@@ -3,11 +3,13 @@
 import { useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
+import { useToast } from '@/hooks/useToast'
+import Link from 'next/link'
 
 const ERROR_MESSAGES: Record<string, string> = {
   'Invalid login credentials': 'Email o contraseña incorrectos.',
   'Email not confirmed': 'Confirma tu email antes de iniciar sesión.',
-  'Email rate limit exceeded': '⏱️ Demasiados intentos. Espera unos minutos.',
+  'Email rate limit exceeded': 'Demasiados intentos. Espera unos minutos.',
 }
 
 function parseAuthError(message: string): string {
@@ -16,7 +18,7 @@ function parseAuthError(message: string): string {
   }
   const waitMatch = message.match(/after (\d+) seconds/)
   if (waitMatch) {
-    return `⏱️ Espera ${waitMatch[1]} segundos antes de intentar nuevamente.`
+    return `Espera ${waitMatch[1]} segundos antes de intentar nuevamente.`
   }
   return message || 'Ocurrió un error inesperado.'
 }
@@ -25,7 +27,6 @@ export default function LoginPage() {
   const [isSignUp, setIsSignUp] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [feedback, setFeedback] = useState<{ message: string; success: boolean } | null>(null)
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -34,17 +35,10 @@ export default function LoginPage() {
 
   const router = useRouter()
   const supabase = createClient()
-
-  const resetForm = () => {
-    setEmail('')
-    setPassword('')
-    setNombre('')
-    setApellido('')
-    setFeedback(null)
-  }
+  const { success, error, info } = useToast()
 
   const handleSignUp = async () => {
-    const { data, error } = await supabase.auth.signUp({
+    const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -53,10 +47,10 @@ export default function LoginPage() {
       },
     })
 
-    if (error) throw error
+    if (signUpError) throw signUpError
 
     if (data?.user?.identities?.length === 0) {
-      setFeedback({ message: 'Este email ya está registrado. Inicia sesión.', success: false })
+      error('Este email ya está registrado. Inicia sesión.')
       setIsSignUp(false)
       return
     }
@@ -69,32 +63,39 @@ export default function LoginPage() {
         apellido,
       }, { onConflict: 'id' })
 
-      router.push('/')
-      router.refresh()
+      success(`Bienvenido ${nombre}! Tu cuenta ha sido creada exitosamente.`)
+      
+      setTimeout(() => {
+        router.push('/')
+        router.refresh()
+      }, 1500)
     }
   }
 
   const handleSignIn = async () => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+    const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password })
 
-    if (error) {
-      if (error.message.includes('Email not confirmed')) {
-        setFeedback({ message: 'Confirma tu email antes de iniciar sesión. Revisa tu bandeja.', success: false })
+    if (signInError) {
+      if (signInError.message.includes('Email not confirmed')) {
+        info('Confirma tu email antes de iniciar sesión. Revisa tu bandeja.')
         return
       }
-      throw error
+      throw signInError
     }
 
     if (data.user) {
-      const supabase = createClient()
       const { data: usuario } = await supabase
         .from('usuarios')
-        .select('rol')
+        .select('nombre, rol')
         .eq('id', data.user.id)
         .single()
 
-      router.push(usuario?.rol === 'admin_adventur' ? '/admin' : '/')
-      router.refresh()
+      success(`Bienvenido de nuevo${usuario?.nombre ? `, ${usuario.nombre}` : ''}!`)
+      
+      setTimeout(() => {
+        router.push(usuario?.rol === 'admin_adventur' ? '/admin' : '/')
+        router.refresh()
+      }, 1500)
     }
   }
 
@@ -103,7 +104,6 @@ export default function LoginPage() {
     if (loading) return
 
     setLoading(true)
-    setFeedback(null)
 
     try {
       if (isSignUp) {
@@ -113,7 +113,7 @@ export default function LoginPage() {
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Error desconocido'
-      setFeedback({ message: parseAuthError(message), success: false })
+      error(parseAuthError(message))
     } finally {
       setLoading(false)
     }
@@ -121,40 +121,40 @@ export default function LoginPage() {
 
   const toggleMode = () => {
     setIsSignUp((prev) => !prev)
-    setFeedback(null)
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600 p-4">
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-yellow-500 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000" />
-      </div>
-
-      <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:50px_50px]" />
-
-      <div className="relative w-full max-w-md z-10">
-        <div className="bg-white/10 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
-          <div className="bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 p-8 text-center border-b border-white/10">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-white/20 to-white/5 backdrop-blur-xl rounded-2xl mb-4 shadow-lg border border-white/20">
-              <svg className="w-10 h-10 text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
-            </div>
-            <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">
-              {isSignUp ? '✨ Crear Cuenta' : '👋 Bienvenido'}
-            </h1>
-            <p className="text-white/80 text-lg">
-              {isSignUp ? 'Únete a Adventur' : 'Nos alegra verte de nuevo'}
-            </p>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
+      <div className="w-full max-w-md">
+        {/* Logo y volver */}
+        <div className="text-center mb-8">
+          <Link href="/" className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors mb-6">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            <span className="text-sm font-medium">Volver al inicio</span>
+          </Link>
+          
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <span className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center text-white font-bold text-xl">H</span>
+            <span className="text-gray-900 font-bold text-xl tracking-wide">otel Adventur</span>
           </div>
+          
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            {isSignUp ? 'Crear cuenta' : 'Iniciar sesión'}
+          </h1>
+          <p className="text-gray-500">
+            {isSignUp ? 'Únete a nuestra comunidad' : 'Bienvenido de nuevo'}
+          </p>
+        </div>
 
-          <form onSubmit={handleAuth} className="p-8 space-y-5">
+        {/* Formulario */}
+        <div className="bg-white rounded-sm shadow-md border border-gray-100 p-8">
+          <form onSubmit={handleAuth} className="space-y-5">
             {isSignUp && (
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label htmlFor="nombre" className="block text-sm font-semibold text-white/90 ml-1">
+                  <label htmlFor="nombre" className="block text-sm font-semibold text-gray-700">
                     Nombre
                   </label>
                   <input
@@ -163,12 +163,12 @@ export default function LoginPage() {
                     value={nombre}
                     onChange={(e) => setNombre(e.target.value)}
                     required={isSignUp}
-                    className="w-full px-4 py-3 bg-white/10 backdrop-blur-xl border-2 border-white/20 rounded-2xl focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/40 transition-all text-white placeholder-white/50 font-medium"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all text-gray-900"
                     placeholder="Luis"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label htmlFor="apellido" className="block text-sm font-semibold text-white/90 ml-1">
+                  <label htmlFor="apellido" className="block text-sm font-semibold text-gray-700">
                     Apellido
                   </label>
                   <input
@@ -177,7 +177,7 @@ export default function LoginPage() {
                     value={apellido}
                     onChange={(e) => setApellido(e.target.value)}
                     required={isSignUp}
-                    className="w-full px-4 py-3 bg-white/10 backdrop-blur-xl border-2 border-white/20 rounded-2xl focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/40 transition-all text-white placeholder-white/50 font-medium"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all text-gray-900"
                     placeholder="Cueva"
                   />
                 </div>
@@ -185,38 +185,50 @@ export default function LoginPage() {
             )}
 
             <div className="space-y-2">
-              <label htmlFor="email" className="block text-sm font-semibold text-white/90 ml-1">
-                📧 Correo Electrónico
+              <label htmlFor="email" className="block text-sm font-semibold text-gray-700">
+                Correo electrónico
               </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full px-5 py-4 bg-white/10 backdrop-blur-xl border-2 border-white/20 rounded-2xl focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/40 transition-all text-white placeholder-white/50 font-medium shadow-lg hover:bg-white/15"
-                placeholder="tu@email.com"
-              />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                  </svg>
+                </div>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all text-gray-900"
+                  placeholder="tu@email.com"
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="password" className="block text-sm font-semibold text-white/90 ml-1">
-                🔒 Contraseña
+              <label htmlFor="password" className="block text-sm font-semibold text-gray-700">
+                Contraseña
               </label>
               <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </div>
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full px-5 py-4 bg-white/10 backdrop-blur-xl border-2 border-white/20 rounded-2xl focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/40 transition-all text-white placeholder-white/50 font-medium shadow-lg hover:bg-white/15 pr-12"
+                  className="w-full pl-10 pr-12 py-2.5 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all text-gray-900"
                   placeholder="••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 hover:text-white transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                 >
                   {showPassword ? (
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -232,71 +244,52 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {feedback && (
-              <div className={`p-4 rounded-2xl text-sm font-medium backdrop-blur-xl border-2 ${feedback.success
-                ? 'bg-green-500/20 text-green-100 border-green-400/30'
-                : 'bg-red-500/20 text-red-100 border-red-400/30'
-                }`}>
-                <div className="flex items-center gap-2">
-                  {feedback.success ? (
-                    <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  ) : (
-                    <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  )}
-                  <span>{feedback.message}</span>
-                </div>
-              </div>
-            )}
-
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 px-6 bg-gradient-to-r from-white to-white/90 text-purple-600 font-bold text-lg rounded-2xl hover:shadow-2xl hover:shadow-white/20 focus:outline-none focus:ring-4 focus:ring-white/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group"
+              className="w-full py-3 px-6 bg-red-600 hover:bg-red-700 text-white font-semibold rounded focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
-              <span className="relative z-10 flex items-center justify-center gap-2">
-                {loading ? (
-                  <>
-                    <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                    Procesando...
-                  </>
-                ) : (
-                  <>
-                    {isSignUp ? '🚀 Crear mi cuenta' : '✨ Iniciar Sesión'}
-                    <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
-                  </>
-                )}
-              </span>
-              <div className="absolute inset-0 bg-gradient-to-r from-violet-400 to-fuchsia-400 opacity-0 group-hover:opacity-20 transition-opacity" />
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  Procesando...
+                </span>
+              ) : (
+                <span className="flex items-center justify-center gap-2">
+                  {isSignUp ? 'Crear mi cuenta' : 'Iniciar sesión'}
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </span>
+              )}
             </button>
           </form>
 
-          <div className="px-8 pb-8 text-center">
-            <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent mb-6" />
+          <div className="mt-6 pt-6 border-t border-gray-200 text-center">
             <button
               type="button"
               onClick={toggleMode}
-              className="text-base text-white/80 hover:text-white transition-colors font-medium group"
+              className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
             >
               {isSignUp ? (
-                <span>¿Ya tienes cuenta? <span className="font-bold text-white group-hover:underline">Inicia sesión aquí</span></span>
+                <span>¿Ya tienes cuenta? <span className="font-semibold text-red-600 hover:text-red-700">Inicia sesión</span></span>
               ) : (
-                <span>¿No tienes cuenta? <span className="font-bold text-white group-hover:underline">Regístrate gratis</span></span>
+                <span>¿No tienes cuenta? <span className="font-semibold text-red-600 hover:text-red-700">Regístrate</span></span>
               )}
             </button>
           </div>
         </div>
 
-        <div className="mt-8 text-center">
-          <p className="text-white/60 text-sm">🔐 Tus datos están protegidos y encriptados</p>
+        <div className="mt-6 text-center">
+          <p className="text-xs text-gray-500 flex items-center justify-center gap-2">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            Tus datos están protegidos y encriptados
+          </p>
         </div>
       </div>
     </div>
