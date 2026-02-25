@@ -1,6 +1,6 @@
 import Link from 'next/link'
 
-export function HeroSection() {
+export function HeroSeccion() {
     return (
         <section className="relative h-[90vh] flex items-center justify-center overflow-hidden">
             <img

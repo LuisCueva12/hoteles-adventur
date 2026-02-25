@@ -1,21 +1,21 @@
 // Dev 1
 
-import { HeroSection } from '@/components/web/HeroSection'
+import { HeroSeccion } from '@/components/web/HeroSeccion'
 import { SearchBar } from '@/components/web/SearchBar'
-import { RoomsSection } from '@/components/web/RoomsSection'
-import { WhyChooseUs } from '@/components/web/WhyChooseUs'
-import { EventsSection } from '@/components/web/EventsSection'
+import { HabitacionesSeccion } from '@/components/web/HabitacionesSeccion'
+import { PorQueElegirnosSeccion } from '@/components/web/PorQueElegirnosSeccion'
+import { EventosSeccion } from '@/components/web/EventosSeccion'
 
 export default function HomePage() {
     return (
         <>
-            <HeroSection />
+            <HeroSeccion />
             <div className="px-6">
                 <SearchBar />
             </div>
-            <RoomsSection />
-            <WhyChooseUs />
-            <EventsSection />
+            <HabitacionesSeccion />
+            <PorQueElegirnosSeccion />
+            <EventosSeccion />
         </>
     )
 }

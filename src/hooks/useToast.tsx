@@ -8,7 +8,6 @@ import {
     useState,
 } from 'react'
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info'
 
@@ -28,11 +27,7 @@ interface ToastContextValue {
     info: (message: string) => void
 }
 
-// ─── Context ──────────────────────────────────────────────────────────────────
-
 export const ToastContext = createContext<ToastContextValue | null>(null)
-
-// ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export const useToast = () => {
     const ctx = useContext(ToastContext)
@@ -40,7 +35,6 @@ export const useToast = () => {
     return ctx
 }
 
-// ─── Provider (solo lógica, sin JSX de UI) ────────────────────────────────────
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
     const [toasts, setToasts] = useState<ToastItem[]>([])
@@ -67,9 +61,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     const info = useCallback((msg: string) => toast(msg, 'info'), [toast])
 
     return (
-        <ToastContext.Provider value= {{ toasts, dismiss, toast, success, error, warning, info }
-}>
-    { children }
-    </ToastContext.Provider>
-  )
+        <ToastContext.Provider value={{ toasts, dismiss, toast, success, error, warning, info }}>
+            {children}
+        </ToastContext.Provider>
+    )
 }

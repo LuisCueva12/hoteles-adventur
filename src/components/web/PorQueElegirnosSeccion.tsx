@@ -14,7 +14,7 @@ const GALLERY = [
     { img: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=500&q=80', cat: 'Eventos' },
 ]
 
-export function WhyChooseUs() {
+export function PorQueElegirnosSeccion() {
     const [active, setActive] = useState('Todo')
     const filtered = active === 'Todo' ? GALLERY : GALLERY.filter((g) => g.cat === active)
 

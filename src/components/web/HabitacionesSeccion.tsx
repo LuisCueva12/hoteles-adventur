@@ -18,7 +18,7 @@ const ROOMS = [
     },
 ]
 
-export function RoomsSection() {
+export function HabitacionesSeccion() {
     return (
         <section className="py-20 bg-white">
             <div className="max-w-7xl mx-auto px-6">
