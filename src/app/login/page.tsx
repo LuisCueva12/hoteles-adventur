@@ -1,107 +1,141 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { createClient } from '@/utils/supabase/client';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react'
+import { createClient } from '@/utils/supabase/client'
+import { useRouter } from 'next/navigation'
+
+const ERROR_MESSAGES: Record<string, string> = {
+  'Invalid login credentials': 'Email o contraseña incorrectos.',
+  'Email not confirmed': 'Confirma tu email antes de iniciar sesión.',
+  'Email rate limit exceeded': '⏱️ Demasiados intentos. Espera unos minutos.',
+}
+
+function parseAuthError(message: string): string {
+  for (const [key, value] of Object.entries(ERROR_MESSAGES)) {
+    if (message.includes(key)) return value
+  }
+  const waitMatch = message.match(/after (\d+) seconds/)
+  if (waitMatch) {
+    return `⏱️ Espera ${waitMatch[1]} segundos antes de intentar nuevamente.`
+  }
+  return message || 'Ocurrió un error inesperado.'
+}
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const router = useRouter();
-  const supabase = createClient();
+  const [isSignUp, setIsSignUp] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [feedback, setFeedback] = useState<{ message: string; success: boolean } | null>(null)
+
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [nombre, setNombre] = useState('')
+  const [apellido, setApellido] = useState('')
+
+  const router = useRouter()
+  const supabase = createClient()
+
+  const resetForm = () => {
+    setEmail('')
+    setPassword('')
+    setNombre('')
+    setApellido('')
+    setFeedback(null)
+  }
+
+  const handleSignUp = async () => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/`,
+        data: { nombre, apellido },
+      },
+    })
+
+    if (error) throw error
+
+    if (data?.user?.identities?.length === 0) {
+      setFeedback({ message: 'Este email ya está registrado. Inicia sesión.', success: false })
+      setIsSignUp(false)
+      return
+    }
+
+    if (data.user) {
+      await supabase.from('usuarios').upsert({
+        id: data.user.id,
+        email: data.user.email,
+        nombre,
+        apellido,
+      }, { onConflict: 'id' })
+
+      router.push('/')
+      router.refresh()
+    }
+  }
+
+  const handleSignIn = async () => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+
+    if (error) {
+      if (error.message.includes('Email not confirmed')) {
+        setFeedback({ message: 'Confirma tu email antes de iniciar sesión. Revisa tu bandeja.', success: false })
+        return
+      }
+      throw error
+    }
+
+    if (data.user) {
+      const supabase = createClient()
+      const { data: usuario } = await supabase
+        .from('usuarios')
+        .select('rol')
+        .eq('id', data.user.id)
+        .single()
+
+      router.push(usuario?.rol === 'admin_adventur' ? '/admin' : '/')
+      router.refresh()
+    }
+  }
 
   const handleAuth = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    
-    // Prevenir múltiples envíos
-    if (loading) return;
-    
-    setLoading(true);
-    setError('');
+    e.preventDefault()
+    if (loading) return
+
+    setLoading(true)
+    setFeedback(null)
 
     try {
       if (isSignUp) {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/`,
-          }
-        });
-        if (error) throw error;
-        
-        if (data?.user?.identities?.length === 0) {
-          setError('Este email ya está registrado. Por favor inicia sesión.');
-          setIsSignUp(false);
-        } else {
-          setError('¡Registro exitoso! Ahora puedes iniciar sesión.');
-          setIsSignUp(false);
-        }
+        await handleSignUp()
       } else {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        
-        if (error) {
-          if (error.message.includes('Email not confirmed')) {
-            setError('Tu email aún no está confirmado. Revisa tu bandeja de entrada o intenta registrarte nuevamente para recibir un nuevo correo de confirmación.');
-          } else {
-            throw error;
-          }
-          return;
-        }
-        
-        if (data?.user) {
-          console.log('Usuario autenticado:', data.user);
-          router.push('/');
-          router.refresh();
-        }
+        await handleSignIn()
       }
-    } catch (err: any) {
-      console.error('Error de autenticación:', err);
-      
-      let errorMessage = err.message || 'Ocurrió un error';
-      
-      // Manejo específico del error de rate limiting
-      if (errorMessage.includes('For security purposes, you can only request this after')) {
-        const match = errorMessage.match(/after (\d+) seconds/);
-        const seconds = match ? match[1] : '60';
-        errorMessage = `⏱️ Por seguridad, debes esperar ${seconds} segundos antes de intentar nuevamente. Por favor espera un momento.`;
-      } else if (errorMessage.includes('Invalid login credentials')) {
-        errorMessage = 'Email o contraseña incorrectos';
-      } else if (errorMessage.includes('Email not confirmed')) {
-        errorMessage = 'Tu email aún no está confirmado. Revisa tu bandeja de entrada.';
-      } else if (errorMessage.includes('Email rate limit exceeded')) {
-        errorMessage = '⏱️ Has intentado demasiadas veces. Por favor espera unos minutos antes de intentar nuevamente.';
-      }
-      
-      setError(errorMessage);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error desconocido'
+      setFeedback({ message: parseAuthError(message), success: false })
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
+
+  const toggleMode = () => {
+    setIsSignUp((prev) => !prev)
+    setFeedback(null)
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600 p-4">
-      {/* Fondo animado con formas */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-yellow-500 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000"></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-yellow-500 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000" />
       </div>
 
-      {/* Grid pattern overlay */}
-      <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:50px_50px]"></div>
-      
+      <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:50px_50px]" />
+
       <div className="relative w-full max-w-md z-10">
-        {/* Card principal con glassmorphism */}
         <div className="bg-white/10 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
-          {/* Header con gradiente */}
           <div className="bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 p-8 text-center border-b border-white/10">
             <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-white/20 to-white/5 backdrop-blur-xl rounded-2xl mb-4 shadow-lg border border-white/20">
               <svg className="w-10 h-10 text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -112,50 +146,77 @@ export default function LoginPage() {
               {isSignUp ? '✨ Crear Cuenta' : '👋 Bienvenido'}
             </h1>
             <p className="text-white/80 text-lg">
-              {isSignUp ? 'Únete a nuestra comunidad' : 'Nos alegra verte de nuevo'}
+              {isSignUp ? 'Únete a Adventur' : 'Nos alegra verte de nuevo'}
             </p>
           </div>
 
-          {/* Formulario */}
-          <form onSubmit={handleAuth} className="p-8 space-y-6">
-            {/* Email Input */}
+          <form onSubmit={handleAuth} className="p-8 space-y-5">
+            {isSignUp && (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label htmlFor="nombre" className="block text-sm font-semibold text-white/90 ml-1">
+                    Nombre
+                  </label>
+                  <input
+                    id="nombre"
+                    type="text"
+                    value={nombre}
+                    onChange={(e) => setNombre(e.target.value)}
+                    required={isSignUp}
+                    className="w-full px-4 py-3 bg-white/10 backdrop-blur-xl border-2 border-white/20 rounded-2xl focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/40 transition-all text-white placeholder-white/50 font-medium"
+                    placeholder="Luis"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="apellido" className="block text-sm font-semibold text-white/90 ml-1">
+                    Apellido
+                  </label>
+                  <input
+                    id="apellido"
+                    type="text"
+                    value={apellido}
+                    onChange={(e) => setApellido(e.target.value)}
+                    required={isSignUp}
+                    className="w-full px-4 py-3 bg-white/10 backdrop-blur-xl border-2 border-white/20 rounded-2xl focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/40 transition-all text-white placeholder-white/50 font-medium"
+                    placeholder="Cueva"
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2">
               <label htmlFor="email" className="block text-sm font-semibold text-white/90 ml-1">
                 📧 Correo Electrónico
               </label>
-              <div className="relative group">
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="w-full px-5 py-4 bg-white/10 backdrop-blur-xl border-2 border-white/20 rounded-2xl focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/40 transition-all text-white placeholder-white/50 font-medium shadow-lg group-hover:bg-white/15"
-                  placeholder="tu@email.com"
-                />
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 opacity-0 group-hover:opacity-100 transition-opacity -z-10 blur-xl"></div>
-              </div>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full px-5 py-4 bg-white/10 backdrop-blur-xl border-2 border-white/20 rounded-2xl focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/40 transition-all text-white placeholder-white/50 font-medium shadow-lg hover:bg-white/15"
+                placeholder="tu@email.com"
+              />
             </div>
 
-            {/* Password Input */}
             <div className="space-y-2">
               <label htmlFor="password" className="block text-sm font-semibold text-white/90 ml-1">
                 🔒 Contraseña
               </label>
-              <div className="relative group">
+              <div className="relative">
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full px-5 py-4 bg-white/10 backdrop-blur-xl border-2 border-white/20 rounded-2xl focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/40 transition-all text-white placeholder-white/50 font-medium shadow-lg group-hover:bg-white/15 pr-12"
+                  className="w-full px-5 py-4 bg-white/10 backdrop-blur-xl border-2 border-white/20 rounded-2xl focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/40 transition-all text-white placeholder-white/50 font-medium shadow-lg hover:bg-white/15 pr-12"
                   placeholder="••••••••"
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white/60 hover:text-white transition-colors"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 hover:text-white transition-colors"
                 >
                   {showPassword ? (
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -168,19 +229,16 @@ export default function LoginPage() {
                     </svg>
                   )}
                 </button>
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 opacity-0 group-hover:opacity-100 transition-opacity -z-10 blur-xl"></div>
               </div>
             </div>
 
-            {/* Error/Success Message */}
-            {error && (
-              <div className={`p-4 rounded-2xl text-sm font-medium backdrop-blur-xl border-2 animate-in slide-in-from-top-2 ${
-                error.includes('exitoso') 
-                  ? 'bg-green-500/20 text-green-100 border-green-400/30' 
-                  : 'bg-red-500/20 text-red-100 border-red-400/30'
-              }`}>
+            {feedback && (
+              <div className={`p-4 rounded-2xl text-sm font-medium backdrop-blur-xl border-2 ${feedback.success
+                ? 'bg-green-500/20 text-green-100 border-green-400/30'
+                : 'bg-red-500/20 text-red-100 border-red-400/30'
+                }`}>
                 <div className="flex items-center gap-2">
-                  {error.includes('exitoso') ? (
+                  {feedback.success ? (
                     <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
@@ -189,12 +247,11 @@ export default function LoginPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   )}
-                  <span>{error}</span>
+                  <span>{feedback.message}</span>
                 </div>
               </div>
             )}
 
-            {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
@@ -204,8 +261,8 @@ export default function LoginPage() {
                 {loading ? (
                   <>
                     <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
                     Procesando...
                   </>
@@ -218,19 +275,15 @@ export default function LoginPage() {
                   </>
                 )}
               </span>
-              <div className="absolute inset-0 bg-gradient-to-r from-violet-400 to-fuchsia-400 opacity-0 group-hover:opacity-20 transition-opacity"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-violet-400 to-fuchsia-400 opacity-0 group-hover:opacity-20 transition-opacity" />
             </button>
           </form>
 
-          {/* Toggle entre login y signup */}
           <div className="px-8 pb-8 text-center">
-            <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent mb-6"></div>
+            <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent mb-6" />
             <button
               type="button"
-              onClick={() => {
-                setIsSignUp(!isSignUp);
-                setError('');
-              }}
+              onClick={toggleMode}
               className="text-base text-white/80 hover:text-white transition-colors font-medium group"
             >
               {isSignUp ? (
@@ -242,13 +295,10 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Decoración inferior */}
         <div className="mt-8 text-center">
-          <p className="text-white/60 text-sm">
-            🔐 Tus datos están protegidos y encriptados
-          </p>
+          <p className="text-white/60 text-sm">🔐 Tus datos están protegidos y encriptados</p>
         </div>
       </div>
     </div>
-  );
+  )
 }

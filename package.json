@@ -6,7 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:push": "supabase db push",
+    "db:pull": "supabase db pull",
+    "db:reset": "supabase db reset",
+    "db:migration:new": "supabase migration new",
+    "db:types": "supabase gen types typescript --linked > src/types/supabase.ts",
+    "db:status": "supabase migration list"
   },
   "dependencies": {
     "@supabase/ssr": "^0.8.0",
@@ -23,6 +29,7 @@
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "supabase": "^2.76.15",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
