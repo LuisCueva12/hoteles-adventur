@@ -1,7 +1,9 @@
+import { LucideIcon } from 'lucide-react'
+
 interface StatCardProps {
     title: string
     value: string | number
-    icon: string
+    icon: string | LucideIcon
     trend?: {
         value: string
         isPositive: boolean
@@ -18,14 +20,16 @@ const colorClasses = {
 }
 
 export function StatCard({ title, value, icon, trend, color = 'blue' }: StatCardProps) {
+    const Icon = typeof icon === 'string' ? null : icon
+
     return (
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-6 hover:border-gray-700 transition-colors">
+        <div className="bg-gray-900 border border-gray-800 rounded-lg p-6 hover:border-gray-700 transition-all hover:scale-105 duration-200">
             <div className="flex items-start justify-between mb-4">
                 <div className={`w-12 h-12 rounded-lg ${colorClasses[color]} border flex items-center justify-center text-2xl`}>
-                    {icon}
+                    {Icon ? <Icon size={24} /> : icon}
                 </div>
                 {trend && (
-                    <span className={`text-xs font-semibold ${trend.isPositive ? 'text-green-400' : 'text-red-400'}`}>
+                    <span className={`text-xs font-semibold px-2 py-1 rounded ${trend.isPositive ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
                         {trend.isPositive ? '↑' : '↓'} {trend.value}
                     </span>
                 )}

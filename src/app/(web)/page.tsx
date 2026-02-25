@@ -1,5 +1,3 @@
-// Dev 1
-
 import { HeroSeccion } from '@/components/web/HeroSeccion'
 import { SearchBar } from '@/components/web/SearchBar'
 import { HabitacionesSeccion } from '@/components/web/HabitacionesSeccion'

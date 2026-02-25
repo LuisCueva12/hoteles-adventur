@@ -1,12 +1,10 @@
 @import "tailwindcss";
 
-/* Variables base */
 :root {
   --background: #ffffff;
   --foreground: #171717;
 }
 
-/* Modo oscuro automático */
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
@@ -14,7 +12,6 @@
   }
 }
 
-/* Estilos globales */
 body {
   background-color: var(--background);
   color: var(--foreground);
@@ -23,20 +20,11 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Animaciones personalizadas */
 @keyframes blob {
-  0% {
-    transform: translate(0px, 0px) scale(1);
-  }
-  33% {
-    transform: translate(30px, -50px) scale(1.1);
-  }
-  66% {
-    transform: translate(-20px, 20px) scale(0.9);
-  }
-  100% {
-    transform: translate(0px, 0px) scale(1);
-  }
+  0% { transform: translate(0px, 0px) scale(1); }
+  33% { transform: translate(30px, -50px) scale(1.1); }
+  66% { transform: translate(-20px, 20px) scale(0.9); }
+  100% { transform: translate(0px, 0px) scale(1); }
 }
 
 .animate-blob {
@@ -51,22 +39,15 @@ body {
   animation-delay: 4s;
 }
 
-/* Grid pattern */
-.bg-grid-white\/\[0\.05\] {
+.bg-grid-pattern {
   background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 
-/* Animación de entrada */
 @keyframes slide-in-from-top {
-  from {
-    transform: translateY(-10px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+  from { transform: translateY(-10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
 .animate-in {

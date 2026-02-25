@@ -1,19 +1,51 @@
+'use client'
+
+import { useState } from 'react'
 import Link from 'next/link'
+import { Facebook, Instagram, Music, MessageCircle } from 'lucide-react'
+import { Logo } from './Logo'
 
 const FOOTER_LINKS = {
-    Informacion: ['Sobre nosotros', 'Politica de privacidad', 'Terminos y condiciones', 'Mapa del sitio'],
-    'Mi cuenta': ['Mi cuenta', 'Historial de reservas', 'Lista de deseos', 'Newsletter', 'Devoluciones'],
+    Informacion: [
+        { label: 'Sobre nosotros', href: '/nosotros' },
+        { label: 'Politica de privacidad', href: '/privacidad' },
+        { label: 'Terminos y condiciones', href: '/terminos' },
+        { label: 'Preguntas frecuentes', href: '/contacto' }
+    ],
+    'Mi cuenta': [
+        { label: 'Iniciar sesión', href: '/login' },
+        { label: 'Mi perfil', href: '/perfil' },
+        { label: 'Mis reservas', href: '/reservas' },
+        { label: 'Mis pagos', href: '/pagos' }
+    ],
 }
 
 export function Footer() {
+    const [email, setEmail] = useState('')
+    const [message, setMessage] = useState('')
+
+    const handleNewsletterSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        console.log('Newsletter suscripción:', email)
+        setMessage('¡Gracias por suscribirte!')
+        setEmail('')
+        setTimeout(() => setMessage(''), 3000)
+    }
+
     return (
         <footer className="bg-gray-950 text-gray-400">
             <div className="max-w-7xl mx-auto px-6 py-16 grid grid-cols-1 md:grid-cols-4 gap-10">
                 <div>
+                    <div className="mb-4">
+                        <Logo className="h-10" variant="footer" />
+                    </div>
                     <h4 className="text-white font-semibold mb-4 uppercase text-sm tracking-widest">Direccion</h4>
-                    <p className="text-sm leading-relaxed">Hotel en Lima, Peru</p>
-                    <p className="text-sm mt-1">+51 (01) 234-5678</p>
-                    <p className="text-sm mt-1">info@adventurhotels.com</p>
+                    <p className="text-sm leading-relaxed">Jr. Amalia Puga 635</p>
+                    <p className="text-sm mt-1">Cajamarca, Perú</p>
+                    <p className="text-sm mt-3">+51 976 123 456</p>
+                    <p className="text-sm mt-1">+51 976 654 321</p>
+                    <p className="text-sm mt-3">info@adventurhotels.com</p>
+                    <p className="text-sm">reservas@adventurhotels.com</p>
                 </div>
 
                 {Object.entries(FOOTER_LINKS).map(([title, links]) => (
@@ -21,8 +53,10 @@ export function Footer() {
                         <h4 className="text-white font-semibold mb-4 uppercase text-sm tracking-widest">{title}</h4>
                         <ul className="space-y-2">
                             {links.map((link) => (
-                                <li key={link}>
-                                    <span className="text-sm hover:text-white transition-colors cursor-pointer">{link}</span>
+                                <li key={link.label}>
+                                    <Link href={link.href} className="text-sm hover:text-white transition-colors">
+                                        {link.label}
+                                    </Link>
                                 </li>
                             ))}
                         </ul>
@@ -32,22 +66,62 @@ export function Footer() {
                 <div>
                     <h4 className="text-white font-semibold mb-4 uppercase text-sm tracking-widest">Newsletter</h4>
                     <p className="text-sm mb-4">Suscribete para recibir las ultimas noticias y ofertas.</p>
-                    <div className="flex">
+                    <form onSubmit={handleNewsletterSubmit} className="flex">
                         <input
                             type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
                             placeholder="Tu email"
                             className="flex-1 px-3 py-2 text-sm bg-gray-800 text-white border border-gray-700 rounded-l outline-none focus:border-red-500"
+                            required
                         />
-                        <button className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-r transition-colors">
+                        <button
+                            type="submit"
+                            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-r transition-colors"
+                        >
                             OK
                         </button>
-                    </div>
+                    </form>
+                    {message && (
+                        <p className="text-sm text-green-400 mt-2">{message}</p>
+                    )}
                     <div className="flex gap-3 mt-6">
-                        {['f', 't', 'in', 'g+'].map((s) => (
-                            <span key={s} className="w-8 h-8 rounded-full bg-gray-800 hover:bg-red-600 flex items-center justify-center text-xs cursor-pointer transition-colors text-white">
-                                {s}
-                            </span>
-                        ))}
+                        <a
+                            href="https://facebook.com/adventurhotels"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-8 h-8 rounded-full bg-gray-800 hover:bg-red-600 flex items-center justify-center cursor-pointer transition-colors text-white"
+                            title="Facebook"
+                        >
+                            <Facebook className="w-4 h-4" />
+                        </a>
+                        <a
+                            href="https://instagram.com/adventurhotels"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-8 h-8 rounded-full bg-gray-800 hover:bg-red-600 flex items-center justify-center cursor-pointer transition-colors text-white"
+                            title="Instagram"
+                        >
+                            <Instagram className="w-4 h-4" />
+                        </a>
+                        <a
+                            href="https://tiktok.com/@adventurhotels"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-8 h-8 rounded-full bg-gray-800 hover:bg-red-600 flex items-center justify-center cursor-pointer transition-colors text-white"
+                            title="TikTok"
+                        >
+                            <Music className="w-4 h-4" />
+                        </a>
+                        <a
+                            href="https://wa.me/51976123456"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-8 h-8 rounded-full bg-gray-800 hover:bg-red-600 flex items-center justify-center cursor-pointer transition-colors text-white"
+                            title="WhatsApp"
+                        >
+                            <MessageCircle className="w-4 h-4" />
+                        </a>
                     </div>
                 </div>
             </div>

@@ -5,6 +5,7 @@ import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/hooks/useToast'
 import Link from 'next/link'
+import { Logo } from '@/components/web/Logo'
 
 const ERROR_MESSAGES: Record<string, string> = {
   'Invalid login credentials': 'Email o contraseña incorrectos.',
@@ -134,9 +135,8 @@ export default function LoginPage() {
             <span className="text-sm font-medium">Volver al inicio</span>
           </Link>
           
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <span className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center text-white font-bold text-xl">H</span>
-            <span className="text-gray-900 font-bold text-xl tracking-wide">otel Adventur</span>
+          <div className="flex justify-center mb-6">
+            <Logo className="h-14" />
           </div>
           
           <h1 className="text-3xl font-bold text-gray-900 mb-2">

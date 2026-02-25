@@ -6,12 +6,14 @@ import Link from 'next/link'
 const FILTERS = ['Todo', 'Restaurante', 'Piscina', 'Spa', 'Eventos']
 
 const GALLERY = [
-    { img: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=500&q=80', cat: 'Restaurante' },
-    { img: 'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=500&q=80', cat: 'Restaurante' },
-    { img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSrHmKit7scCP3ikRIUdEYwKcH6SNllCtpvqQ&s', cat: 'Piscina' },
-    { img: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=500&q=80', cat: 'Piscina' },
-    { img: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=500&q=80', cat: 'Spa' },
-    { img: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=500&q=80', cat: 'Eventos' },
+    { img: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80', cat: 'Restaurante', alt: 'Restaurante gourmet del hotel' },
+    { img: 'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=800&q=80', cat: 'Restaurante', alt: 'Platos gourmet' },
+    { img: 'https://images.unsplash.com/photo-1575429198097-0414ec08e8cd?w=800&q=80', cat: 'Piscina', alt: 'Piscina del hotel' },
+    { img: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800&q=80', cat: 'Piscina', alt: 'Área de piscina' },
+    { img: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80', cat: 'Spa', alt: 'Spa y wellness' },
+    { img: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800&q=80', cat: 'Eventos', alt: 'Salón de eventos' },
+    { img: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&q=80', cat: 'Restaurante', alt: 'Bar del hotel' },
+    { img: 'https://images.unsplash.com/photo-1540541338287-41700207dee6?w=800&q=80', cat: 'Spa', alt: 'Tratamientos de spa' },
 ]
 
 export function PorQueElegirnosSeccion() {
@@ -43,11 +45,15 @@ export function PorQueElegirnosSeccion() {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-10">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-10">
                     {filtered.map((item, i) => (
-                        <div key={i} className="group relative h-52 overflow-hidden">
-                            <img src={item.img} alt={item.cat}
-                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                        <div key={i} className="group relative h-52 overflow-hidden rounded-sm">
+                            <img
+                                src={item.img}
+                                alt={item.alt}
+                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                loading="lazy"
+                            />
                             <div className="absolute inset-0 bg-black/30 group-hover:bg-black/50 transition-colors flex items-end p-4">
                                 <span className="text-white text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
                                     {item.cat}

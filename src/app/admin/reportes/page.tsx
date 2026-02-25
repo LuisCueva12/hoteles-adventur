@@ -2,15 +2,16 @@
 
 import { useState } from 'react'
 import { StatCard } from '@/components/admin/StatCard'
+import { DollarSign, Calendar, Hotel, Users, FileText, Download } from 'lucide-react'
 
 export default function ReportesAdminPage() {
     const [periodo, setPeriodo] = useState<'dia' | 'semana' | 'mes' | 'ano'>('mes')
 
     const stats = [
-        { title: 'Ingresos Totales', value: 'S/. 125,450', icon: '💰', trend: { value: '15%', isPositive: true }, color: 'green' as const },
-        { title: 'Reservas Realizadas', value: '89', icon: '📅', trend: { value: '8%', isPositive: true }, color: 'blue' as const },
-        { title: 'Tasa de Ocupación', value: '78%', icon: '🏨', trend: { value: '5%', isPositive: true }, color: 'purple' as const },
-        { title: 'Nuevos Clientes', value: '45', icon: '👥', trend: { value: '23%', isPositive: true }, color: 'yellow' as const },
+        { title: 'Ingresos Totales', value: 'S/. 125,450', icon: DollarSign, trend: { value: '15%', isPositive: true }, color: 'green' as const },
+        { title: 'Reservas Realizadas', value: '89', icon: Calendar, trend: { value: '8%', isPositive: true }, color: 'blue' as const },
+        { title: 'Tasa de Ocupación', value: '78%', icon: Hotel, trend: { value: '5%', isPositive: true }, color: 'purple' as const },
+        { title: 'Nuevos Clientes', value: '45', icon: Users, trend: { value: '23%', isPositive: true }, color: 'yellow' as const },
     ]
 
     const topHabitaciones = [
@@ -182,17 +183,35 @@ export default function ReportesAdminPage() {
                     <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
                         <h2 className="text-xl font-semibold mb-4">Exportar Reportes</h2>
                         <div className="space-y-2">
-                            <button className="w-full px-4 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors text-left flex items-center justify-between">
-                                <span className="text-sm">📊 Reporte de Ingresos</span>
-                                <span className="text-xs text-gray-400">PDF</span>
+                            <button className="w-full px-4 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors text-left flex items-center justify-between group">
+                                <div className="flex items-center gap-2">
+                                    <FileText size={18} className="text-gray-400 group-hover:text-red-400 transition-colors" />
+                                    <span className="text-sm">Reporte de Ingresos</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs text-gray-400">PDF</span>
+                                    <Download size={16} className="text-gray-400 group-hover:text-red-400 transition-colors" />
+                                </div>
                             </button>
-                            <button className="w-full px-4 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors text-left flex items-center justify-between">
-                                <span className="text-sm">📅 Reporte de Reservas</span>
-                                <span className="text-xs text-gray-400">Excel</span>
+                            <button className="w-full px-4 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors text-left flex items-center justify-between group">
+                                <div className="flex items-center gap-2">
+                                    <Calendar size={18} className="text-gray-400 group-hover:text-red-400 transition-colors" />
+                                    <span className="text-sm">Reporte de Reservas</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs text-gray-400">Excel</span>
+                                    <Download size={16} className="text-gray-400 group-hover:text-red-400 transition-colors" />
+                                </div>
                             </button>
-                            <button className="w-full px-4 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors text-left flex items-center justify-between">
-                                <span className="text-sm">👥 Reporte de Usuarios</span>
-                                <span className="text-xs text-gray-400">CSV</span>
+                            <button className="w-full px-4 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors text-left flex items-center justify-between group">
+                                <div className="flex items-center gap-2">
+                                    <Users size={18} className="text-gray-400 group-hover:text-red-400 transition-colors" />
+                                    <span className="text-sm">Reporte de Usuarios</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs text-gray-400">CSV</span>
+                                    <Download size={16} className="text-gray-400 group-hover:text-red-400 transition-colors" />
+                                </div>
                             </button>
                         </div>
                     </div>

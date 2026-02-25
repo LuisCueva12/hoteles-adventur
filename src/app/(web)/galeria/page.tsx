@@ -50,15 +50,16 @@ export default function GaleriaPage() {
 
             <section className="max-w-7xl mx-auto px-6 py-20">
                 <div className="flex items-center justify-center gap-3 flex-wrap mb-12">
-                    {CATEGORIES.map((cat) => (
+                    {CATEGORIES.map((cat, index) => (
                         <button
                             key={cat}
                             onClick={() => setActiveCategory(cat)}
-                            className={`px-6 py-2 text-sm font-semibold uppercase tracking-wider border transition-colors ${
+                            className={`px-6 py-2 text-sm font-semibold uppercase tracking-wider border transition-all duration-300 animate-fadeInDown hover:scale-105 ${
                                 activeCategory === cat
-                                    ? 'bg-red-600 border-red-600 text-white'
+                                    ? 'bg-red-600 border-red-600 text-white shadow-lg'
                                     : 'border-gray-300 text-gray-600 hover:border-red-600 hover:text-red-600'
                             }`}
+                            style={{ animationDelay: `${index * 0.05}s` }}
                         >
                             {cat}
                         </button>
@@ -70,15 +71,16 @@ export default function GaleriaPage() {
                         <div
                             key={idx}
                             onClick={() => setSelectedImage(img.url)}
-                            className="group relative h-64 overflow-hidden rounded-sm cursor-pointer"
+                            className="group relative h-64 overflow-hidden rounded-sm cursor-pointer animate-fadeInUp hover:shadow-2xl transition-all duration-500 hover:-translate-y-2"
+                            style={{ animationDelay: `${idx * 0.05}s` }}
                         >
                             <img
                                 src={img.url}
                                 alt={img.title}
-                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                             />
-                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition-colors flex items-center justify-center">
-                                <div className="opacity-0 group-hover:opacity-100 transition-opacity text-center text-white px-4">
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-6">
+                                <div className="text-center text-white px-4 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
                                     <p className="font-semibold mb-1">{img.title}</p>
                                     <p className="text-xs text-gray-300">{img.cat}</p>
                                 </div>
@@ -91,18 +93,18 @@ export default function GaleriaPage() {
             {selectedImage && (
                 <div
                     onClick={() => setSelectedImage(null)}
-                    className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+                    className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4 animate-fadeIn cursor-pointer"
                 >
                     <button
                         onClick={() => setSelectedImage(null)}
-                        className="absolute top-4 right-4 text-white text-4xl hover:text-red-500 transition-colors"
+                        className="absolute top-4 right-4 text-white text-4xl hover:text-red-500 transition-all duration-300 hover:rotate-90 z-10"
                     >
                         ×
                     </button>
                     <img
                         src={selectedImage}
                         alt="Vista ampliada"
-                        className="max-w-full max-h-full object-contain"
+                        className="max-w-full max-h-full object-contain animate-scaleIn shadow-2xl"
                     />
                 </div>
             )}

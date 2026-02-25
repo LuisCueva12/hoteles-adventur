@@ -1,3 +1,5 @@
+import { Check, Car, Wifi, Briefcase, Bell, Sparkles, Lock, Dog, Accessibility } from 'lucide-react'
+
 export default function ServiciosPage() {
     return (
         <div className="bg-white">
@@ -67,22 +69,22 @@ export default function ServiciosPage() {
                             desc: 'Servicio personalizado para reservas de tours, transporte, restaurantes y recomendaciones locales.',
                             features: ['Tours privados', 'Transporte', 'Reservas', 'Asistencia 24/7']
                         },
-                    ].map((service) => (
-                        <div key={service.title} className="group bg-white border border-gray-200 rounded-sm overflow-hidden hover:shadow-xl transition-shadow">
+                    ].map((service, index) => (
+                        <div key={service.title} className="group bg-white border border-gray-200 rounded-sm overflow-hidden hover:shadow-2xl transition-all duration-500 animate-fadeInUp hover:-translate-y-2" style={{ animationDelay: `${index * 0.1}s` }}>
                             <div className="relative h-48 overflow-hidden">
                                 <img
                                     src={service.img}
                                     alt={service.title}
-                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                                 />
                             </div>
                             <div className="p-6">
-                                <h3 className="text-xl font-semibold text-gray-900 mb-3">{service.title}</h3>
+                                <h3 className="text-xl font-semibold text-gray-900 mb-3 group-hover:text-red-600 transition-colors duration-300">{service.title}</h3>
                                 <p className="text-gray-600 text-sm mb-4 leading-relaxed">{service.desc}</p>
                                 <ul className="space-y-2">
                                     {service.features.map((feature) => (
                                         <li key={feature} className="flex items-center text-sm text-gray-600">
-                                            <span className="text-red-600 mr-2">✓</span>
+                                            <Check className="w-4 h-4 text-red-600 mr-2 flex-shrink-0" />
                                             {feature}
                                         </li>
                                     ))}
@@ -98,20 +100,23 @@ export default function ServiciosPage() {
                     </h3>
                     <div className="grid md:grid-cols-4 gap-6 mt-8">
                         {[
-                            { icon: '🚗', label: 'Estacionamiento gratuito' },
-                            { icon: '📶', label: 'WiFi de alta velocidad' },
-                            { icon: '🧳', label: 'Servicio de equipaje' },
-                            { icon: '🛎️', label: 'Room service 24/7' },
-                            { icon: '🧹', label: 'Limpieza diaria' },
-                            { icon: '🔒', label: 'Caja de seguridad' },
-                            { icon: '🐕', label: 'Pet friendly' },
-                            { icon: '♿', label: 'Accesibilidad total' },
-                        ].map((item) => (
-                            <div key={item.label} className="flex flex-col items-center">
-                                <div className="text-3xl mb-2">{item.icon}</div>
-                                <p className="text-sm text-gray-300">{item.label}</p>
-                            </div>
-                        ))}
+                            { Icon: Car, label: 'Estacionamiento gratuito' },
+                            { Icon: Wifi, label: 'WiFi de alta velocidad' },
+                            { Icon: Briefcase, label: 'Servicio de equipaje' },
+                            { Icon: Bell, label: 'Room service 24/7' },
+                            { Icon: Sparkles, label: 'Limpieza diaria' },
+                            { Icon: Lock, label: 'Caja de seguridad' },
+                            { Icon: Dog, label: 'Pet friendly' },
+                            { Icon: Accessibility, label: 'Accesibilidad total' },
+                        ].map((item) => {
+                            const IconComponent = item.Icon
+                            return (
+                                <div key={item.label} className="flex flex-col items-center">
+                                    <IconComponent className="w-8 h-8 text-red-600 mb-2" />
+                                    <p className="text-sm text-gray-300">{item.label}</p>
+                                </div>
+                            )
+                        })}
                     </div>
                 </div>
             </section>

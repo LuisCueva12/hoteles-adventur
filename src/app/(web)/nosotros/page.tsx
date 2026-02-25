@@ -1,4 +1,4 @@
-import Image from 'next/image'
+import { Star, Handshake, Leaf, Gem } from 'lucide-react'
 
 export default function NosotrosPage() {
     return (
@@ -20,7 +20,7 @@ export default function NosotrosPage() {
 
             <section className="max-w-7xl mx-auto px-6 py-20">
                 <div className="grid md:grid-cols-2 gap-12 items-center mb-20">
-                    <div>
+                    <div className="animate-fadeInLeft">
                         <p className="text-red-600 text-xs font-semibold tracking-[0.3em] uppercase mb-3">
                             Nuestra Historia
                         </p>
@@ -37,11 +37,11 @@ export default function NosotrosPage() {
                             Nuestro compromiso con la excelencia se refleja en cada detalle, desde nuestras elegantes habitaciones hasta nuestro servicio personalizado de clase mundial.
                         </p>
                     </div>
-                    <div className="relative h-96 rounded-sm overflow-hidden shadow-xl">
+                    <div className="relative h-96 rounded-sm overflow-hidden shadow-xl animate-fadeInRight hover:shadow-2xl transition-shadow duration-500">
                         <img
                             src="https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=800&q=80"
                             alt="Hotel interior"
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
                         />
                     </div>
                 </div>
@@ -51,8 +51,8 @@ export default function NosotrosPage() {
                         { num: '150+', label: 'Habitaciones de lujo' },
                         { num: '50K+', label: 'Huéspedes satisfechos' },
                         { num: '25+', label: 'Años de experiencia' },
-                    ].map((stat) => (
-                        <div key={stat.label} className="text-center p-8 bg-gray-50 rounded-sm">
+                    ].map((stat, index) => (
+                        <div key={stat.label} className="text-center p-8 bg-gray-50 rounded-sm hover:bg-red-50 transition-all duration-500 animate-fadeInUp hover:shadow-lg hover:-translate-y-2" style={{ animationDelay: `${index * 0.1}s` }}>
                             <p className="text-4xl font-bold text-red-600 mb-2">{stat.num}</p>
                             <p className="text-gray-600 text-sm uppercase tracking-wider">{stat.label}</p>
                         </div>
@@ -72,17 +72,22 @@ export default function NosotrosPage() {
 
                 <div className="grid md:grid-cols-4 gap-6">
                     {[
-                        { icon: '⭐', title: 'Excelencia', desc: 'Compromiso con la calidad en cada servicio' },
-                        { icon: '🤝', title: 'Hospitalidad', desc: 'Atención cálida y personalizada' },
-                        { icon: '🌿', title: 'Sostenibilidad', desc: 'Respeto por el medio ambiente' },
-                        { icon: '💎', title: 'Innovación', desc: 'Mejora continua de nuestros servicios' },
-                    ].map((value) => (
-                        <div key={value.title} className="text-center p-6 border border-gray-200 rounded-sm hover:shadow-lg transition-shadow">
-                            <div className="text-4xl mb-4">{value.icon}</div>
-                            <h3 className="font-semibold text-gray-900 mb-2">{value.title}</h3>
-                            <p className="text-sm text-gray-600">{value.desc}</p>
-                        </div>
-                    ))}
+                        { Icon: Star, title: 'Excelencia', desc: 'Compromiso con la calidad en cada servicio' },
+                        { Icon: Handshake, title: 'Hospitalidad', desc: 'Atención cálida y personalizada' },
+                        { Icon: Leaf, title: 'Sostenibilidad', desc: 'Respeto por el medio ambiente' },
+                        { Icon: Gem, title: 'Innovación', desc: 'Mejora continua de nuestros servicios' },
+                    ].map((value, index) => {
+                        const IconComponent = value.Icon
+                        return (
+                            <div key={value.title} className="text-center p-6 border border-gray-200 rounded-sm hover:shadow-xl transition-all duration-500 animate-fadeInUp hover:-translate-y-2 hover:border-red-600 group" style={{ animationDelay: `${index * 0.1}s` }}>
+                                <div className="flex justify-center mb-4 transform group-hover:scale-110 transition-transform duration-300">
+                                    <IconComponent className="w-10 h-10 text-red-600" />
+                                </div>
+                                <h3 className="font-semibold text-gray-900 mb-2 group-hover:text-red-600 transition-colors duration-300">{value.title}</h3>
+                                <p className="text-sm text-gray-600">{value.desc}</p>
+                            </div>
+                        )
+                    })}
                 </div>
             </section>
         </div>
