@@ -42,7 +42,7 @@ export default function LoginPage() {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/`,
+        emailRedirectTo: `${window.location.origin}/perfil`,
         data: { nombre, apellido },
       },
     })
@@ -66,7 +66,7 @@ export default function LoginPage() {
       success(`Bienvenido ${nombre}! Tu cuenta ha sido creada exitosamente.`)
       
       setTimeout(() => {
-        router.push('/')
+        router.push('/perfil')
         router.refresh()
       }, 1500)
     }
@@ -93,7 +93,7 @@ export default function LoginPage() {
       success(`Bienvenido de nuevo${usuario?.nombre ? `, ${usuario.nombre}` : ''}!`)
       
       setTimeout(() => {
-        router.push(usuario?.rol === 'admin_adventur' ? '/admin' : '/')
+        router.push(usuario?.rol === 'admin_adventur' ? '/admin' : '/perfil')
         router.refresh()
       }, 1500)
     }
@@ -126,7 +126,6 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
       <div className="w-full max-w-md">
-        {/* Logo y volver */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors mb-6">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -148,7 +147,6 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Formulario */}
         <div className="bg-white rounded-sm shadow-md border border-gray-100 p-8">
           <form onSubmit={handleAuth} className="space-y-5">
             {isSignUp && (
