@@ -24,7 +24,7 @@ export function Navbar() {
     }
 
     return (
-        <header className="sticky top-0 z-50 bg-white shadow-md">
+        <header className="sticky top-0 z-50 bg-white shadow-md backdrop-blur-sm bg-white/95">
             <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
                 <Link href="/" className="transition-transform duration-300 hover:scale-105">
                     <Logo className="h-12" />
@@ -56,15 +56,20 @@ export function Navbar() {
                     </Link>
                 </div>
 
-                <button onClick={() => setOpen(!open)} className="md:hidden p-2 text-gray-600">
-                    <span className="block w-6 h-0.5 bg-current mb-1.5" />
-                    <span className="block w-6 h-0.5 bg-current mb-1.5" />
-                    <span className="block w-6 h-0.5 bg-current" />
+                <button
+                    onClick={() => setOpen(!open)} 
+                    className="md:hidden p-2 text-gray-600 hover:text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-red-600 rounded"
+                    aria-label="Menú de navegación"
+                    aria-expanded={open}
+                >
+                    <span className={`block w-6 h-0.5 bg-current mb-1.5 transition-transform duration-300 ${open ? 'rotate-45 translate-y-2' : ''}`} />
+                    <span className={`block w-6 h-0.5 bg-current mb-1.5 transition-opacity duration-300 ${open ? 'opacity-0' : ''}`} />
+                    <span className={`block w-6 h-0.5 bg-current transition-transform duration-300 ${open ? '-rotate-45 -translate-y-2' : ''}`} />
                 </button>
             </div>
 
             {open && (
-                <div className="md:hidden bg-white border-t border-gray-100 px-6 py-4 flex flex-col gap-3">
+                <div className="md:hidden bg-white border-t border-gray-100 px-6 py-4 flex flex-col gap-3 animate-slideInUp">
                     {NAV_LINKS.map((link) => (
                         <Link
                             key={link.href}

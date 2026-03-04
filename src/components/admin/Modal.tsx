@@ -46,14 +46,14 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fadeIn">
             <div
                 onClick={onClose}
-                className="absolute inset-0 bg-black/70 backdrop-blur-sm animate-fadeIn"
+                className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fadeIn"
             />
-            <div className={`relative bg-gray-900 border border-gray-800 rounded-lg shadow-2xl w-full ${sizeClasses[size]} max-h-[90vh] overflow-hidden flex flex-col animate-scaleIn`}>
-                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800">
-                    <h2 className="text-xl font-semibold text-white">{title}</h2>
+            <div className={`relative bg-white rounded-2xl shadow-2xl w-full ${sizeClasses[size]} max-h-[90vh] overflow-hidden flex flex-col animate-scaleIn`}>
+                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
+                    <h2 className="text-xl font-bold text-gray-900">{title}</h2>
                     <button
                         onClick={onClose}
-                        className="text-gray-400 hover:text-white transition-colors p-1 hover:bg-gray-800 rounded"
+                        className="text-gray-500 hover:text-gray-900 transition-colors p-2 hover:bg-white rounded-lg"
                     >
                         <X size={20} />
                     </button>

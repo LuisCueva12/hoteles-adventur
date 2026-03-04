@@ -88,7 +88,8 @@ export function TestimoniosSeccion() {
                         <div className="flex items-center justify-center gap-4 mt-8">
                             <button
                                 onClick={prev}
-                                className="w-10 h-10 bg-white hover:bg-red-600 hover:text-white text-gray-600 rounded-full flex items-center justify-center transition-colors shadow"
+                                className="w-10 h-10 bg-white hover:bg-red-600 hover:text-white text-gray-600 rounded-full flex items-center justify-center transition-all duration-300 shadow focus:outline-none focus:ring-2 focus:ring-red-600"
+                                aria-label="Testimonio anterior"
                             >
                                 ←
                             </button>
@@ -98,16 +99,18 @@ export function TestimoniosSeccion() {
                                     <button
                                         key={idx}
                                         onClick={() => setCurrentIndex(idx)}
-                                        className={`w-2 h-2 rounded-full transition-colors ${
+                                        className={`w-2 h-2 rounded-full transition-all duration-300 ${
                                             idx === currentIndex ? 'bg-red-600 w-8' : 'bg-gray-300'
                                         }`}
+                                        aria-label={`Ir al testimonio ${idx + 1}`}
                                     />
                                 ))}
                             </div>
 
                             <button
                                 onClick={next}
-                                className="w-10 h-10 bg-white hover:bg-red-600 hover:text-white text-gray-600 rounded-full flex items-center justify-center transition-colors shadow"
+                                className="w-10 h-10 bg-white hover:bg-red-600 hover:text-white text-gray-600 rounded-full flex items-center justify-center transition-all duration-300 shadow focus:outline-none focus:ring-2 focus:ring-red-600"
+                                aria-label="Siguiente testimonio"
                             >
                                 →
                             </button>
@@ -121,8 +124,8 @@ export function TestimoniosSeccion() {
                         { value: '2,500+', label: 'Reseñas positivas' },
                         { value: '98%', label: 'Clientes satisfechos' },
                         { value: '95%', label: 'Recomendarían' },
-                    ].map((stat) => (
-                        <div key={stat.label} className="text-center">
+                    ].map((stat, index) => (
+                        <div key={stat.label} className="text-center p-6 bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-2 animate-fadeInUp">
                             <p className="text-3xl font-bold text-red-600 mb-2">{stat.value}</p>
                             <p className="text-sm text-gray-600">{stat.label}</p>
                         </div>

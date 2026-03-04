@@ -12,30 +12,40 @@ interface StatCardProps {
 }
 
 const colorClasses = {
-    blue: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-    green: 'bg-green-500/10 text-green-400 border-green-500/20',
-    red: 'bg-red-500/10 text-red-400 border-red-500/20',
-    yellow: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
-    purple: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+    blue: 'bg-blue-100 text-blue-600',
+    green: 'bg-green-100 text-green-600',
+    red: 'bg-red-100 text-red-600',
+    yellow: 'bg-yellow-100 text-yellow-600',
+    purple: 'bg-purple-100 text-purple-600',
 }
 
 export function StatCard({ title, value, icon, trend, color = 'blue' }: StatCardProps) {
     const Icon = typeof icon === 'string' ? null : icon
 
     return (
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-6 hover:border-gray-700 transition-all hover:scale-105 duration-200">
-            <div className="flex items-start justify-between mb-4">
-                <div className={`w-12 h-12 rounded-lg ${colorClasses[color]} border flex items-center justify-center text-2xl`}>
-                    {Icon ? <Icon size={24} /> : icon}
+        <div className="bg-white border-2 border-gray-200 rounded-2xl p-6 hover:shadow-xl transition-all hover:scale-105 duration-200 group relative overflow-hidden">
+            {/* Efecto de brillo en hover */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-100/50 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+            
+            <div className="relative z-10">
+                <div className="flex items-start justify-between mb-4">
+                    <div className={`w-14 h-14 rounded-xl ${colorClasses[color]} flex items-center justify-center text-2xl shadow-md group-hover:scale-110 transition-transform`}>
+                        {Icon ? <Icon size={28} /> : icon}
+                    </div>
+                    {trend && (
+                        <div className="flex flex-col items-end gap-1">
+                            <span className={`text-xs font-semibold px-2.5 py-1 rounded-lg flex items-center gap-1 border ${trend.isPositive ? 'bg-green-100 text-green-700 border-green-200' : 'bg-red-100 text-red-700 border-red-200'}`}>
+                                {trend.isPositive ? '↑' : '↓'} {trend.value}
+                            </span>
+                            <span className="text-[10px] text-gray-500 font-medium">vs mes anterior</span>
+                        </div>
+                    )}
                 </div>
-                {trend && (
-                    <span className={`text-xs font-semibold px-2 py-1 rounded ${trend.isPositive ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
-                        {trend.isPositive ? '↑' : '↓'} {trend.value}
-                    </span>
-                )}
+                <h3 className="text-gray-600 text-sm mb-2 font-medium">{title}</h3>
+                <p className="text-3xl font-bold text-gray-900 transition-all">
+                    {value}
+                </p>
             </div>
-            <h3 className="text-gray-400 text-sm mb-1">{title}</h3>
-            <p className="text-3xl font-bold text-white">{value}</p>
         </div>
     )
 }

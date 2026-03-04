@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/hooks/useToast'
+import { User, Mail, Phone, MapPin, Calendar, Globe, Lock, Shield, Camera, Award, Star, TrendingUp } from 'lucide-react'
 
 interface UserProfile {
     id: string
@@ -60,23 +61,58 @@ export default function PerfilPage() {
                 .from('usuarios')
                 .select('*')
                 .eq('id', user.id)
-                .single()
+                .maybeSingle()
 
-            if (fetchError) throw fetchError
+            if (fetchError) {
+                console.error('Error fetching profile:', fetchError)
+                throw fetchError
+            }
 
-            setProfile(data)
-            setFormData({
-                nombre: data.nombre || '',
-                apellido: data.apellido || '',
-                telefono: data.telefono || '',
-                direccion: data.direccion || '',
-                ciudad: data.ciudad || '',
-                pais: data.pais || '',
-                fecha_nacimiento: data.fecha_nacimiento || ''
-            })
-        } catch (err) {
+            // Si no existe el usuario en la tabla, crear uno básico
+            if (!data) {
+                console.log('Usuario no encontrado en tabla, creando registro...')
+                const { data: newUser, error: insertError } = await supabase
+                    .from('usuarios')
+                    .insert({
+                        id: user.id,
+                        email: user.email || '',
+                        nombre: user.user_metadata?.nombre || 'Usuario',
+                        apellido: user.user_metadata?.apellido || 'Nuevo'
+                    })
+                    .select()
+                    .single()
+
+                if (insertError) {
+                    console.error('Error creating user:', insertError)
+                    error('Error al crear el perfil. Por favor, contacta al administrador.')
+                    return
+                }
+
+                setProfile(newUser)
+                setFormData({
+                    nombre: newUser.nombre || '',
+                    apellido: newUser.apellido || '',
+                    telefono: newUser.telefono || '',
+                    direccion: newUser.direccion || '',
+                    ciudad: newUser.ciudad || '',
+                    pais: newUser.pais || '',
+                    fecha_nacimiento: newUser.fecha_nacimiento || ''
+                })
+            } else {
+                setProfile(data)
+                setFormData({
+                    nombre: data.nombre || '',
+                    apellido: data.apellido || '',
+                    telefono: data.telefono || '',
+                    direccion: data.direccion || '',
+                    ciudad: data.ciudad || '',
+                    pais: data.pais || '',
+                    fecha_nacimiento: data.fecha_nacimiento || ''
+                })
+            }
+        } catch (err: any) {
             console.error('Error loading profile:', err)
-            error('Error al cargar el perfil')
+            error(`Error al cargar el perfil: ${err.message || 'Error desconocido'}`)
         } finally {
             setLoading(false)
         }
@@ -90,7 +126,7 @@ export default function PerfilPage() {
         setPasswordData({ ...passwordData, [e.target.name]: e.target.value })
     }
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         setSaving(true)
 
@@ -115,7 +151,7 @@ export default function PerfilPage() {
         }
     }
 
-    const handlePasswordUpdate = async (e: React.FormEvent) => {
+    const handlePasswordUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
 
         if (passwordData.newPassword !== passwordData.confirmPassword) {
@@ -143,186 +179,323 @@ export default function PerfilPage() {
         }
     }
 
+    // Calcular fortaleza de contraseña
+    const getPasswordStrength = (password: string) => {
+        let strength = 0
+        const checks = {
+            length: password.length >= 8,
+            uppercase: /[A-Z]/.test(password),
+            lowercase: /[a-z]/.test(password),
+            number: /[0-9]/.test(password),
+            special: /[^A-Za-z0-9]/.test(password)
+        }
+        
+        if (checks.length) strength += 20
+        if (checks.uppercase) strength += 20
+        if (checks.lowercase) strength += 20
+        if (checks.number) strength += 20
+        if (checks.special) strength += 20
+        
+        return { strength, checks }
+    }
+
+    const passwordStrength = getPasswordStrength(passwordData.newPassword)
+
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-[400px]">
+            <div className="flex items-center justify-center min-h-[600px]">
                 <div className="text-center">
-                    <div className="w-12 h-12 border-4 border-red-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                    <p className="text-gray-600">Cargando perfil...</p>
+                    <div className="relative w-20 h-20 mx-auto mb-6">
+                        <div className="absolute inset-0 border-4 border-red-200 rounded-full animate-ping" />
+                        <div className="relative w-20 h-20 border-4 border-red-600 border-t-transparent rounded-full animate-spin" />
+                    </div>
+                    <p className="text-lg font-semibold text-gray-900 mb-2">Cargando perfil...</p>
+                    <p className="text-sm text-gray-500">Por favor espera un momento</p>
                 </div>
             </div>
         )
     }
 
     return (
-        <div>
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">Mi Perfil</h1>
-                <p className="text-gray-600">Administra tu información personal y configuración de cuenta</p>
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 px-4 sm:px-6 lg:px-8 py-6">
+            {/* Header mejorado y responsive */}
+            <div className="bg-gradient-to-r from-red-600 via-red-700 to-red-800 text-white rounded-2xl p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8 relative overflow-hidden shadow-2xl">
+                {/* Elementos decorativos */}
+                <div className="absolute top-0 right-0 w-32 sm:w-64 h-32 sm:h-64 bg-white/10 rounded-full blur-3xl" />
+                <div className="absolute bottom-0 left-0 w-32 sm:w-64 h-32 sm:h-64 bg-red-900/30 rounded-full blur-3xl" />
+                
+                <div className="relative z-10">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-4">
+                        <div>
+                            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 animate-fadeInUp">Mi Perfil</h1>
+                            <p className="text-sm sm:text-base text-red-100 animate-fadeInUp animation-delay-100">Administra tu información personal</p>
+                        </div>
+                        <div className="flex sm:hidden items-center gap-3 w-full">
+                            <div className="flex-1 text-center px-4 py-2 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
+                                <div className="text-xl font-bold">0</div>
+                                <div className="text-xs text-red-100">Reservas</div>
+                            </div>
+                            <div className="flex-1 text-center px-4 py-2 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
+                                <div className="text-xl font-bold">0</div>
+                                <div className="text-xs text-red-100">Puntos</div>
+                            </div>
+                        </div>
+                        <div className="hidden md:flex items-center gap-4">
+                            <div className="text-center px-6 py-3 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
+                                <div className="text-2xl font-bold">0</div>
+                                <div className="text-xs text-red-100">Reservas</div>
+                            </div>
+                            <div className="text-center px-6 py-3 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
+                                <div className="text-2xl font-bold">0</div>
+                                <div className="text-xs text-red-100">Puntos</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {/* Barra de progreso del perfil */}
+                    <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-white/20">
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs sm:text-sm font-semibold">Completitud del perfil</span>
+                            <span className="text-xs sm:text-sm font-bold">75%</span>
+                        </div>
+                        <div className="h-2 bg-white/20 rounded-full overflow-hidden">
+                            <div className="h-full bg-white rounded-full" style={{ width: '75%' }} />
+                        </div>
+                        <p className="text-xs text-red-100 mt-2">Completa tu perfil para obtener mejores recomendaciones</p>
+                    </div>
+                </div>
             </div>
 
-            {/* Tabs */}
-            <div className="mb-6 border-b border-gray-200">
-                <div className="flex gap-8">
-                    <button
-                        onClick={() => setActiveTab('personal')}
-                        className={`pb-4 px-1 text-sm font-semibold border-b-2 transition-colors ${
-                            activeTab === 'personal'
-                                ? 'border-red-600 text-red-600'
-                                : 'border-transparent text-gray-500 hover:text-gray-700'
-                        }`}
-                    >
-                        Información Personal
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('seguridad')}
-                        className={`pb-4 px-1 text-sm font-semibold border-b-2 transition-colors ${
-                            activeTab === 'seguridad'
-                                ? 'border-red-600 text-red-600'
-                                : 'border-transparent text-gray-500 hover:text-gray-700'
-                        }`}
-                    >
-                        Seguridad
-                    </button>
+            {/* Tabs mejorados y responsive */}
+            <div className="mb-6 sm:mb-8">
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-1.5 sm:p-2">
+                    <div className="flex gap-1.5 sm:gap-2">
+                        <button
+                            onClick={() => setActiveTab('personal')}
+                            className={`flex-1 py-3 sm:py-4 px-3 sm:px-6 text-xs sm:text-sm font-bold rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5 sm:gap-2 ${
+                                activeTab === 'personal'
+                                    ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg shadow-red-600/30'
+                                    : 'text-gray-600 hover:bg-gray-50'
+                            }`}
+                        >
+                            <User className="w-4 h-4 sm:w-5 sm:h-5" />
+                            <span className="hidden sm:inline">Información Personal</span>
+                            <span className="sm:hidden">Personal</span>
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('seguridad')}
+                            className={`flex-1 py-3 sm:py-4 px-3 sm:px-6 text-xs sm:text-sm font-bold rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5 sm:gap-2 ${
+                                activeTab === 'seguridad'
+                                    ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg shadow-red-600/30'
+                                    : 'text-gray-600 hover:bg-gray-50'
+                            }`}
+                        >
+                            <Shield className="w-4 h-4 sm:w-5 sm:h-5" />
+                            <span>Seguridad</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
             {/* Personal Info Tab */}
             {activeTab === 'personal' && (
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-                    <div className="flex items-center gap-6 mb-8 pb-8 border-b border-gray-200">
-                        <div className="w-24 h-24 bg-gradient-to-br from-red-500 to-red-700 rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-lg">
-                            {formData.nombre.charAt(0)}{formData.apellido.charAt(0)}
+                <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-4 sm:p-6 lg:p-8 animate-fadeInUp">
+                    {/* Avatar y header mejorado y responsive */}
+                    <div className="flex flex-col items-center gap-4 sm:gap-6 lg:gap-8 mb-6 sm:mb-8 lg:mb-10 pb-6 sm:pb-8 lg:pb-10 border-b border-gray-100">
+                        <div className="relative group">
+                            <div className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 bg-gradient-to-br from-red-500 via-red-600 to-red-700 rounded-3xl flex items-center justify-center text-white text-4xl sm:text-5xl font-bold shadow-2xl transform group-hover:scale-105 transition-all duration-300">
+                                {formData.nombre.charAt(0)}{formData.apellido.charAt(0)}
+                            </div>
+                            <button className="absolute bottom-0 right-0 w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-full flex items-center justify-center shadow-lg border-2 border-gray-100 hover:bg-red-600 hover:text-white transition-all duration-300 group-hover:scale-110">
+                                <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
+                            </button>
                         </div>
-                        <div>
-                            <h2 className="text-2xl font-semibold text-gray-900">
+                        
+                        <div className="flex-1 text-center w-full">
+                            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
                                 {formData.nombre} {formData.apellido}
                             </h2>
-                            <p className="text-gray-600">{profile?.email}</p>
-                            <span className="inline-block mt-2 px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
-                                Cuenta Activa
-                            </span>
+                            <p className="text-sm sm:text-base text-gray-600 mb-3 flex items-center gap-2 justify-center flex-wrap">
+                                <Mail className="w-4 h-4" />
+                                <span className="break-all">{profile?.email}</span>
+                            </p>
+                            <div className="flex items-center gap-2 sm:gap-3 justify-center flex-wrap">
+                                <span className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-green-100 text-green-700 text-xs sm:text-sm font-bold rounded-full">
+                                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                                    Cuenta Activa
+                                </span>
+                                <span className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-100 text-blue-700 text-xs sm:text-sm font-bold rounded-full">
+                                    <Award className="w-3 h-3 sm:w-4 sm:h-4" />
+                                    Miembro
+                                </span>
+                            </div>
+                        </div>
+                        
+                        {/* Estadísticas responsive */}
+                        <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:gap-4 w-full sm:w-auto">
+                            <div className="text-center p-3 sm:p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl">
+                                <Star className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 mx-auto mb-1 sm:mb-2" />
+                                <div className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-900">0</div>
+                                <div className="text-[10px] sm:text-xs text-blue-700">Reservas</div>
+                            </div>
+                            <div className="text-center p-3 sm:p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl">
+                                <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600 mx-auto mb-1 sm:mb-2" />
+                                <div className="text-lg sm:text-xl lg:text-2xl font-bold text-purple-900">0</div>
+                                <div className="text-[10px] sm:text-xs text-purple-700">Puntos</div>
+                            </div>
+                            <div className="text-center p-3 sm:p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl">
+                                <Award className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 mx-auto mb-1 sm:mb-2" />
+                                <div className="text-lg sm:text-xl lg:text-2xl font-bold text-green-900">0</div>
+                                <div className="text-[10px] sm:text-xs text-green-700">Nivel</div>
+                            </div>
                         </div>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        <div className="grid md:grid-cols-2 gap-6">
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Nombre *
-                                </label>
-                                <input
-                                    type="text"
-                                    name="nombre"
-                                    value={formData.nombre}
-                                    onChange={handleChange}
-                                    required
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
-                                />
-                            </div>
+                    <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
+                        <div>
+                            <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-4 sm:mb-6 flex items-center gap-2">
+                                <User className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" />
+                                Información Básica
+                            </h3>
+                            <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
+                                <div className="group">
+                                    <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                                        <User className="w-4 h-4 text-red-600" />
+                                        Nombre *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="nombre"
+                                        value={formData.nombre}
+                                        onChange={handleChange}
+                                        required
+                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all hover:border-gray-400 bg-white text-gray-900 text-base placeholder:text-gray-400"
+                                        placeholder="Ingresa tu nombre"
+                                    />
+                                </div>
 
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Apellido *
-                                </label>
-                                <input
-                                    type="text"
-                                    name="apellido"
-                                    value={formData.apellido}
-                                    onChange={handleChange}
-                                    required
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
-                                />
-                            </div>
+                                <div className="group">
+                                    <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                                        <User className="w-4 h-4 text-red-600" />
+                                        Apellido *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="apellido"
+                                        value={formData.apellido}
+                                        onChange={handleChange}
+                                        required
+                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all hover:border-gray-400 bg-white text-gray-900 text-base placeholder:text-gray-400"
+                                        placeholder="Ingresa tu apellido"
+                                    />
+                                </div>
 
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Correo Electrónico
-                                </label>
-                                <input
-                                    type="email"
-                                    value={profile?.email || ''}
-                                    disabled
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
-                                />
-                                <p className="text-xs text-gray-500 mt-1">El email no se puede cambiar</p>
-                            </div>
+                                <div className="group sm:col-span-2">
+                                    <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                                        <Mail className="w-4 h-4 text-red-600" />
+                                        Correo Electrónico
+                                    </label>
+                                    <input
+                                        type="email"
+                                        value={profile?.email || ''}
+                                        disabled
+                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl bg-gray-100 text-gray-600 cursor-not-allowed text-base"
+                                    />
+                                    <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                                        <Lock className="w-3 h-3" />
+                                        El email no se puede cambiar
+                                    </p>
+                                </div>
 
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Teléfono
-                                </label>
-                                <input
-                                    type="tel"
-                                    name="telefono"
-                                    value={formData.telefono}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
-                                    placeholder="+51 999 999 999"
-                                />
-                            </div>
+                                <div className="group">
+                                    <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                                        <Phone className="w-4 h-4 text-red-600" />
+                                        Teléfono
+                                    </label>
+                                    <input
+                                        type="tel"
+                                        name="telefono"
+                                        value={formData.telefono}
+                                        onChange={handleChange}
+                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all hover:border-gray-400 bg-white text-gray-900 text-base placeholder:text-gray-400"
+                                        placeholder="+51 999 999 999"
+                                    />
+                                </div>
 
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Fecha de Nacimiento
-                                </label>
-                                <input
-                                    type="date"
-                                    name="fecha_nacimiento"
-                                    value={formData.fecha_nacimiento}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Ciudad
-                                </label>
-                                <input
-                                    type="text"
-                                    name="ciudad"
-                                    value={formData.ciudad}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
-                                    placeholder="Lima"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    País
-                                </label>
-                                <input
-                                    type="text"
-                                    name="pais"
-                                    value={formData.pais}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
-                                    placeholder="Perú"
-                                />
-                            </div>
-
-                            <div className="md:col-span-2">
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Dirección
-                                </label>
-                                <input
-                                    type="text"
-                                    name="direccion"
-                                    value={formData.direccion}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
-                                    placeholder="Av. Principal 123"
-                                />
+                                <div className="group">
+                                    <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                                        <Calendar className="w-4 h-4 text-red-600" />
+                                        Fecha de Nacimiento
+                                    </label>
+                                    <input
+                                        type="date"
+                                        name="fecha_nacimiento"
+                                        value={formData.fecha_nacimiento}
+                                        onChange={handleChange}
+                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all hover:border-gray-400 bg-white text-gray-900 text-base"
+                                    />
+                                </div>
                             </div>
                         </div>
 
-                        <div className="flex gap-4 pt-6">
+                        <div>
+                            <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-4 sm:mb-6 flex items-center gap-2">
+                                <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" />
+                                Ubicación
+                            </h3>
+                            <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
+                                <div className="group">
+                                    <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                                        <MapPin className="w-4 h-4 text-red-600" />
+                                        Ciudad
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="ciudad"
+                                        value={formData.ciudad}
+                                        onChange={handleChange}
+                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all hover:border-gray-400 bg-white text-gray-900 text-base placeholder:text-gray-400"
+                                        placeholder="Lima"
+                                    />
+                                </div>
+
+                                <div className="group">
+                                    <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                                        <Globe className="w-4 h-4 text-red-600" />
+                                        País
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="pais"
+                                        value={formData.pais}
+                                        onChange={handleChange}
+                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all hover:border-gray-400 bg-white text-gray-900 text-base placeholder:text-gray-400"
+                                        placeholder="Perú"
+                                    />
+                                </div>
+
+                                <div className="sm:col-span-2 group">
+                                    <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                                        <MapPin className="w-4 h-4 text-red-600" />
+                                        Dirección
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="direccion"
+                                        value={formData.direccion}
+                                        onChange={handleChange}
+                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all hover:border-gray-400 bg-white text-gray-900 text-base placeholder:text-gray-400"
+                                        placeholder="Av. Principal 123"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-6 border-t border-gray-100">
                             <button
                                 type="submit"
                                 disabled={saving}
-                                className="px-8 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                className="flex-1 px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 sm:gap-3 shadow-lg hover:shadow-2xl hover:shadow-red-600/30 transform hover:-translate-y-0.5 text-sm sm:text-base"
                             >
                                 {saving ? (
                                     <>
@@ -344,7 +517,7 @@ export default function PerfilPage() {
                             <button
                                 type="button"
                                 onClick={loadProfile}
-                                className="px-8 py-3 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+                                className="px-6 sm:px-8 py-3 sm:py-4 border-2 border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all text-sm sm:text-base"
                             >
                                 Cancelar
                             </button>
@@ -355,14 +528,24 @@ export default function PerfilPage() {
 
             {/* Security Tab */}
             {activeTab === 'seguridad' && (
-                <div className="space-y-6">
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-                        <h3 className="text-xl font-semibold text-gray-900 mb-6">Cambiar Contraseña</h3>
-                        
-                        <form onSubmit={handlePasswordUpdate} className="space-y-6 max-w-md">
+                <div className="space-y-4 sm:space-y-6 animate-fadeInUp">
+                    {/* Cambiar Contraseña */}
+                    <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-4 sm:p-6 lg:p-8">
+                        <div className="flex items-start gap-3 mb-6 sm:mb-8">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <Lock className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                            </div>
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Nueva Contraseña
+                                <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">Cambiar Contraseña</h3>
+                                <p className="text-xs sm:text-sm text-gray-600 mt-1">Actualiza tu contraseña para mantener tu cuenta segura</p>
+                            </div>
+                        </div>
+                        
+                        <form onSubmit={handlePasswordUpdate} className="space-y-4 sm:space-y-6">
+                            <div className="group">
+                                <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                                    <Lock className="w-4 h-4 text-red-600" />
+                                    Nueva Contraseña *
                                 </label>
                                 <input
                                     type="password"
@@ -370,14 +553,80 @@ export default function PerfilPage() {
                                     value={passwordData.newPassword}
                                     onChange={handlePasswordChange}
                                     required
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
-                                    placeholder="Mínimo 6 caracteres"
+                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all hover:border-gray-400 bg-white text-gray-900 text-base placeholder:text-gray-400"
+                                    placeholder="Ingresa tu nueva contraseña"
                                 />
+                                
+                                {/* Indicador de fortaleza */}
+                                {passwordData.newPassword && (
+                                    <div className="mt-4 space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-sm font-bold text-gray-700">Fortaleza de la contraseña</span>
+                                            <span className={`text-sm font-bold ${
+                                                passwordStrength.strength >= 80 ? 'text-green-600' :
+                                                passwordStrength.strength >= 60 ? 'text-blue-600' :
+                                                passwordStrength.strength >= 40 ? 'text-yellow-600' :
+                                                'text-red-600'
+                                            }`}>
+                                                {passwordStrength.strength >= 80 ? 'Muy Fuerte' :
+                                                 passwordStrength.strength >= 60 ? 'Fuerte' :
+                                                 passwordStrength.strength >= 40 ? 'Media' :
+                                                 'Débil'}
+                                            </span>
+                                        </div>
+                                        <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                            <div 
+                                                className={`h-full transition-all duration-500 rounded-full ${
+                                                    passwordStrength.strength >= 80 ? 'bg-gradient-to-r from-green-500 to-green-600' :
+                                                    passwordStrength.strength >= 60 ? 'bg-gradient-to-r from-blue-500 to-blue-600' :
+                                                    passwordStrength.strength >= 40 ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' :
+                                                    'bg-gradient-to-r from-red-500 to-red-600'
+                                                }`}
+                                                style={{ width: `${passwordStrength.strength}%` }}
+                                            />
+                                        </div>
+                                        
+                                        {/* Checklist de requisitos */}
+                                        <div className="grid grid-cols-2 gap-3 mt-4">
+                                            <div className={`flex items-center gap-2 text-sm ${passwordStrength.checks.length ? 'text-green-600' : 'text-gray-400'}`}>
+                                                <div className={`w-5 h-5 rounded-full flex items-center justify-center ${passwordStrength.checks.length ? 'bg-green-100' : 'bg-gray-100'}`}>
+                                                    {passwordStrength.checks.length ? '✓' : '○'}
+                                                </div>
+                                                <span>8+ caracteres</span>
+                                            </div>
+                                            <div className={`flex items-center gap-2 text-sm ${passwordStrength.checks.uppercase ? 'text-green-600' : 'text-gray-400'}`}>
+                                                <div className={`w-5 h-5 rounded-full flex items-center justify-center ${passwordStrength.checks.uppercase ? 'bg-green-100' : 'bg-gray-100'}`}>
+                                                    {passwordStrength.checks.uppercase ? '✓' : '○'}
+                                                </div>
+                                                <span>Mayúsculas</span>
+                                            </div>
+                                            <div className={`flex items-center gap-2 text-sm ${passwordStrength.checks.lowercase ? 'text-green-600' : 'text-gray-400'}`}>
+                                                <div className={`w-5 h-5 rounded-full flex items-center justify-center ${passwordStrength.checks.lowercase ? 'bg-green-100' : 'bg-gray-100'}`}>
+                                                    {passwordStrength.checks.lowercase ? '✓' : '○'}
+                                                </div>
+                                                <span>Minúsculas</span>
+                                            </div>
+                                            <div className={`flex items-center gap-2 text-sm ${passwordStrength.checks.number ? 'text-green-600' : 'text-gray-400'}`}>
+                                                <div className={`w-5 h-5 rounded-full flex items-center justify-center ${passwordStrength.checks.number ? 'bg-green-100' : 'bg-gray-100'}`}>
+                                                    {passwordStrength.checks.number ? '✓' : '○'}
+                                                </div>
+                                                <span>Números</span>
+                                            </div>
+                                            <div className={`flex items-center gap-2 text-sm ${passwordStrength.checks.special ? 'text-green-600' : 'text-gray-400'}`}>
+                                                <div className={`w-5 h-5 rounded-full flex items-center justify-center ${passwordStrength.checks.special ? 'bg-green-100' : 'bg-gray-100'}`}>
+                                                    {passwordStrength.checks.special ? '✓' : '○'}
+                                                </div>
+                                                <span>Caracteres especiales</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Confirmar Nueva Contraseña
+                            <div className="group">
+                                <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                                    <Shield className="w-4 h-4 text-red-600" />
+                                    Confirmar Nueva Contraseña *
                                 </label>
                                 <input
                                     type="password"
@@ -385,33 +634,103 @@ export default function PerfilPage() {
                                     value={passwordData.confirmPassword}
                                     onChange={handlePasswordChange}
                                     required
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
-                                    placeholder="Repite la contraseña"
+                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all hover:border-gray-400 bg-white text-gray-900 text-base placeholder:text-gray-400"
+                                    placeholder="Repite tu nueva contraseña"
                                 />
+                                {passwordData.confirmPassword && passwordData.newPassword !== passwordData.confirmPassword && (
+                                    <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                        Las contraseñas no coinciden
+                                    </p>
+                                )}
+                                {passwordData.confirmPassword && passwordData.newPassword === passwordData.confirmPassword && (
+                                    <p className="text-sm text-green-600 mt-2 flex items-center gap-1">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        Las contraseñas coinciden
+                                    </p>
+                                )}
                             </div>
 
                             <button
                                 type="submit"
-                                className="w-full px-8 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors"
+                                className="w-full px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 sm:gap-3 shadow-lg hover:shadow-2xl hover:shadow-blue-600/30 transform hover:-translate-y-0.5 text-sm sm:text-base"
                             >
+                                <Lock className="w-4 h-4 sm:w-5 sm:h-5" />
                                 Actualizar Contraseña
                             </button>
                         </form>
                     </div>
 
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-                        <h3 className="text-lg font-semibold text-red-900 mb-2 flex items-center gap-2">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                            </svg>
-                            Zona de Peligro
-                        </h3>
-                        <p className="text-sm text-red-700 mb-4">
-                            Las siguientes acciones son permanentes y no se pueden deshacer.
-                        </p>
-                        <button className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors text-sm">
-                            Eliminar Cuenta
-                        </button>
+                    {/* Información de Seguridad */}
+                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl shadow-lg border border-green-200 p-4 sm:p-6 lg:p-8">
+                        <div className="flex items-start gap-3 sm:gap-4">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                            </div>
+                            <div>
+                                <h3 className="text-base sm:text-lg font-bold text-green-900 mb-2">Consejos de Seguridad</h3>
+                                <ul className="space-y-2 text-xs sm:text-sm text-green-800">
+                                    <li className="flex items-start gap-2">
+                                        <span className="text-green-600 mt-0.5">•</span>
+                                        <span>Usa una contraseña única que no uses en otros sitios</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <span className="text-green-600 mt-0.5">•</span>
+                                        <span>Combina letras mayúsculas, minúsculas, números y símbolos</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <span className="text-green-600 mt-0.5">•</span>
+                                        <span>Evita información personal como nombres o fechas</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <span className="text-green-600 mt-0.5">•</span>
+                                        <span>Cambia tu contraseña regularmente</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Zona de Peligro */}
+                    <div className="bg-gradient-to-br from-red-50 to-rose-50 rounded-2xl shadow-lg border-2 border-red-200 p-4 sm:p-6 lg:p-8">
+                        <div className="flex items-start gap-3 sm:gap-4 mb-4 sm:mb-6">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                            </div>
+                            <div className="flex-1">
+                                <h3 className="text-lg sm:text-xl font-bold text-red-900 mb-2">Zona de Peligro</h3>
+                                <p className="text-xs sm:text-sm text-red-700 mb-4 sm:mb-6">
+                                    Las siguientes acciones son permanentes y no se pueden deshacer. Por favor, procede con precaución.
+                                </p>
+                                
+                                <div className="bg-white rounded-xl p-4 sm:p-6 border-2 border-red-200">
+                                    <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+                                        <div className="flex-1">
+                                            <h4 className="font-bold text-gray-900 mb-1 text-sm sm:text-base">Eliminar Cuenta</h4>
+                                            <p className="text-xs sm:text-sm text-gray-600">
+                                                Una vez que elimines tu cuenta, no hay vuelta atrás. Todos tus datos, reservas e información personal serán eliminados permanentemente.
+                                            </p>
+                                        </div>
+                                        <button 
+                                            onClick={() => {
+                                                if (confirm('¿Estás seguro de que deseas eliminar tu cuenta? Esta acción no se puede deshacer.')) {
+                                                    error('Funcionalidad de eliminación de cuenta no implementada')
+                                                }
+                                            }}
+                                            className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold rounded-xl transition-all text-xs sm:text-sm whitespace-nowrap shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                                        >
+                                            Eliminar Cuenta
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}

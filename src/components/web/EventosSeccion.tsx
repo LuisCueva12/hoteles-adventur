@@ -39,10 +39,11 @@ export function EventosSeccion() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {EVENTS.map((event) => (
-                        <div key={event.title} className="group bg-white shadow-sm hover:shadow-lg transition-shadow overflow-hidden rounded-sm">
+                    {EVENTS.map((event, index) => (
+                        <div key={event.title} className="group bg-white shadow-sm hover:shadow-lg transition-all duration-500 overflow-hidden rounded-sm hover:-translate-y-2 animate-fadeInUp">
                             <div className="relative h-48 overflow-hidden">
                                 <img src={event.img} alt={event.title}
+                                    loading="lazy"
                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                                 <div className="absolute bottom-0 left-0 bg-red-600 text-white px-4 py-2 text-center min-w-[60px]">
                                     <p className="text-2xl font-bold leading-none">{event.day}</p>

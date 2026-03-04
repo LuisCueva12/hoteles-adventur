@@ -14,28 +14,106 @@ const MENU_ITEMS = [
 export default function CuentaLayout({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<any>(null)
     const [loading, setLoading] = useState(true)
+    const [mounted, setMounted] = useState(false)
+    const [accessDenied, setAccessDenied] = useState(false)
     const router = useRouter()
     const pathname = usePathname()
     const supabase = createClient()
 
     useEffect(() => {
-        checkUser()
+        setMounted(true)
+        checkUserAccess()
     }, [])
 
-    const checkUser = async () => {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) {
-            router.push('/login')
-        } else {
+    const checkUserAccess = async () => {
+        try {
+            const { data: { user }, error: authError } = await supabase.auth.getUser()
+            
+            if (authError || !user) {
+                console.error('Error de autenticación:', authError)
+                router.push('/login?redirect=' + pathname)
+                return
+            }
+
+            // Verificar que el usuario existe
+            const { data: userData, error: dbError } = await supabase
+                .from('usuarios')
+                .select('id, rol')
+                .eq('id', user.id)
+                .maybeSingle()
+
+            // Si hay error de base de datos (tabla no existe), permitir acceso temporal
+            if (dbError) {
+                console.error('Error de base de datos:', dbError)
+                console.warn('Permitiendo acceso temporal - la tabla usuarios no existe o hay un error de conexión')
+                setUser(user)
+                setLoading(false)
+                return
+            }
+
+            if (!userData) {
+                console.warn('Usuario no encontrado en la base de datos:', user.id)
+                await supabase.auth.signOut()
+                setAccessDenied(true)
+                setLoading(false)
+                return
+            }
+
             setUser(user)
+            setLoading(false)
+        } catch (error) {
+            console.error('Error en checkUserAccess:', error)
+            setAccessDenied(true)
+            setLoading(false)
         }
-        setLoading(false)
     }
 
     const handleLogout = async () => {
         await supabase.auth.signOut()
         router.push('/')
         router.refresh()
+    }
+
+    // Evitar errores de hidratación
+    if (!mounted) {
+        return null
+    }
+
+    if (accessDenied) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 px-6">
+                <div className="text-center max-w-md">
+                    <div className="mb-8">
+                        <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg className="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                        </div>
+                        <h1 className="text-3xl font-bold text-gray-900 mb-4">
+                            Acceso Denegado
+                        </h1>
+                        <p className="text-gray-600 mb-6">
+                            No tienes permisos para acceder a esta sección. 
+                            Por favor, inicia sesión o contacta al administrador.
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                            <Link
+                                href="/"
+                                className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors inline-block"
+                            >
+                                Ir al inicio
+                            </Link>
+                            <Link
+                                href="/login"
+                                className="px-6 py-3 border-2 border-red-600 text-red-600 hover:bg-red-600 hover:text-white font-semibold rounded-lg transition-colors inline-block"
+                            >
+                                Iniciar sesión
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )
     }
 
     if (loading) {
@@ -51,21 +129,25 @@ export default function CuentaLayout({ children }: { children: React.ReactNode }
 
     return (
         <div className="min-h-screen bg-gray-50">
-            {/* Header */}
+            {/* Header responsive */}
             <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-                <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
                     <Link href="/" className="flex items-center gap-2">
-                        <span className="w-9 h-9 bg-red-600 rounded-full flex items-center justify-center text-white font-bold text-lg">H</span>
-                        <span className="text-gray-900 font-bold text-lg tracking-wide">otel Adventur</span>
+                        <span className="w-8 h-8 sm:w-9 sm:h-9 bg-red-600 rounded-full flex items-center justify-center text-white font-bold text-base sm:text-lg">H</span>
+                        <span className="text-gray-900 font-bold text-base sm:text-lg tracking-wide hidden sm:inline">otel Adventur</span>
+                        <span className="text-gray-900 font-bold text-base tracking-wide sm:hidden">Adventur</span>
                     </Link>
 
-                    <div className="flex items-center gap-4">
-                        <Link href="/" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
+                    <div className="flex items-center gap-2 sm:gap-4">
+                        <Link href="/" className="text-xs sm:text-sm text-gray-600 hover:text-gray-900 transition-colors hidden sm:inline">
                             Volver al sitio
+                        </Link>
+                        <Link href="/" className="text-xs text-gray-600 hover:text-gray-900 transition-colors sm:hidden">
+                            Inicio
                         </Link>
                         <button
                             onClick={handleLogout}
-                            className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded transition-colors"
+                            className="px-3 py-1.5 sm:px-4 sm:py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs sm:text-sm font-semibold rounded transition-colors"
                         >
                             Cerrar sesión
                         </button>
@@ -73,35 +155,38 @@ export default function CuentaLayout({ children }: { children: React.ReactNode }
                 </div>
             </header>
 
-            <div className="max-w-7xl mx-auto px-6 py-8">
-                <div className="flex gap-8">
-                    {/* Sidebar */}
-                    <aside className="w-64 flex-shrink-0">
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sticky top-24">
-                            <div className="mb-6 pb-6 border-b border-gray-200">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
+                <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8">
+                    {/* Sidebar - Horizontal en móvil, vertical en desktop */}
+                    <aside className="w-full lg:w-64 flex-shrink-0">
+                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4 lg:sticky lg:top-24">
+                            {/* Perfil - Oculto en móvil, visible en desktop */}
+                            <div className="hidden lg:block mb-6 pb-6 border-b border-gray-200">
                                 <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-3">
                                     {user?.email?.charAt(0).toUpperCase()}
                                 </div>
-                                <p className="text-center text-sm font-semibold text-gray-900 truncate">
+                                <p className="text-center text-sm font-semibold text-gray-900 truncate px-2">
                                     {user?.email}
                                 </p>
                             </div>
 
-                            <nav className="space-y-1">
+                            {/* Navegación - Horizontal en móvil, vertical en desktop */}
+                            <nav className="flex lg:flex-col gap-1 sm:gap-2 lg:space-y-1 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0">
                                 {MENU_ITEMS.map((item) => {
-                                    const isActive = pathname === item.href
+                                    const isActive = pathname?.includes(item.href)
                                     return (
                                         <Link
                                             key={item.href}
                                             href={item.href}
-                                            className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                                            className={`flex items-center justify-center lg:justify-start gap-2 lg:gap-3 px-3 sm:px-4 py-2 sm:py-3 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 lg:flex-shrink ${
                                                 isActive
                                                     ? 'bg-red-50 text-red-600'
                                                     : 'text-gray-700 hover:bg-gray-50'
                                             }`}
                                         >
-                                            <span className="text-xl">{item.icon}</span>
-                                            {item.label}
+                                            <span className="text-lg sm:text-xl">{item.icon}</span>
+                                            <span className="hidden sm:inline">{item.label}</span>
+                                            <span className="sm:hidden">{item.label.replace('Mis ', '').replace('Mi ', '')}</span>
                                         </Link>
                                     )
                                 })}

@@ -2,6 +2,7 @@ import { Navbar } from '@/components/web/Navbar'
 import { Footer } from '@/components/web/Footer'
 import { ScrollToTop } from '@/components/web/ScrollToTop'
 import { Breadcrumbs } from '@/components/web/Breadcrumbs'
+import { WhatsAppButton } from '@/components/web/WhatsAppButton'
 
 export default function WebLayout({ children }: { children: React.ReactNode }) {
     return (
@@ -10,6 +11,7 @@ export default function WebLayout({ children }: { children: React.ReactNode }) {
             <Breadcrumbs />
             <main className="flex-1">{children}</main>
             <Footer />
+            <WhatsAppButton />
             <ScrollToTop />
         </div>
     )

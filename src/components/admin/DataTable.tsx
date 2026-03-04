@@ -54,31 +54,31 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchable 
     }
 
     return (
-        <div className="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden">
+        <div className="bg-white border-2 border-gray-200 rounded-2xl overflow-hidden shadow-lg">
             {(searchable || exportable) && (
-                <div className="p-4 border-b border-gray-800 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+                <div className="p-4 border-b border-gray-200 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between bg-gray-50">
                     {searchable && (
-                        <div className="relative flex-1 max-w-md">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                        <div className="relative flex-1 max-w-md group">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-600 transition-colors" size={18} />
                             <input
                                 type="text"
-                                placeholder="Buscar..."
+                                placeholder="Buscar en la tabla..."
                                 value={searchTerm}
                                 onChange={(e) => {
                                     setSearchTerm(e.target.value)
                                     setCurrentPage(1)
                                 }}
-                                className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-red-500"
+                                className="w-full pl-10 pr-4 py-2.5 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                             />
                         </div>
                     )}
                     {exportable && (
                         <button
                             onClick={handleExport}
-                            className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors"
+                            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl transition-all shadow-md hover:shadow-lg hover:scale-105"
                         >
                             <Download size={18} />
-                            <span className="hidden sm:inline">Exportar CSV</span>
+                            <span className="hidden sm:inline font-medium">Exportar CSV</span>
                         </button>
                     )}
                 </div>
@@ -86,42 +86,42 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchable 
 
             <div className="overflow-x-auto">
                 <table className="w-full">
-                    <thead className="bg-gray-800 border-b border-gray-700">
+                    <thead className="bg-gray-50 border-b-2 border-gray-200">
                         <tr>
                             {columns.map((column) => (
-                                <th key={column.key} className="px-6 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider whitespace-nowrap">
+                                <th key={column.key} className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">
                                     {column.label}
                                 </th>
                             ))}
                             {(onEdit || onDelete || onView) && (
-                                <th className="px-6 py-3 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider whitespace-nowrap">
+                                <th className="px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">
                                     Acciones
                                 </th>
                             )}
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-800">
+                    <tbody className="divide-y divide-gray-200">
                         {currentData.length === 0 ? (
                             <tr>
-                                <td colSpan={columns.length + 1} className="px-6 py-8 text-center text-gray-500">
+                                <td colSpan={columns.length + 1} className="px-6 py-8 text-center text-gray-500 font-medium">
                                     {searchTerm ? 'No se encontraron resultados' : 'No hay datos disponibles'}
                                 </td>
                             </tr>
                         ) : (
                             currentData.map((row, idx) => (
-                                <tr key={idx} className="hover:bg-gray-800/50 transition-colors">
+                                <tr key={idx} className="hover:bg-gray-50 transition-all group">
                                     {columns.map((column) => (
-                                        <td key={column.key} className="px-6 py-4 text-sm text-gray-300 whitespace-nowrap">
+                                        <td key={column.key} className="px-6 py-4 text-sm text-gray-700 whitespace-nowrap group-hover:text-gray-900 transition-colors">
                                             {column.render ? column.render(row[column.key], row) : row[column.key]}
                                         </td>
                                     ))}
                                     {(onEdit || onDelete || onView) && (
                                         <td className="px-6 py-4 text-right text-sm whitespace-nowrap">
-                                            <div className="flex items-center justify-end gap-2">
+                                            <div className="flex items-center justify-end gap-1.5">
                                                 {onView && (
                                                     <button
                                                         onClick={() => onView(row)}
-                                                        className="px-3 py-1 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 rounded transition-colors"
+                                                        className="px-2 py-1 text-[11px] bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-md transition-all border border-blue-200 hover:border-blue-300 font-medium"
                                                     >
                                                         Ver
                                                     </button>
@@ -129,7 +129,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchable 
                                                 {onEdit && (
                                                     <button
                                                         onClick={() => onEdit(row)}
-                                                        className="px-3 py-1 bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 rounded transition-colors"
+                                                        className="px-2 py-1 text-[11px] bg-yellow-100 text-yellow-700 hover:bg-yellow-200 rounded-md transition-all border border-yellow-200 hover:border-yellow-300 font-medium"
                                                     >
                                                         Editar
                                                     </button>
@@ -137,7 +137,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchable 
                                                 {onDelete && (
                                                     <button
                                                         onClick={() => onDelete(row)}
-                                                        className="px-3 py-1 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded transition-colors"
+                                                        className="px-2 py-1 text-[11px] bg-red-100 text-red-700 hover:bg-red-200 rounded-md transition-all border border-red-200 hover:border-red-300 font-medium"
                                                     >
                                                         Eliminar
                                                     </button>
@@ -153,25 +153,25 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchable 
             </div>
             
             {totalPages > 1 && (
-                <div className="px-6 py-4 border-t border-gray-800 flex flex-col sm:flex-row gap-3 items-center justify-between">
-                    <p className="text-sm text-gray-400">
-                        Mostrando {startIndex + 1} a {Math.min(endIndex, filteredData.length)} de {filteredData.length} resultados
+                <div className="px-6 py-4 border-t-2 border-gray-200 flex flex-col sm:flex-row gap-3 items-center justify-between bg-gray-50">
+                    <p className="text-sm text-gray-600 font-medium">
+                        Mostrando <span className="text-gray-900 font-bold">{startIndex + 1}</span> a <span className="text-gray-900 font-bold">{Math.min(endIndex, filteredData.length)}</span> de <span className="text-gray-900 font-bold">{filteredData.length}</span> resultados
                     </p>
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                             disabled={currentPage === 1}
-                            className="p-2 bg-gray-800 text-gray-400 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
+                            className="p-2 bg-white text-gray-700 hover:bg-gray-100 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-all hover:scale-105 border-2 border-gray-300"
                         >
                             <ChevronLeft size={18} />
                         </button>
-                        <span className="px-3 py-1 text-gray-400 text-sm">
-                            Página {currentPage} de {totalPages}
+                        <span className="px-4 py-2 text-gray-700 text-sm font-medium bg-white rounded-lg border-2 border-gray-300">
+                            Página <span className="text-gray-900 font-bold">{currentPage}</span> de <span className="text-gray-900 font-bold">{totalPages}</span>
                         </span>
                         <button
                             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                             disabled={currentPage === totalPages}
-                            className="p-2 bg-gray-800 text-gray-400 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
+                            className="p-2 bg-white text-gray-700 hover:bg-gray-100 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-all hover:scale-105 border-2 border-gray-300"
                         >
                             <ChevronRight size={18} />
                         </button>

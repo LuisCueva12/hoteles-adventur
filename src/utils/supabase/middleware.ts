@@ -1,6 +1,21 @@
 import { createServerClient } from '@supabase/ssr'
 import { type NextRequest, NextResponse } from 'next/server'
 
+export const createClient = () => {
+    return createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY!,
+        {
+            cookies: {
+                getAll: () => {
+                    return []
+                },
+                setAll: () => {},
+            },
+        },
+    )
+}
+
 export const updateSession = async (request: NextRequest) => {
     let supabaseResponse = NextResponse.next({ request })
 
@@ -24,5 +39,5 @@ export const updateSession = async (request: NextRequest) => {
     )
     const { data: { user } } = await supabase.auth.getUser()
 
-    return { supabaseResponse, user }
+    return { supabaseResponse, user, supabase }
 }
