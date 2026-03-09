@@ -2,8 +2,10 @@
 
 import { createClient } from '@/utils/supabase/client'
 import { useRouter, usePathname } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import Link from 'next/link'
+
+export const dynamic = 'force-dynamic'
 
 const MENU_ITEMS = [
     { href: '/perfil', label: 'Mi Perfil', icon: '👤' },
@@ -11,7 +13,7 @@ const MENU_ITEMS = [
     { href: '/pagos', label: 'Mis Pagos', icon: '💳' },
 ]
 
-export default function CuentaLayout({ children }: { children: React.ReactNode }) {
+function CuentaLayoutContent({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<any>(null)
     const [loading, setLoading] = useState(true)
     const [mounted, setMounted] = useState(false)
@@ -201,5 +203,20 @@ export default function CuentaLayout({ children }: { children: React.ReactNode }
                 </div>
             </div>
         </div>
+    )
+}
+
+export default function CuentaLayout({ children }: { children: React.ReactNode }) {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="text-center">
+                    <div className="w-12 h-12 border-4 border-red-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                    <p className="text-gray-600">Cargando...</p>
+                </div>
+            </div>
+        }>
+            <CuentaLayoutContent>{children}</CuentaLayoutContent>
+        </Suspense>
     )
 }

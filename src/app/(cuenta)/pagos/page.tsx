@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
-import type { Pago, Reserva, Alojamiento } from '@/types/database'
+import type { Pago, Reserva, Alojamiento } from '@/types/basedatos'
 import { CreditCard, CheckCircle, Clock, XCircle, DollarSign, Calendar, Receipt, TrendingUp, Wallet } from 'lucide-react'
+
+export const dynamic = 'force-dynamic'
 
 interface PagoConReserva extends Pago {
     reserva: (Reserva & { alojamiento: Alojamiento | null }) | null

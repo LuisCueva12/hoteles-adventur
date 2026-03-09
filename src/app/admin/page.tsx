@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { adminService } from '@/services/admin.service'
+import { adminService } from '@/services/admin.servicio'
 import { Hotel, Calendar, Users, DollarSign, TrendingUp, Clock, CheckCircle, AlertCircle, ArrowRight, Activity, BarChart3, PieChart, RefreshCw, Loader2, Target } from 'lucide-react'
 
 export default function AdminPage() {

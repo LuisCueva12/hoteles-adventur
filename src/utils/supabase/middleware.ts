@@ -16,7 +16,7 @@ export const createClient = () => {
     )
 }
 
-export const updateSession = async (request: NextRequest) => {
+export const actualizarSesion = async (request: NextRequest) => {
     let supabaseResponse = NextResponse.next({ request })
 
     const supabase = createServerClient(

@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
-import type { Reserva, Alojamiento } from '@/types/database'
+import type { Reserva, Alojamiento } from '@/types/basedatos'
 import { Calendar, MapPin, Users, CreditCard, Clock, CheckCircle, XCircle, AlertCircle, Hotel, ArrowRight, FileText } from 'lucide-react'
 import ModalComprobante from '@/components/cuenta/ModalComprobante'
+
+export const dynamic = 'force-dynamic'
 
 interface ReservaConAlojamiento extends Reserva {
     alojamiento: Alojamiento | null

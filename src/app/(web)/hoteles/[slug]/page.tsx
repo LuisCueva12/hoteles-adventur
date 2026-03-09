@@ -8,7 +8,7 @@ import {
     Check, Star, Heart, Share2, Calendar, Clock, Wifi, Tv, Wind,
     Coffee, Bath, Shield, Phone, MapPin, Award, Sparkles, X, CreditCard, Loader2
 } from 'lucide-react'
-import { useFavorites } from '@/hooks/useFavorites'
+import { useFavorites } from '@/hooks/useFavoritos'
 import Swal from 'sweetalert2'
 import { createClient } from '@/utils/supabase/client'
 
@@ -593,7 +593,7 @@ export default function HabitacionDetailPage() {
                                 <ChevronRight className="w-6 h-6" />
                             </button>
                             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                                {room.images.map((_, idx) => (
+                                {room.images.map((_: string, idx: number) => (
                                     <button
                                         key={idx}
                                         onClick={() => setCurrentImageIndex(idx)}
@@ -604,7 +604,7 @@ export default function HabitacionDetailPage() {
                                 ))}
                             </div>
                         </div>
-                        {room.images.slice(1, 5).map((img, idx) => (
+                        {room.images.slice(1, 5).map((img: string, idx: number) => (
                             <div 
                                 key={idx}
                                 className="relative h-48 rounded-lg overflow-hidden cursor-pointer group"
@@ -665,7 +665,7 @@ export default function HabitacionDetailPage() {
                         <div>
                             <h2 className="text-2xl font-bold text-gray-900 mb-4">Lo que hace especial esta habitación</h2>
                             <div className="grid md:grid-cols-2 gap-4">
-                                {room.highlights.map((highlight, idx) => (
+                                {room.highlights.map((highlight: string, idx: number) => (
                                     <div key={idx} className="flex items-start gap-3 bg-green-50 p-4 rounded-lg">
                                         <Award className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
                                         <span className="text-gray-700">{highlight}</span>
@@ -678,7 +678,7 @@ export default function HabitacionDetailPage() {
                         <div>
                             <h2 className="text-2xl font-bold text-gray-900 mb-6">Amenidades</h2>
                             <div className="grid md:grid-cols-2 gap-6">
-                                {room.amenities.map((amenity, idx) => {
+                                {room.amenities.map((amenity: { icon: any; name: string; description: string }, idx: number) => {
                                     const Icon = amenity.icon
                                     return (
                                         <div key={idx} className="flex items-start gap-4 p-4 border border-gray-200 rounded-lg hover:border-red-600 hover:shadow-md transition-all">
@@ -699,7 +699,7 @@ export default function HabitacionDetailPage() {
                         <div>
                             <h2 className="text-2xl font-bold text-gray-900 mb-6">Servicios Incluidos</h2>
                             <div className="grid md:grid-cols-2 gap-3">
-                                {room.services.map((service, idx) => (
+                                {room.services.map((service: string, idx: number) => (
                                     <div key={idx} className="flex items-center gap-3 bg-blue-50 p-3 rounded-lg">
                                         <Check className="w-5 h-5 text-blue-600 flex-shrink-0" />
                                         <span className="text-gray-700">{service}</span>
@@ -740,7 +740,7 @@ export default function HabitacionDetailPage() {
                         <div>
                             <h2 className="text-2xl font-bold text-gray-900 mb-6">Atracciones Cercanas</h2>
                             <div className="space-y-3">
-                                {room.nearbyAttractions.map((attraction, idx) => (
+                                {room.nearbyAttractions.map((attraction: { name: string; distance: string; time: string }, idx: number) => (
                                     <div key={idx} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                                         <div className="flex items-center gap-3">
                                             <MapPin className="w-5 h-5 text-red-600" />

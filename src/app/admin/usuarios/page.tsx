@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { adminService } from '@/services/admin.service'
-import { notificationsService } from '@/services/notifications.service'
+import { adminService } from '@/services/admin.servicio'
+import { notificationsService } from '@/services/notificaciones.servicio'
 import { RefreshCw, Loader2, Download, Eye, Edit, Trash2, UserPlus } from 'lucide-react'
 import { Modal } from '@/components/admin/Modal'
 import Swal from 'sweetalert2'

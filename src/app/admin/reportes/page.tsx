@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { StatCard } from '@/components/admin/StatCard'
+import { StatCard } from '@/components/admin/TarjetaEstadistica'
 import { DollarSign, Calendar, Hotel, Users, FileText, Download, Loader2 } from 'lucide-react'
-import { exportIngresosPDF, exportReservasExcel, exportUsuariosCSV } from '@/utils/exportReports'
-import { adminService } from '@/services/admin.service'
+import { exportIngresosPDF, exportReservasExcel, exportUsuariosCSV } from '@/utils/exportarReportes'
+import { adminService } from '@/services/admin.servicio'
 
 export default function ReportesAdminPage() {
     const [periodo, setPeriodo] = useState<'dia' | 'semana' | 'mes' | 'ano'>('mes')

@@ -1,6 +1,5 @@
-// Componentes UI compartidos
-// Usar: import { Toaster } from '@/components/ui'
-
-export { Toaster } from './Toaster'
-export { AnimatedDiv } from './AnimatedDiv'
-export { ClientOnly } from './ClientOnly'
+export { Toaster } from './Notificador'
+export { AnimatedDiv } from './DivAnimado'
+export { ClientOnly } from './SoloCliente'
+export { OptimizedImage } from './ImagenOptimizada'
+export { ErrorBoundary } from './LimiteErrores'

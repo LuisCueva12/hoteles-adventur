@@ -86,46 +86,130 @@ npm run dev
 ## 📁 Estructura del Proyecto
 
 ```
-src/
-├── app/
-│   ├── (web)/              # Rutas públicas del sitio web
-│   │   ├── page.tsx        # Página de inicio
-│   │   ├── hoteles/        # Catálogo de habitaciones
-│   │   ├── nosotros/       # Sobre nosotros
-│   │   ├── servicios/      # Servicios del hotel
-│   │   ├── galeria/        # Galería de imágenes
-│   │   └── contacto/       # Formulario de contacto
-│   ├── (cuenta)/           # Panel de usuario
-│   │   ├── perfil/
-│   │   ├── reservas/
-│   │   └── pagos/
-│   ├── admin/              # Panel de administración
-│   ├── login/              # Autenticación
-│   └── layout.tsx          # Layout principal
-├── components/
-│   ├── admin/              # Componentes del panel admin
-│   │   ├── StatCard.tsx    # Tarjetas de estadísticas
-│   │   ├── DataTable.tsx   # Tabla de datos con paginación
-│   │   ├── Modal.tsx       # Modal reutilizable
-│   │   └── index.ts        # Exportaciones
-│   ├── web/                # Componentes del sitio web
-│   │   ├── Navbar.tsx
-│   │   ├── Footer.tsx
-│   │   ├── HeroSeccion.tsx
-│   │   ├── SearchBar.tsx
-│   │   ├── HabitacionesSeccion.tsx
-│   │   ├── PorQueElegirnosSeccion.tsx
-│   │   ├── TestimoniosSeccion.tsx
-│   │   └── EventosSeccion.tsx
-│   └── ui/                 # Componentes UI reutilizables
-├── utils/
-│   └── supabase/           # Configuración de Supabase
-│       ├── client.ts
-│       ├── server.ts
-│       ├── middleware.ts
-│       └── migrations/
-└── types/                  # Tipos de TypeScript
+hoteles-adventur/
+├── public/
+│   ├── logo-adventur.png
+│   └── *.svg
+├── src/
+│   ├── app/
+│   │   ├── _styles/
+│   │   │   ├── globals.css
+│   │   │   └── animations.css
+│   │   ├── (web)/
+│   │   │   ├── page.tsx
+│   │   │   ├── hoteles/
+│   │   │   ├── nosotros/
+│   │   │   ├── servicios/
+│   │   │   ├── galeria/
+│   │   │   ├── contacto/
+│   │   │   ├── terminos/
+│   │   │   └── privacidad/
+│   │   ├── (cuenta)/
+│   │   │   ├── perfil/
+│   │   │   ├── reservas/
+│   │   │   └── pagos/
+│   │   ├── admin/
+│   │   │   ├── page.tsx
+│   │   │   ├── hoteles/
+│   │   │   ├── reservas/
+│   │   │   ├── usuarios/
+│   │   │   ├── reportes/
+│   │   │   └── configuracion/
+│   │   ├── api/
+│   │   │   ├── chat/
+│   │   │   └── nubefact/
+│   │   ├── login/
+│   │   ├── acceso-denegado/
+│   │   ├── layout.tsx
+│   │   ├── loading.tsx
+│   │   ├── not-found.tsx
+│   │   ├── robots.ts
+│   │   ├── sitemap.ts
+│   │   └── favicon.ico
+│   ├── components/
+│   │   ├── admin/
+│   │   │   ├── StatCard.tsx
+│   │   │   ├── DataTable.tsx
+│   │   │   ├── Modal.tsx
+│   │   │   ├── NotificationsPanel.tsx
+│   │   │   └── index.ts
+│   │   ├── auth/
+│   │   │   ├── LoginForm.tsx
+│   │   │   └── RegisterForm.tsx
+│   │   ├── cuenta/
+│   │   │   └── ModalComprobante.tsx
+│   │   ├── providers/
+│   │   │   └── QueryProvider.tsx
+│   │   ├── ui/
+│   │   │   ├── AnimatedDiv.tsx
+│   │   │   ├── ClientOnly.tsx
+│   │   │   ├── OptimizedImage.tsx
+│   │   │   ├── Toaster.tsx
+│   │   │   ├── ErrorBoundary.tsx
+│   │   │   └── index.ts
+│   │   └── web/
+│   │       ├── Navbar.tsx
+│   │       ├── Footer.tsx
+│   │       ├── Logo.tsx
+│   │       └── ... (25+ componentes)
+│   ├── hooks/
+│   │   ├── useToast.tsx
+│   │   ├── useRooms.tsx
+│   │   ├── useFavorites.tsx
+│   │   ├── useTranslation.tsx
+│   │   └── index.ts
+│   ├── lib/
+│   │   ├── analytics.ts
+│   │   ├── errors.ts
+│   │   ├── i18n.ts
+│   │   ├── query-client.ts
+│   │   ├── rate-limit.ts
+│   │   ├── security.ts
+│   │   ├── seo.ts
+│   │   ├── validations.ts
+│   │   └── index.ts
+│   ├── services/
+│   │   ├── admin.service.ts
+│   │   ├── notifications.service.ts
+│   │   ├── nubefact.service.ts
+│   │   └── index.ts
+│   ├── types/
+│   │   ├── database.ts
+│   │   └── index.ts
+│   ├── utils/
+│   │   ├── supabase/
+│   │   │   ├── client.ts
+│   │   │   ├── server.ts
+│   │   │   ├── admin.ts
+│   │   │   ├── middleware.ts
+│   │   │   ├── migrations/
+│   │   │   │   ├── 001_schema.sql
+│   │   │   │   ├── 002_rls_policies.sql
+│   │   │   │   ├── 003_add_profile_photo.sql
+│   │   │   │   ├── 004_comprobantes.sql
+│   │   │   │   ├── 005_profile_photos_storage.sql
+│   │   │   │   ├── 006_notificaciones.sql
+│   │   │   │   └── 007_reviews.sql
+│   │   │   └── index.ts
+│   │   ├── exportReports.ts
+│   │   └── index.ts
+│   └── middleware.ts
+├── .env.example
+├── .gitignore
+├── package.json
+├── tsconfig.json
+├── tailwind.config.js
+├── next.config.ts
+└── README.md
 ```
+
+### 📦 Estructura Limpia
+
+- Archivos CSS organizados en `_styles/`
+- Todos los archivos index.ts sin comentarios
+- Sin archivos duplicados
+- Sin carpetas vacías
+- Migraciones numeradas secuencialmente
 
 ## 🎨 Páginas Disponibles
 

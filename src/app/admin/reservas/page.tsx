@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { DataTable } from '@/components/admin/DataTable'
+import { DataTable } from '@/components/admin/TablasDatos'
 import { Modal } from '@/components/admin/Modal'
-import { adminService } from '@/services/admin.service'
-import { notificationsService } from '@/services/notifications.service'
+import { adminService } from '@/services/admin.servicio'
+import { notificationsService } from '@/services/notificaciones.servicio'
 import { RefreshCw, Loader2, Calendar, User, Home, CreditCard, Eye, Trash2 } from 'lucide-react'
 import Swal from 'sweetalert2'
 

@@ -10,6 +10,8 @@ import Image from 'next/image'
 import { createClient } from '@/utils/supabase/client'
 import Swal from 'sweetalert2'
 
+export const dynamic = 'force-dynamic'
+
 const NAV_ITEMS = [
     { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, badge: null },
     { href: '/admin/hoteles', label: 'Habitaciones', icon: Hotel, badge: null },

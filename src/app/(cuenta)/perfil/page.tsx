@@ -1,10 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
-import { useToast } from '@/hooks/useToast'
+import { useToast } from '@/hooks/useNotificacion'
 import { User, Mail, Phone, MapPin, Calendar, Globe, Lock, Shield, Camera, Award, Star, TrendingUp } from 'lucide-react'
+import Swal from 'sweetalert2'
+
+export const dynamic = 'force-dynamic'
 
 interface UserProfile {
     id: string
@@ -16,13 +19,24 @@ interface UserProfile {
     ciudad?: string
     pais?: string
     fecha_nacimiento?: string
+    foto_perfil?: string
+}
+
+interface UserStats {
+    reservas: number
+    puntos: number
+    nivel: number
 }
 
 export default function PerfilPage() {
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
+    const [uploadingPhoto, setUploadingPhoto] = useState(false)
     const [profile, setProfile] = useState<UserProfile | null>(null)
     const [activeTab, setActiveTab] = useState<'personal' | 'seguridad'>('personal')
+    const [stats, setStats] = useState<UserStats>({ reservas: 0, puntos: 0, nivel: 0 })
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+    const fileInputRef = useRef<HTMLInputElement>(null)
     
     const [formData, setFormData] = useState({
         nombre: '',
@@ -47,6 +61,53 @@ export default function PerfilPage() {
     useEffect(() => {
         loadProfile()
     }, [])
+
+    // Detectar cambios no guardados
+    useEffect(() => {
+        if (!profile) return
+        
+        const hasChanges = 
+            formData.nombre !== (profile.nombre || '') ||
+            formData.apellido !== (profile.apellido || '') ||
+            formData.telefono !== (profile.telefono || '') ||
+            formData.direccion !== (profile.direccion || '') ||
+            formData.ciudad !== (profile.ciudad || '') ||
+            formData.pais !== (profile.pais || '') ||
+            formData.fecha_nacimiento !== (profile.fecha_nacimiento || '')
+        
+        setHasUnsavedChanges(hasChanges)
+    }, [formData, profile])
+
+    // Advertir antes de salir con cambios no guardados
+    useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (hasUnsavedChanges) {
+                e.preventDefault()
+                e.returnValue = ''
+            }
+        }
+        
+        window.addEventListener('beforeunload', handleBeforeUnload)
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+    }, [hasUnsavedChanges])
+
+    const loadStats = async (userId: string) => {
+        try {
+            const { data: reservas } = await supabase
+                .from('reservas')
+                .select('id, total')
+                .eq('usuario_id', userId)
+                .eq('estado', 'completada')
+
+            const totalReservas = reservas?.length || 0
+            const puntos = Math.floor(reservas?.reduce((sum, r) => sum + (r.total * 0.1), 0) || 0)
+            const nivel = Math.floor(puntos / 100)
+
+            setStats({ reservas: totalReservas, puntos, nivel })
+        } catch (err) {
+            console.error('Error loading stats:', err)
+        }
+    }
 
     const loadProfile = async () => {
         try {
@@ -110,12 +171,59 @@ export default function PerfilPage() {
                     fecha_nacimiento: data.fecha_nacimiento || ''
                 })
             }
+
+            // Cargar estadísticas
+            await loadStats(user.id)
         } catch (err: any) {
             console.error('Error loading profile:', err)
-            error(`Error al cargar el perfil: ${err.message || 'Error desconocido'}`)
+            if (err.code === 'PGRST116') {
+                error('Usuario no encontrado en la base de datos')
+            } else {
+                error(`Error al cargar el perfil: ${err.message || 'Error desconocido'}`)
+            }
         } finally {
             setLoading(false)
         }
+    }
+
+    // Validaciones
+    const validatePhone = (phone: string): boolean => {
+        if (!phone) return true // Opcional
+        const phoneRegex = /^\+?[\d\s-()]+$/
+        const digitsOnly = phone.replace(/\D/g, '')
+        return phoneRegex.test(phone) && digitsOnly.length >= 9
+    }
+
+    const validateBirthdate = (date: string): boolean => {
+        if (!date) return true // Opcional
+        const birthDate = new Date(date)
+        const today = new Date()
+        const age = today.getFullYear() - birthDate.getFullYear()
+        
+        if (age < 18) {
+            error('Debes ser mayor de 18 años')
+            return false
+        }
+        if (birthDate > today) {
+            error('La fecha de nacimiento no puede ser futura')
+            return false
+        }
+        return true
+    }
+
+    const calculateProfileCompletion = (): number => {
+        const fields = [
+            formData.nombre,
+            formData.apellido,
+            formData.telefono,
+            formData.direccion,
+            formData.ciudad,
+            formData.pais,
+            formData.fecha_nacimiento,
+            profile?.foto_perfil
+        ]
+        const completed = fields.filter(f => f && f.length > 0).length
+        return Math.round((completed / fields.length) * 100)
     }
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -126,8 +234,96 @@ export default function PerfilPage() {
         setPasswordData({ ...passwordData, [e.target.name]: e.target.value })
     }
 
+    const handlePhotoClick = () => {
+        fileInputRef.current?.click()
+    }
+
+    const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        // Validar tipo de archivo
+        if (!file.type.startsWith('image/')) {
+            error('Por favor selecciona una imagen válida')
+            return
+        }
+
+        // Validar tamaño (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            error('La imagen no debe superar los 5MB')
+            return
+        }
+
+        setUploadingPhoto(true)
+
+        try {
+            const { data: { user } } = await supabase.auth.getUser()
+            if (!user) throw new Error('No user found')
+
+            const fileExt = file.name.split('.').pop()
+            const fileName = `${user.id}-${Date.now()}.${fileExt}`
+            const filePath = `avatars/${fileName}`
+
+            // Subir archivo
+            const { error: uploadError } = await supabase.storage
+                .from('profile-photos')
+                .upload(filePath, file, {
+                    cacheControl: '3600',
+                    upsert: true
+                })
+
+            if (uploadError) throw uploadError
+
+            // Obtener URL pública
+            const { data: { publicUrl } } = supabase.storage
+                .from('profile-photos')
+                .getPublicUrl(filePath)
+
+            // Actualizar perfil
+            const { error: updateError } = await supabase
+                .from('usuarios')
+                .update({ foto_perfil: publicUrl })
+                .eq('id', user.id)
+
+            if (updateError) throw updateError
+
+            success('Foto de perfil actualizada correctamente')
+            await loadProfile()
+        } catch (err: any) {
+            console.error('Error uploading photo:', err)
+            error(`Error al subir la foto: ${err.message}`)
+        } finally {
+            setUploadingPhoto(false)
+        }
+    }
+
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
+
+        // Validaciones
+        if (!validatePhone(formData.telefono)) {
+            error('Formato de teléfono inválido. Debe tener al menos 9 dígitos')
+            return
+        }
+
+        if (!validateBirthdate(formData.fecha_nacimiento)) {
+            return
+        }
+
+        // Confirmación
+        const result = await Swal.fire({
+            title: '¿Guardar cambios?',
+            text: 'Se actualizará tu información personal',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#DC2626',
+            cancelButtonColor: '#6B7280',
+            confirmButtonText: 'Sí, guardar',
+            cancelButtonText: 'Cancelar'
+        })
+
+        if (!result.isConfirmed) return
+
         setSaving(true)
 
         try {
@@ -142,10 +338,15 @@ export default function PerfilPage() {
             if (updateError) throw updateError
 
             success('Perfil actualizado correctamente')
-            loadProfile()
-        } catch (err) {
+            setHasUnsavedChanges(false)
+            await loadProfile()
+        } catch (err: any) {
             console.error('Error updating profile:', err)
-            error('Error al actualizar el perfil')
+            if (err.code === '23505') {
+                error('Ya existe un usuario con estos datos')
+            } else {
+                error(`Error al actualizar el perfil: ${err.message}`)
+            }
         } finally {
             setSaving(false)
         }
@@ -164,6 +365,20 @@ export default function PerfilPage() {
             return
         }
 
+        // Confirmación
+        const result = await Swal.fire({
+            title: '¿Cambiar contraseña?',
+            text: 'Tu contraseña será actualizada',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#DC2626',
+            cancelButtonColor: '#6B7280',
+            confirmButtonText: 'Sí, cambiar',
+            cancelButtonText: 'Cancelar'
+        })
+
+        if (!result.isConfirmed) return
+
         try {
             const { error: updateError } = await supabase.auth.updateUser({
                 password: passwordData.newPassword
@@ -171,11 +386,17 @@ export default function PerfilPage() {
 
             if (updateError) throw updateError
 
-            success('Contraseña actualizada correctamente')
+            await Swal.fire({
+                icon: 'success',
+                title: '¡Contraseña actualizada!',
+                text: 'Tu contraseña ha sido cambiada correctamente',
+                confirmButtonColor: '#DC2626'
+            })
+
             setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
-        } catch (err) {
+        } catch (err: any) {
             console.error('Error updating password:', err)
-            error('Error al actualizar la contraseña')
+            error(`Error al actualizar la contraseña: ${err.message}`)
         }
     }
 
@@ -242,11 +463,11 @@ export default function PerfilPage() {
                         </div>
                         <div className="hidden md:flex items-center gap-4">
                             <div className="text-center px-6 py-3 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
-                                <div className="text-2xl font-bold">0</div>
+                                <div className="text-2xl font-bold">{stats.reservas}</div>
                                 <div className="text-xs text-red-100">Reservas</div>
                             </div>
                             <div className="text-center px-6 py-3 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
-                                <div className="text-2xl font-bold">0</div>
+                                <div className="text-2xl font-bold">{stats.puntos}</div>
                                 <div className="text-xs text-red-100">Puntos</div>
                             </div>
                         </div>
@@ -256,12 +477,19 @@ export default function PerfilPage() {
                     <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-white/20">
                         <div className="flex items-center justify-between mb-2">
                             <span className="text-xs sm:text-sm font-semibold">Completitud del perfil</span>
-                            <span className="text-xs sm:text-sm font-bold">75%</span>
+                            <span className="text-xs sm:text-sm font-bold">{calculateProfileCompletion()}%</span>
                         </div>
                         <div className="h-2 bg-white/20 rounded-full overflow-hidden">
-                            <div className="h-full bg-white rounded-full" style={{ width: '75%' }} />
+                            <div 
+                                className="h-full bg-white rounded-full transition-all duration-500" 
+                                style={{ width: `${calculateProfileCompletion()}%` }} 
+                            />
                         </div>
-                        <p className="text-xs text-red-100 mt-2">Completa tu perfil para obtener mejores recomendaciones</p>
+                        <p className="text-xs text-red-100 mt-2">
+                            {calculateProfileCompletion() === 100 
+                                ? '¡Perfil completo! 🎉' 
+                                : 'Completa tu perfil para obtener mejores recomendaciones'}
+                        </p>
                     </div>
                 </div>
             </div>
@@ -303,11 +531,38 @@ export default function PerfilPage() {
                     {/* Avatar y header mejorado y responsive */}
                     <div className="flex flex-col items-center gap-4 sm:gap-6 lg:gap-8 mb-6 sm:mb-8 lg:mb-10 pb-6 sm:pb-8 lg:pb-10 border-b border-gray-100">
                         <div className="relative group">
-                            <div className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 bg-gradient-to-br from-red-500 via-red-600 to-red-700 rounded-3xl flex items-center justify-center text-white text-4xl sm:text-5xl font-bold shadow-2xl transform group-hover:scale-105 transition-all duration-300">
-                                {formData.nombre.charAt(0)}{formData.apellido.charAt(0)}
-                            </div>
-                            <button className="absolute bottom-0 right-0 w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-full flex items-center justify-center shadow-lg border-2 border-gray-100 hover:bg-red-600 hover:text-white transition-all duration-300 group-hover:scale-110">
-                                <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
+                            {profile?.foto_perfil ? (
+                                <img
+                                    src={profile.foto_perfil}
+                                    alt="Foto de perfil"
+                                    className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-3xl object-cover shadow-2xl transform group-hover:scale-105 transition-all duration-300"
+                                />
+                            ) : (
+                                <div className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 bg-gradient-to-br from-red-500 via-red-600 to-red-700 rounded-3xl flex items-center justify-center text-white text-4xl sm:text-5xl font-bold shadow-2xl transform group-hover:scale-105 transition-all duration-300">
+                                    {formData.nombre.charAt(0)}{formData.apellido.charAt(0)}
+                                </div>
+                            )}
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/*"
+                                onChange={handlePhotoUpload}
+                                className="hidden"
+                            />
+                            <button
+                                onClick={handlePhotoClick}
+                                disabled={uploadingPhoto}
+                                className="absolute bottom-0 right-0 w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-full flex items-center justify-center shadow-lg border-2 border-gray-100 hover:bg-red-600 hover:text-white transition-all duration-300 group-hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
+                                title="Cambiar foto de perfil"
+                            >
+                                {uploadingPhoto ? (
+                                    <svg className="animate-spin w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                    </svg>
+                                ) : (
+                                    <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
+                                )}
                             </button>
                         </div>
                         
@@ -335,17 +590,17 @@ export default function PerfilPage() {
                         <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:gap-4 w-full sm:w-auto">
                             <div className="text-center p-3 sm:p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl">
                                 <Star className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 mx-auto mb-1 sm:mb-2" />
-                                <div className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-900">0</div>
+                                <div className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-900">{stats.reservas}</div>
                                 <div className="text-[10px] sm:text-xs text-blue-700">Reservas</div>
                             </div>
                             <div className="text-center p-3 sm:p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl">
                                 <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600 mx-auto mb-1 sm:mb-2" />
-                                <div className="text-lg sm:text-xl lg:text-2xl font-bold text-purple-900">0</div>
+                                <div className="text-lg sm:text-xl lg:text-2xl font-bold text-purple-900">{stats.puntos}</div>
                                 <div className="text-[10px] sm:text-xs text-purple-700">Puntos</div>
                             </div>
                             <div className="text-center p-3 sm:p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl">
                                 <Award className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 mx-auto mb-1 sm:mb-2" />
-                                <div className="text-lg sm:text-xl lg:text-2xl font-bold text-green-900">0</div>
+                                <div className="text-lg sm:text-xl lg:text-2xl font-bold text-green-900">{stats.nivel}</div>
                                 <div className="text-[10px] sm:text-xs text-green-700">Nivel</div>
                             </div>
                         </div>
@@ -494,8 +749,8 @@ export default function PerfilPage() {
                         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-6 border-t border-gray-100">
                             <button
                                 type="submit"
-                                disabled={saving}
-                                className="flex-1 px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 sm:gap-3 shadow-lg hover:shadow-2xl hover:shadow-red-600/30 transform hover:-translate-y-0.5 text-sm sm:text-base"
+                                disabled={saving || !hasUnsavedChanges}
+                                className="flex-1 px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 sm:gap-3 shadow-lg hover:shadow-2xl hover:shadow-red-600/30 transform hover:-translate-y-0.5 text-sm sm:text-base relative"
                             >
                                 {saving ? (
                                     <>
@@ -510,13 +765,35 @@ export default function PerfilPage() {
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                         </svg>
-                                        Guardar cambios
+                                        {hasUnsavedChanges ? 'Guardar cambios' : 'Sin cambios'}
                                     </>
+                                )}
+                                {hasUnsavedChanges && !saving && (
+                                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-pulse" />
                                 )}
                             </button>
                             <button
                                 type="button"
-                                onClick={loadProfile}
+                                onClick={() => {
+                                    if (hasUnsavedChanges) {
+                                        Swal.fire({
+                                            title: '¿Descartar cambios?',
+                                            text: 'Los cambios no guardados se perderán',
+                                            icon: 'warning',
+                                            showCancelButton: true,
+                                            confirmButtonColor: '#DC2626',
+                                            cancelButtonColor: '#6B7280',
+                                            confirmButtonText: 'Sí, descartar',
+                                            cancelButtonText: 'Cancelar'
+                                        }).then((result) => {
+                                            if (result.isConfirmed) {
+                                                loadProfile()
+                                            }
+                                        })
+                                    } else {
+                                        loadProfile()
+                                    }
+                                }}
                                 className="px-6 sm:px-8 py-3 sm:py-4 border-2 border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all text-sm sm:text-base"
                             >
                                 Cancelar

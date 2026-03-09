@@ -22,7 +22,7 @@ const images = [
 
 export default function GaleriaPage() {
   const [cat, setCat] = useState('Todas')
-  const [sel, setSel] = useState(null)
+  const [sel, setSel] = useState<typeof images[0] | null>(null)
   const [liked, setLiked] = useState(false)
   const [zoomed, setZoomed] = useState(false)
   const [showThumbs, setShowThumbs] = useState(false)
@@ -36,7 +36,7 @@ export default function GaleriaPage() {
   }, [sel])
   
   useEffect(() => {
-    const handleKeyDown = (e) => {
+    const handleKeyDown = (e: KeyboardEvent) => {
       if (!sel) return
       if (e.key === 'Escape') setSel(null)
       if (e.key === 'ArrowLeft') handlePrev()
@@ -48,16 +48,19 @@ export default function GaleriaPage() {
   }, [sel, zoomed])
   
   const handlePrev = () => {
+    if (!sel) return
     const idx = filtered.findIndex(i => i.id === sel.id)
     setSel(filtered[idx > 0 ? idx - 1 : filtered.length - 1])
   }
   
   const handleNext = () => {
+    if (!sel) return
     const idx = filtered.findIndex(i => i.id === sel.id)
     setSel(filtered[idx < filtered.length - 1 ? idx + 1 : 0])
   }
   
   const handleDownload = () => {
+    if (!sel) return
     const link = document.createElement('a')
     link.href = sel.src
     link.download = `${sel.alt}.jpg`
@@ -65,6 +68,7 @@ export default function GaleriaPage() {
   }
   
   const handleShare = async () => {
+    if (!sel) return
     if (navigator.share) {
       await navigator.share({
         title: sel.alt,

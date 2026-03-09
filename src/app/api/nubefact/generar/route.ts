@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
-import NubefactService from '@/services/nubefact.service'
+import NubefactService from '@/services/nubefact.servicio'
 
 export async function POST(request: NextRequest) {
   try {

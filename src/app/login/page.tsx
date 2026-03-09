@@ -3,13 +3,13 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
-import { useToast } from '@/hooks/useToast'
-import { type LoginInput, type RegisterInput } from '@/lib/validations'
-import { Logger } from '@/lib/errors'
+import { useToast } from '@/hooks/useNotificacion'
+import { type LoginInput, type RegisterInput } from '@/lib/validaciones'
+import { Registrador } from '@/lib/errores'
 import Link from 'next/link'
 import { Logo } from '@/components/web/Logo'
-import { LoginForm } from '@/components/auth/LoginForm'
-import { RegisterForm } from '@/components/auth/RegisterForm'
+import { LoginForm } from '@/components/auth/FormularioLogin'
+import { RegisterForm } from '@/components/auth/FormularioRegistro'
 import { 
   ArrowLeft, Shield, Lock, Sparkles, Hotel, Star, Award, CheckCircle
 } from 'lucide-react'
@@ -93,7 +93,7 @@ export default function LoginPage() {
         
         // Notificar a los administradores
         try {
-          const { notificationsService } = await import('@/services/notifications.service')
+          const { notificationsService } = await import('@/services/notificaciones.servicio')
           await notificationsService.notifyAdmins(
             'success',
             '🎉 Nuevo usuario registrado',
@@ -102,7 +102,7 @@ export default function LoginPage() {
             { usuarioId: authData.user.id, email: data.email, nombre: data.nombre, apellido: data.apellido }
           )
         } catch (notifError) {
-          Logger.warn('Error enviando notificación de registro', notifError as Error)
+          Registrador.advertencia('Error enviando notificación de registro', notifError as Error)
         }
 
         success(`Bienvenido ${data.nombre}! Tu cuenta ha sido creada exitosamente.`)
@@ -113,7 +113,7 @@ export default function LoginPage() {
         }, 1500)
       }
     } catch (err) {
-      Logger.error(err as Error, { action: 'signup' })
+      Registrador.error(err as Error, { action: 'signup' })
       throw err
     }
   }
@@ -140,7 +140,7 @@ export default function LoginPage() {
           .eq('id', authData.user.id)
           .maybeSingle()
 
-        Logger.info('User logged in', { userId: authData.user.id })
+        Registrador.info('User logged in', { userId: authData.user.id })
         success(`Bienvenido de nuevo${usuario?.nombre ? `, ${usuario.nombre}` : ''}!`)
         
         // Esperar un poco más para asegurar que la sesión se guarde
@@ -150,7 +150,7 @@ export default function LoginPage() {
         window.location.href = usuario?.rol === 'admin_adventur' ? '/admin' : '/perfil'
       }
     } catch (err) {
-      Logger.error(err as Error, { action: 'signin' })
+      Registrador.error(err as Error, { action: 'signin' })
       throw err
     }
   }
@@ -179,73 +179,67 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex bg-gradient-to-br from-gray-50 via-red-50 to-pink-50">
+    <div className="min-h-screen flex bg-gray-50">
       {/* Panel Izquierdo - Imagen/Info */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-red-600 via-rose-600 to-pink-600 relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-[45%] bg-gradient-to-br from-red-600 via-red-700 to-red-800 relative overflow-hidden">
         {/* Patrón de fondo animado */}
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0 bg-grid-pattern" />
+          <div className="absolute inset-0" style={{
+            backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
+            backgroundSize: '40px 40px'
+          }} />
         </div>
 
         {/* Elementos decorativos flotantes */}
-        <div className="absolute top-20 left-20 w-72 h-72 bg-white/10 rounded-full blur-3xl animate-blob" />
-        <div className="absolute bottom-20 right-20 w-96 h-96 bg-pink-400/20 rounded-full blur-3xl animate-blob animation-delay-2000" />
-        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-rose-400/10 rounded-full blur-3xl animate-blob animation-delay-4000" />
+        <div className="absolute top-20 left-20 w-72 h-72 bg-white/5 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-20 right-20 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-pulse animation-delay-2000" />
 
-        <div className="relative z-10 flex flex-col justify-between p-8 text-white w-full">
+        <div className="relative z-10 flex flex-col justify-between p-12 text-white w-full">
           {/* Logo y Header */}
           <div>
-            <Link href="/" className="inline-block mb-6 hover:scale-105 transition-transform duration-300">
-              <div className="flex items-center gap-2.5 bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/20 shadow-2xl">
-                <div className="w-11 h-11 bg-gradient-to-br from-white/30 to-white/10 backdrop-blur-sm rounded-lg flex items-center justify-center shadow-lg">
-                  <Hotel className="w-6 h-6 text-white drop-shadow-lg" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-white drop-shadow-md">Adventur Hotels</h3>
-                  <p className="text-[10px] text-red-100 font-medium">Tu viaje, tu hogar</p>
-                </div>
-              </div>
+            <Link href="/" className="inline-block mb-8 hover:scale-105 transition-transform duration-300">
+              <Logo className="h-14" variant="footer" />
             </Link>
             
-            <h2 className="text-3xl font-bold mb-3 animate-fadeInUp leading-tight">
+            <h2 className="text-5xl font-bold mb-4 animate-fadeInUp leading-tight">
               Descubre tu próxima<br />
-              <span className="text-pink-200">aventura</span>
+              <span className="text-red-200">aventura</span>
             </h2>
-            <p className="text-base text-red-100 mb-6 animate-fadeInUp animation-delay-100">
-              Reserva experiencias únicas en los mejores hoteles
+            <p className="text-lg text-red-100 mb-10 animate-fadeInUp animation-delay-100 max-w-md">
+              Reserva experiencias únicas en los mejores hoteles de Cajamarca
             </p>
 
-            {/* Estadísticas */}
-            <div className="grid grid-cols-3 gap-3 mb-6 animate-fadeInUp animation-delay-150">
-              <div className="bg-white/10 backdrop-blur-md rounded-lg p-3 border border-white/20">
-                <div className="text-2xl font-bold text-white mb-0.5">10K+</div>
-                <div className="text-[10px] text-red-100">Clientes felices</div>
+            {/* Estadísticas mejoradas */}
+            <div className="grid grid-cols-3 gap-4 mb-10 animate-fadeInUp animation-delay-150">
+              <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20 hover:bg-white/15 transition-all">
+                <div className="text-3xl font-bold text-white mb-1">10K+</div>
+                <div className="text-xs text-red-200">Clientes felices</div>
               </div>
-              <div className="bg-white/10 backdrop-blur-md rounded-lg p-3 border border-white/20">
-                <div className="text-2xl font-bold text-white mb-0.5">500+</div>
-                <div className="text-[10px] text-red-100">Hoteles</div>
+              <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20 hover:bg-white/15 transition-all">
+                <div className="text-3xl font-bold text-white mb-1">500+</div>
+                <div className="text-xs text-red-200">Hoteles</div>
               </div>
-              <div className="bg-white/10 backdrop-blur-md rounded-lg p-3 border border-white/20">
-                <div className="text-2xl font-bold text-white mb-0.5">4.9★</div>
-                <div className="text-[10px] text-red-100">Calificación</div>
+              <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20 hover:bg-white/15 transition-all">
+                <div className="text-3xl font-bold text-white mb-1">4.9★</div>
+                <div className="text-xs text-red-200">Calificación</div>
               </div>
             </div>
 
             {/* Beneficios con diseño moderno */}
             <div className="space-y-3 animate-fadeInUp animation-delay-200">
               {[
-                { icon: CheckCircle, text: 'Reservas instantáneas', color: 'from-green-400 to-emerald-500' },
-                { icon: Star, text: 'Ofertas exclusivas para miembros', color: 'from-yellow-400 to-orange-500' },
-                { icon: Award, text: 'Programa de puntos y recompensas', color: 'from-purple-400 to-pink-500' },
-                { icon: Shield, text: 'Pago 100% seguro y protegido', color: 'from-blue-400 to-cyan-500' }
+                { icon: CheckCircle, text: 'Reservas instantáneas' },
+                { icon: Star, text: 'Ofertas exclusivas para miembros' },
+                { icon: Award, text: 'Programa de puntos y recompensas' },
+                { icon: Shield, text: 'Pago 100% seguro y protegido' }
               ].map((benefit, idx) => {
                 const Icon = benefit.icon
                 return (
-                  <div key={idx} className="flex items-center gap-3 group cursor-pointer">
-                    <div className={`w-10 h-10 bg-gradient-to-br ${benefit.color} rounded-lg flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                  <div key={idx} className="flex items-center gap-4 group">
+                    <div className="w-11 h-11 bg-white/20 rounded-xl flex items-center justify-center group-hover:bg-white/30 transition-all flex-shrink-0">
                       <Icon className="w-5 h-5 text-white" />
                     </div>
-                    <span className="text-red-50 font-medium text-sm">{benefit.text}</span>
+                    <span className="text-red-50 text-sm">{benefit.text}</span>
                   </div>
                 )
               })}
@@ -253,15 +247,17 @@ export default function LoginPage() {
           </div>
 
           {/* Testimonial mejorado */}
-          <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20 animate-fadeInUp animation-delay-300 shadow-2xl">
-            <div className="flex gap-1 mb-2">
+          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 animate-fadeInUp animation-delay-300 hover:bg-white/15 transition-all">
+            <div className="flex gap-1 mb-3">
               {[...Array(testimonials[currentTestimonial].rating)].map((_, i) => (
                 <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
               ))}
             </div>
-            <p className="text-white mb-3 italic leading-relaxed text-sm">"{testimonials[currentTestimonial].text}"</p>
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 bg-gradient-to-br from-pink-400 to-red-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+            <p className="text-white mb-4 italic leading-relaxed text-sm">
+              "{testimonials[currentTestimonial].text}"
+            </p>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
                 {testimonials[currentTestimonial].author.charAt(0)}
               </div>
               <div>
@@ -269,7 +265,7 @@ export default function LoginPage() {
                 <p className="text-red-200 text-xs">Cliente verificado</p>
               </div>
             </div>
-            <div className="flex gap-2 mt-3">
+            <div className="flex gap-2 mt-4">
               {testimonials.map((_, idx) => (
                 <button
                   key={idx}
@@ -277,6 +273,7 @@ export default function LoginPage() {
                   className={`h-1.5 rounded-full transition-all ${
                     idx === currentTestimonial ? 'bg-white w-8' : 'bg-white/30 w-1.5 hover:bg-white/50'
                   }`}
+                  aria-label={`Ver testimonio ${idx + 1}`}
                 />
               ))}
             </div>
@@ -285,53 +282,53 @@ export default function LoginPage() {
       </div>
 
       {/* Panel Derecho - Formulario */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-8">
+      <div className="w-full lg:w-[55%] flex items-center justify-center px-6 py-12 bg-white">
         <div className="w-full max-w-md">
           {/* Header Mobile */}
-          <div className="lg:hidden text-center mb-6">
+          <div className="lg:hidden text-center mb-8">
             <div className="flex justify-center mb-4">
-              <Logo className="h-10" />
+              <Logo className="h-12" />
             </div>
           </div>
 
-          <div className="text-center mb-5 animate-fadeInUp">
+          <div className="text-center mb-6 animate-fadeInUp">
             <Link 
               href="/" 
-              className="inline-flex items-center gap-2 text-gray-600 hover:text-red-600 transition-all mb-4 group"
+              className="inline-flex items-center gap-2 text-gray-600 hover:text-red-600 transition-all mb-6 group"
             >
               <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
               <span className="text-sm font-medium">Volver al inicio</span>
             </Link>
             
             <div className="mb-4">
-              <div className="inline-flex items-center gap-2 bg-red-50 text-red-600 px-3 py-1.5 rounded-full mb-3">
+              <div className="inline-flex items-center gap-2 bg-red-50 text-red-600 px-4 py-2 rounded-full mb-4">
                 <Sparkles className="w-4 h-4" />
                 <span className="text-xs font-semibold">
-                  {isSignUp ? 'Únete a más de 10,000 viajeros' : 'Bienvenido de nuevo'}
+                  {isSignUp ? 'Bienvenido de nuevo' : 'Únete a más de 10,000 viajeros'}
                 </span>
               </div>
             </div>
             
-            <h1 className="text-xl font-bold text-gray-900 mb-1">
-              {isSignUp ? 'Crear tu cuenta' : 'Iniciar sesión'}
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              {isSignUp ? 'Crear cuenta' : 'Iniciar sesión'}
             </h1>
-            <p className="text-xs text-gray-600">
+            <p className="text-sm text-gray-600">
               {isSignUp 
-                ? 'Completa el formulario para comenzar tu aventura' 
+                ? 'Completa el formulario para comenzar' 
                 : 'Ingresa tus credenciales para continuar'}
             </p>
           </div>
 
-          <div className="bg-white/80 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-200/50 p-6 animate-fadeInUp animation-delay-100">
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 animate-fadeInUp animation-delay-100">
             {/* Tabs de Login/Registro */}
-            <div className="flex gap-3 mb-6">
+            <div className="flex gap-2 mb-8 bg-gray-100 p-1 rounded-xl">
               <button
                 type="button"
                 onClick={() => setIsSignUp(false)}
                 className={`flex-1 py-3 px-4 rounded-lg font-semibold text-sm transition-all duration-300 ${
                   !isSignUp
-                    ? 'bg-gradient-to-r from-red-600 to-pink-600 text-white shadow-lg'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    ? 'bg-white text-red-600 shadow-md'
+                    : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
                 Iniciar sesión
@@ -341,8 +338,8 @@ export default function LoginPage() {
                 onClick={() => setIsSignUp(true)}
                 className={`flex-1 py-3 px-4 rounded-lg font-semibold text-sm transition-all duration-300 ${
                   isSignUp
-                    ? 'bg-gradient-to-r from-red-600 to-pink-600 text-white shadow-lg'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    ? 'bg-white text-red-600 shadow-md'
+                    : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
                 Registrarse
@@ -358,7 +355,7 @@ export default function LoginPage() {
 
             {/* Beneficios adicionales */}
             {!isSignUp && (
-              <div className="mt-5 p-4 bg-gradient-to-r from-red-50 to-pink-50 rounded-xl border border-red-100 animate-fadeInUp">
+              <div className="mt-6 p-4 bg-gradient-to-r from-red-50 to-pink-50 rounded-xl border border-red-100 animate-fadeInUp">
                 <div className="flex items-start gap-3">
                   <Sparkles className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
                   <div>
@@ -366,7 +363,7 @@ export default function LoginPage() {
                       ¿Sabías que los miembros obtienen hasta 20% de descuento?
                     </h4>
                     <p className="text-xs text-gray-600">
-                      Regístrate gratis y accede a ofertas exclusivas en miles de hoteles.
+                      Regístrate gratis y accede a ofertas exclusivas.
                     </p>
                   </div>
                 </div>
@@ -374,47 +371,47 @@ export default function LoginPage() {
             )}
           </div>
 
-          <div className="mt-6 pt-4 border-t border-gray-200">
+          <div className="mt-6 text-center">
             <button
               type="button"
               onClick={toggleMode}
-              className="w-full text-center text-sm text-gray-600 hover:text-gray-900 transition-colors group"
+              className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
             >
               {isSignUp ? (
-                <span className="flex items-center justify-center gap-2">
+                <span>
                   ¿Ya tienes cuenta?{' '}
-                  <span className="font-semibold text-red-600 group-hover:text-red-700">
+                  <span className="font-semibold text-red-600 hover:text-red-700">
                     Inicia sesión
                   </span>
                 </span>
               ) : (
-                <span className="flex items-center justify-center gap-2">
+                <span>
                   ¿No tienes cuenta?{' '}
-                  <span className="font-semibold text-red-600 group-hover:text-red-700">
+                  <span className="font-semibold text-red-600 hover:text-red-700">
                     Regístrate gratis
                   </span>
                 </span>
               )}
             </button>
           </div>
-        </div>
 
-        {/* Footer de seguridad */}
-        <div className="mt-6 text-center space-y-3 animate-fadeInUp animation-delay-300">
-          <div className="flex items-center justify-center gap-6 text-xs text-gray-500">
-            <div className="flex items-center gap-1.5">
-              <Shield className="w-3.5 h-3.5 text-green-600" />
-              <span>Conexión segura</span>
+          {/* Footer de seguridad */}
+          <div className="mt-8 text-center space-y-3 animate-fadeInUp animation-delay-300">
+            <div className="flex items-center justify-center gap-6 text-xs text-gray-500">
+              <div className="flex items-center gap-1.5">
+                <Shield className="w-3.5 h-3.5 text-green-600" />
+                <span>Conexión segura</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Lock className="w-3.5 h-3.5 text-green-600" />
+                <span>Datos encriptados</span>
+              </div>
             </div>
-            <div className="flex items-center gap-1.5">
-              <Lock className="w-3.5 h-3.5 text-green-600" />
-              <span>Datos encriptados</span>
-            </div>
+            
+            <p className="text-xs text-gray-500">
+              © 2026 Adventur Hotels. Todos los derechos reservados.
+            </p>
           </div>
-          
-          <p className="text-xs text-gray-500">
-            © 2026 Adventur Hotels. Todos los derechos reservados.
-          </p>
         </div>
       </div>
     </div>
