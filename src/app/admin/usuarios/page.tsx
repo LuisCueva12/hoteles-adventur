@@ -358,8 +358,17 @@ export default function UsuariosAdminPage() {
 
         if (result.isConfirmed) {
             try {
-                // Implementar eliminación si es necesario
+                await adminService.deleteUsuario(usuario.id)
                 await loadUsuarios()
+                
+                await notificationsService.notifyAdmins(
+                    'warning',
+                    '🗑️ Usuario eliminado',
+                    `El usuario ${usuario.nombre} ${usuario.apellido} ha sido eliminado del sistema`,
+                    '/admin/usuarios',
+                    { usuarioId: usuario.id, email: usuario.email }
+                )
+                
                 await Swal.fire({
                     icon: 'success',
                     title: '¡Eliminado!',

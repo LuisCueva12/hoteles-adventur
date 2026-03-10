@@ -278,6 +278,15 @@ export class AdminService {
     if (error) throw error
     return data
   }
+
+  async deleteUsuario(id: string) {
+    const { error } = await this.supabase
+      .from('usuarios')
+      .delete()
+      .eq('id', id)
+
+    if (error) throw error
+  }
 }
 
 export const adminService = new AdminService()
