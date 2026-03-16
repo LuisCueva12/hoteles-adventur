@@ -1,10 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 export function SearchBar() {
     const router = useRouter()
+    const [minDate, setMinDate] = useState('')
+
+    useEffect(() => {
+        setMinDate(new Date().toISOString().split('T')[0])
+    }, [])
+
     const [formData, setFormData] = useState({
         email: '',
         roomType: '',
@@ -103,7 +109,7 @@ export function SearchBar() {
                         value={formData.checkIn}
                         onChange={handleChange}
                         className="text-sm text-gray-700 outline-none w-full bg-transparent"
-                        min={new Date().toISOString().split('T')[0]}
+                        min={minDate}
                         required
                     />
                 </div>
@@ -118,7 +124,7 @@ export function SearchBar() {
                         value={formData.checkOut}
                         onChange={handleChange}
                         className={`text-sm text-gray-700 outline-none w-full bg-transparent ${errors.checkOut ? 'border-red-500' : ''}`}
-                        min={formData.checkIn || new Date().toISOString().split('T')[0]}
+                        min={formData.checkIn || minDate}
                         required
                     />
                     {errors.checkOut && (

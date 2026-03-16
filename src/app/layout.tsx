@@ -10,7 +10,7 @@ import { generarSEO } from '@/lib/seo'
 import './_styles/globals.css'
 import './_styles/animations.css'
 
-const geist = Geist({ subsets: ['latin'], variable: '--font-geist' })
+const geist = Geist({ subsets: ['latin'], variable: '--font-geist-sans' })
 
 export const metadata: Metadata = generarSEO({
   title: 'Adventur Hotels - Tu viaje, tu hogar',
@@ -25,7 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="icon" href="/favicon.ico" />
       </head>
-      <body className={`${geist.variable} antialiased bg-gray-50`}>
+      <body className={`${geist.variable} font-sans antialiased bg-gray-50`}>
         <ErrorBoundary>
           <QueryProvider>
             <TranslationProvider>
