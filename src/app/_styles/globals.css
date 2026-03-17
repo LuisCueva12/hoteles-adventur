@@ -1,5 +1,6 @@
 @import "tailwindcss";
 
+/* Variables de color */
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -12,6 +13,7 @@
   }
 }
 
+/* Estilos base */
 body {
   background-color: var(--background);
   color: var(--foreground);
@@ -24,8 +26,9 @@ body {
   font-family: inherit;
 }
 
+/* Animación blob */
 @keyframes blob {
-  0%, 100% { transform: translate(0px, 0px) scale(1); }
+  0%, 100% { transform: translate(0, 0) scale(1); }
   33% { transform: translate(30px, -50px) scale(1.1); }
   66% { transform: translate(-20px, 20px) scale(0.9); }
 }
@@ -34,14 +37,10 @@ body {
   animation: blob 10s infinite ease-in-out;
 }
 
-.animation-delay-2000 {
-  animation-delay: 2s;
-}
+.animation-delay-2000 { animation-delay: 2s; }
+.animation-delay-4000 { animation-delay: 4s; }
 
-.animation-delay-4000 {
-  animation-delay: 4s;
-}
-
+/* Animación gradiente */
 @keyframes gradient {
   0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
@@ -52,21 +51,21 @@ body {
   animation: gradient 3s ease infinite;
 }
 
+/* Patrón de cuadrícula */
 .bg-grid-pattern {
-  background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
   background-size: 20px 20px;
 }
 
+/* Animación de entrada */
 @keyframes slide-in-from-top {
   from { transform: translateY(-10px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
 
-.animate-in {
-  animation: slide-in-from-top 0.3s ease-out;
-}
-
+.animate-in,
 .slide-in-from-top-2 {
   animation: slide-in-from-top 0.3s ease-out;
 }
