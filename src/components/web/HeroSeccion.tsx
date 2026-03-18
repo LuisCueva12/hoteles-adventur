@@ -22,14 +22,24 @@ const HERO_IMAGES = [
     }
 ]
 
-// Generar partículas una sola vez
-const PARTICLES = Array.from({ length: 15 }, (_, i) => ({
-    id: i,
-    left: Math.random() * 100,
-    top: Math.random() * 100,
-    delay: Math.random() * 5,
-    duration: 8 + Math.random() * 12
-}))
+// Partículas con valores fijos para evitar hydration mismatch (no usar Math.random())
+const PARTICLES = [
+    { id: 0,  left: 12,  top: 8,  delay: 0,   duration: 10 },
+    { id: 1,  left: 28,  top: 22, delay: 1.2, duration: 14 },
+    { id: 2,  left: 45,  top: 5,  delay: 0.5, duration: 9  },
+    { id: 3,  left: 67,  top: 35, delay: 2.1, duration: 12 },
+    { id: 4,  left: 83,  top: 15, delay: 0.8, duration: 16 },
+    { id: 5,  left: 7,   top: 55, delay: 3.0, duration: 11 },
+    { id: 6,  left: 35,  top: 70, delay: 1.7, duration: 13 },
+    { id: 7,  left: 55,  top: 48, delay: 0.3, duration: 8  },
+    { id: 8,  left: 72,  top: 62, delay: 2.5, duration: 15 },
+    { id: 9,  left: 90,  top: 40, delay: 1.0, duration: 10 },
+    { id: 10, left: 20,  top: 85, delay: 4.0, duration: 12 },
+    { id: 11, left: 48,  top: 90, delay: 0.6, duration: 9  },
+    { id: 12, left: 63,  top: 78, delay: 3.3, duration: 14 },
+    { id: 13, left: 78,  top: 88, delay: 1.5, duration: 11 },
+    { id: 14, left: 95,  top: 72, delay: 2.8, duration: 16 },
+]
 
 export function HeroSeccion() {
     const [currentSlide, setCurrentSlide] = useState(0)
@@ -137,7 +147,7 @@ export function HeroSeccion() {
                         <div className="text-xs text-gray-300 uppercase tracking-wider">Habitaciones</div>
                     </div>
                     <div className="text-center border-x border-white/20">
-                        <div className="text-3xl md:text-4xl font-bold text-white mb-1">4.9★</div>
+                        <div className="text-3xl md:text-4xl font-bold text-white mb-1">4.9</div>
                         <div className="text-xs text-gray-300 uppercase tracking-wider">Calificación</div>
                     </div>
                     <div className="text-center">

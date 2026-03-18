@@ -15,7 +15,7 @@ const PUBLIC_ROUTES = [
 ]
 
 // Rutas que requieren autenticación de usuario
-const USER_ROUTES = ['/reservas', '/pagos', '/perfil']
+const USER_ROUTES = ['/reservas', '/pagos']
 
 // Rutas que solo pueden acceder administradores
 const ADMIN_ROUTES = ['/admin']

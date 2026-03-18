@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import { useState } from 'react'
+import { Star, ChevronLeft, ChevronRight } from 'lucide-react'
 
 const TESTIMONIALS = [
     {
@@ -45,17 +46,22 @@ export function TestimoniosSeccion() {
         <section className="py-20 bg-white">
             <div className="max-w-7xl mx-auto px-6">
                 <div className="text-center mb-14">
-                    <p className="text-red-600 text-xs font-semibold tracking-[0.3em] uppercase mb-3">
-                        Testimonios
-                    </p>
-                    <h2 className="text-3xl font-bold text-gray-900 mb-4 font-serif">
-                        Lo que dicen nuestros huéspedes
-                    </h2>
-                    <div className="flex items-center justify-center gap-2">
-                        <div className="h-px w-16 bg-red-600" />
-                        <div className="w-2 h-2 rounded-full bg-red-600" />
-                        <div className="h-px w-16 bg-red-600" />
+                    <div className="inline-block mb-4">
+                        <span className="px-4 py-1.5 bg-red-50 text-red-600 text-xs font-semibold tracking-[0.3em] uppercase rounded-full">
+                            Testimonios
+                        </span>
                     </div>
+                    <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 font-serif">
+                        Lo que dicen nuestros <span className="text-red-600">huéspedes</span>
+                    </h2>
+                    <div className="flex items-center justify-center gap-3 mb-6">
+                        <div className="h-px w-20 bg-gradient-to-r from-transparent via-red-600 to-red-600" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse" />
+                        <div className="h-px w-20 bg-gradient-to-l from-transparent via-red-600 to-red-600" />
+                    </div>
+                    <p className="text-gray-600 max-w-2xl mx-auto text-base leading-relaxed">
+                        La opinión de nuestros huéspedes es nuestra mayor satisfacción
+                    </p>
                 </div>
 
                 <div className="max-w-4xl mx-auto">
@@ -71,9 +77,7 @@ export function TestimoniosSeccion() {
                             
                             <div className="flex gap-1 mb-4">
                                 {[...Array(5)].map((_, i) => (
-                                    <span key={i} className={`text-xl ${i < current.rating ? 'text-yellow-400' : 'text-gray-300'}`}>
-                                        ★
-                                    </span>
+                                    <Star key={i} className={`w-5 h-5 ${i < current.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
                                 ))}
                             </div>
 
@@ -91,7 +95,7 @@ export function TestimoniosSeccion() {
                                 className="w-10 h-10 bg-white hover:bg-red-600 hover:text-white text-gray-600 rounded-full flex items-center justify-center transition-all duration-300 shadow focus:outline-none focus:ring-2 focus:ring-red-600"
                                 aria-label="Testimonio anterior"
                             >
-                                ←
+                                <ChevronLeft className="w-5 h-5" />
                             </button>
                             
                             <div className="flex gap-2">
@@ -112,7 +116,7 @@ export function TestimoniosSeccion() {
                                 className="w-10 h-10 bg-white hover:bg-red-600 hover:text-white text-gray-600 rounded-full flex items-center justify-center transition-all duration-300 shadow focus:outline-none focus:ring-2 focus:ring-red-600"
                                 aria-label="Siguiente testimonio"
                             >
-                                →
+                                <ChevronRight className="w-5 h-5" />
                             </button>
                         </div>
                     </div>

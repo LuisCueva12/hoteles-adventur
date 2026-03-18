@@ -1,4 +1,4 @@
-﻿import { Star, Handshake, Leaf, Gem, Award, Users, TrendingUp, Heart, Shield, Zap, Target, Globe } from 'lucide-react'
+﻿import { Star, Handshake, Leaf, Gem, Award, Users, Heart, Shield, Zap, Target, Globe, Hotel, Smile, Trophy } from 'lucide-react'
 
 export default function NosotrosPage() {
     return (
@@ -11,19 +11,22 @@ export default function NosotrosPage() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/70" />
                 
-                {/* Partículas flotantes */}
+                {/* Partículas flotantes con valores fijos para evitar hydration mismatch */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                    {[...Array(20)].map((_, i) => (
-                        <div
-                            key={i}
-                            className="absolute w-1 h-1 bg-white/20 rounded-full animate-float"
-                            style={{
-                                left: `${Math.random() * 100}%`,
-                                top: `${Math.random() * 100}%`,
-                                animationDelay: `${Math.random() * 5}s`,
-                                animationDuration: `${8 + Math.random() * 12}s`
-                            }}
-                        />
+                    {[
+                        { l: 12, t: 8,  d: 0,   dur: 10 }, { l: 28, t: 22, d: 1.2, dur: 14 },
+                        { l: 45, t: 5,  d: 0.5, dur: 9  }, { l: 67, t: 35, d: 2.1, dur: 12 },
+                        { l: 83, t: 15, d: 0.8, dur: 16 }, { l: 7,  t: 55, d: 3.0, dur: 11 },
+                        { l: 35, t: 70, d: 1.7, dur: 13 }, { l: 55, t: 48, d: 0.3, dur: 8  },
+                        { l: 72, t: 62, d: 2.5, dur: 15 }, { l: 90, t: 40, d: 1.0, dur: 10 },
+                        { l: 20, t: 85, d: 4.0, dur: 12 }, { l: 48, t: 90, d: 0.6, dur: 9  },
+                        { l: 63, t: 78, d: 3.3, dur: 14 }, { l: 78, t: 88, d: 1.5, dur: 11 },
+                        { l: 95, t: 72, d: 2.8, dur: 16 }, { l: 15, t: 30, d: 0.4, dur: 10 },
+                        { l: 33, t: 45, d: 1.9, dur: 13 }, { l: 58, t: 18, d: 3.5, dur: 9  },
+                        { l: 75, t: 55, d: 0.7, dur: 14 }, { l: 88, t: 25, d: 2.2, dur: 11 },
+                    ].map((p, i) => (
+                        <div key={i} className="absolute w-1 h-1 bg-white/20 rounded-full animate-float"
+                            style={{ left: `${p.l}%`, top: `${p.t}%`, animationDelay: `${p.d}s`, animationDuration: `${p.dur}s` }} />
                     ))}
                 </div>
                 
@@ -77,15 +80,15 @@ export default function NosotrosPage() {
                         
                         <div className="mt-8 flex items-center gap-4">
                             <div className="flex -space-x-3">
-                                {[1, 2, 3, 4].map((i) => (
-                                    <div key={i} className="w-12 h-12 rounded-full bg-gradient-to-br from-red-400 to-red-600 border-2 border-white flex items-center justify-center text-white font-bold">
-                                        {i === 1 ? '👤' : i === 2 ? '👥' : i === 3 ? '🌟' : '✨'}
+                                {[Users, Users, Star, Star].map((Icon, i) => (
+                                    <div key={i} className="w-12 h-12 rounded-full bg-gradient-to-br from-red-400 to-red-600 border-2 border-white flex items-center justify-center text-white">
+                                        <Icon className="w-5 h-5" />
                                     </div>
                                 ))}
                             </div>
                             <div>
                                 <p className="text-sm font-semibold text-gray-900">+50,000 huéspedes satisfechos</p>
-                                <p className="text-xs text-gray-500">Calificación promedio: 4.9/5 ⭐</p>
+                                <p className="text-xs text-gray-500 flex items-center gap-1">Calificación promedio: 4.9/5 <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /></p>
                             </div>
                         </div>
                     </div>
@@ -121,18 +124,16 @@ export default function NosotrosPage() {
 
                 <div className="grid md:grid-cols-4 gap-6 mb-24">
                     {[
-                        { num: '150+', label: 'Habitaciones de lujo', icon: '🏨', color: 'from-blue-500 to-blue-600' },
-                        { num: '50K+', label: 'Huéspedes satisfechos', icon: '😊', color: 'from-green-500 to-green-600' },
-                        { num: '25+', label: 'Años de experiencia', icon: '⭐', color: 'from-yellow-500 to-yellow-600' },
-                        { num: '4.9★', label: 'Calificación promedio', icon: '🏆', color: 'from-red-500 to-red-600' },
+                        { num: '150+', label: 'Habitaciones de lujo', Icon: Hotel,  color: 'from-blue-500 to-blue-600' },
+                        { num: '50K+', label: 'Huéspedes satisfechos', Icon: Smile, color: 'from-green-500 to-green-600' },
+                        { num: '25+',  label: 'Años de experiencia',   Icon: Star,  color: 'from-yellow-500 to-yellow-600' },
+                        { num: '4.9',  label: 'Calificación promedio', Icon: Trophy,color: 'from-red-500 to-red-600' },
                     ].map((stat, index) => (
                         <div key={stat.label} className="relative text-center p-8 bg-gradient-to-br from-white to-gray-50 rounded-2xl hover:shadow-2xl transition-all duration-500 animate-fadeInUp hover:-translate-y-3 group border border-gray-100 overflow-hidden" style={{ animationDelay: `${index * 0.1}s` }}>
-                            {/* Efecto de brillo */}
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                            
                             <div className="relative z-10">
                                 <div className={`inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br ${stat.color} rounded-2xl mb-4 transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg`}>
-                                    <span className="text-3xl">{stat.icon}</span>
+                                    <stat.Icon className="w-8 h-8 text-white" />
                                 </div>
                                 <p className="text-4xl font-bold text-gray-900 mb-2 group-hover:text-red-600 transition-colors font-sans">{stat.num}</p>
                                 <p className="text-gray-600 text-sm uppercase tracking-wider font-medium">{stat.label}</p>

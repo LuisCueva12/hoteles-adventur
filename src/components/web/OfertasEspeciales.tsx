@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Clock, Tag, TrendingUp } from 'lucide-react'
+import { Clock, Tag, Star } from 'lucide-react'
 
 const OFERTAS = [
     {
@@ -68,14 +68,20 @@ export function OfertasEspeciales() {
         <section className="py-20 bg-gradient-to-br from-red-50 to-orange-50">
             <div className="max-w-7xl mx-auto px-6">
                 <div className="text-center mb-14">
-                    <div className="inline-flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-full mb-4 animate-pulse-slow">
-                        <TrendingUp className="w-4 h-4" />
-                        <span className="text-xs font-semibold uppercase tracking-wider">Ofertas Limitadas</span>
+                    <div className="inline-block mb-4">
+                        <span className="px-4 py-1.5 bg-red-50 text-red-600 text-xs font-semibold tracking-[0.3em] uppercase rounded-full">
+                            Ofertas Limitadas
+                        </span>
                     </div>
-                    <h2 className="text-4xl font-bold text-gray-900 mb-4 font-serif">
-                        Ofertas Especiales
+                    <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 font-serif">
+                        Ofertas <span className="text-red-600">Especiales</span>
                     </h2>
-                    <p className="text-gray-600 max-w-2xl mx-auto">
+                    <div className="flex items-center justify-center gap-3 mb-6">
+                        <div className="h-px w-20 bg-gradient-to-r from-transparent via-red-600 to-red-600" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse" />
+                        <div className="h-px w-20 bg-gradient-to-l from-transparent via-red-600 to-red-600" />
+                    </div>
+                    <p className="text-gray-600 max-w-2xl mx-auto text-base leading-relaxed">
                         Aprovecha nuestras promociones exclusivas y vive una experiencia inolvidable
                     </p>
                 </div>
@@ -89,8 +95,8 @@ export function OfertasEspeciales() {
                             }`}
                         >
                             {oferta.destacado && (
-                                <div className="absolute top-4 left-4 z-10 bg-yellow-400 text-gray-900 px-3 py-1 rounded-full text-xs font-bold uppercase shadow-lg animate-pulse-slow">
-                                    ⭐ Más Popular
+                                <div className="absolute top-4 left-4 z-10 bg-yellow-400 text-gray-900 px-3 py-1 rounded-full text-xs font-bold uppercase shadow-lg animate-pulse-slow flex items-center gap-1">
+                                    <Star className="w-3 h-3 fill-gray-900" /> Más Popular
                                 </div>
                             )}
                             

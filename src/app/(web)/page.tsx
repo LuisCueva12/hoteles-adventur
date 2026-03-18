@@ -1,7 +1,7 @@
 'use client'
 
 import { HeroSeccion } from '@/components/web/HeroSeccion'
-import { SearchBar } from '@/components/web/BarraBusqueda'
+import { BuscadorHoteles } from '@/components/web/BuscadorHoteles'
 import { HabitacionesSeccion } from '@/components/web/HabitacionesSeccion'
 import { PorQueElegirnosSeccion } from '@/components/web/PorQueElegirnosSeccion'
 import { EventosSeccion } from '@/components/web/EventosSeccion'
@@ -15,7 +15,7 @@ export default function HomePage() {
         <>
             <HeroSeccion />
             <div className="px-6">
-                <SearchBar />
+                <BuscadorHoteles />
             </div>
             <InsigniasConfianza />
             <HabitacionesSeccion />

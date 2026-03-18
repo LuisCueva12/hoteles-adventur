@@ -5,12 +5,13 @@ import { useRouter, usePathname } from 'next/navigation'
 import { useEffect, useState, Suspense } from 'react'
 import Link from 'next/link'
 
+import { Calendar, CreditCard } from 'lucide-react'
+
 export const dynamic = 'force-dynamic'
 
 const MENU_ITEMS = [
-    { href: '/perfil', label: 'Mi Perfil', icon: '👤' },
-    { href: '/reservas', label: 'Mis Reservas', icon: '📅' },
-    { href: '/pagos', label: 'Mis Pagos', icon: '💳' },
+    { href: '/reservas', label: 'Mis Reservas', Icon: Calendar },
+    { href: '/pagos', label: 'Mis Pagos', Icon: CreditCard },
 ]
 
 function CuentaLayoutContent({ children }: { children: React.ReactNode }) {
@@ -176,6 +177,7 @@ function CuentaLayoutContent({ children }: { children: React.ReactNode }) {
                             <nav className="flex lg:flex-col gap-1 sm:gap-2 lg:space-y-1 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0">
                                 {MENU_ITEMS.map((item) => {
                                     const isActive = pathname?.includes(item.href)
+                                    const Icon = item.Icon
                                     return (
                                         <Link
                                             key={item.href}
@@ -186,7 +188,7 @@ function CuentaLayoutContent({ children }: { children: React.ReactNode }) {
                                                     : 'text-gray-700 hover:bg-gray-50'
                                             }`}
                                         >
-                                            <span className="text-lg sm:text-xl">{item.icon}</span>
+                                            <Icon className="w-5 h-5" />
                                             <span className="hidden sm:inline">{item.label}</span>
                                             <span className="sm:hidden">{item.label.replace('Mis ', '').replace('Mi ', '')}</span>
                                         </Link>

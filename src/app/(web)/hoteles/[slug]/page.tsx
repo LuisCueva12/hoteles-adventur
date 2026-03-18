@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { 
     ChevronLeft, ChevronRight, Users, Maximize, Bed, Eye, Building2, 
     Check, Star, Heart, Share2, Calendar, Clock, Wifi, Tv, Wind,
-    Coffee, Bath, Shield, Phone, MapPin, Award, Sparkles, X, CreditCard, Loader2
+    Coffee, Bath, Shield, Phone, MapPin, Award, Sparkles, X, Loader2
 } from 'lucide-react'
 import { useFavorites } from '@/hooks/useFavoritos'
 import Swal from 'sweetalert2'
@@ -164,15 +164,33 @@ export default function HabitacionDetailPage() {
     const [loading, setLoading] = useState(true)
     const [currentImageIndex, setCurrentImageIndex] = useState(0)
     const [showReservaModal, setShowReservaModal] = useState(false)
-    const [isSubmitting, setIsSubmitting] = useState(false)
     const { toggleFavorite, isFavorite } = useFavorites()
-    
-    // Estados del formulario
+
     const [formData, setFormData] = useState({
+        nombre: '',
         fechaInicio: '',
         fechaFin: '',
-        huespedes: 1
+        huespedes: 1,
     })
+    const [minDate, setMinDate] = useState('')
+
+    useEffect(() => {
+        setMinDate(new Date().toISOString().split('T')[0])
+        if (typeof window !== 'undefined') {
+            const sp = new URLSearchParams(window.location.search)
+            const checkIn = sp.get('checkIn')
+            const checkOut = sp.get('checkOut')
+            const huespedes = sp.get('huespedes')
+            if (checkIn || checkOut || huespedes) {
+                setFormData(prev => ({
+                    ...prev,
+                    fechaInicio: checkIn || prev.fechaInicio,
+                    fechaFin: checkOut || prev.fechaFin,
+                    huespedes: huespedes ? Number(huespedes) : prev.huespedes,
+                }))
+            }
+        }
+    }, [])
 
     // Cargar alojamiento desde la base de datos
     useEffect(() => {
@@ -356,159 +374,38 @@ export default function HabitacionDetailPage() {
 
     const calcularNoches = () => {
         if (!formData.fechaInicio || !formData.fechaFin) return 0
-        const inicio = new Date(formData.fechaInicio)
-        const fin = new Date(formData.fechaFin)
-        const diff = fin.getTime() - inicio.getTime()
-        return Math.ceil(diff / (1000 * 60 * 60 * 24))
+        const diff = new Date(formData.fechaFin).getTime() - new Date(formData.fechaInicio).getTime()
+        return Math.max(0, Math.ceil(diff / 86400000))
     }
 
-    const calcularTotal = () => {
-        const noches = calcularNoches()
-        return noches * room.price
-    }
-
-    const handleSubmitReserva = async (e: React.FormEvent) => {
+    const handleEnviarWhatsApp = (e: React.FormEvent) => {
         e.preventDefault()
-        
-        if (!formData.fechaInicio || !formData.fechaFin) {
-            await Swal.fire({
-                icon: 'warning',
-                title: 'Datos incompletos',
-                text: 'Por favor selecciona las fechas de entrada y salida',
-                confirmButtonColor: '#DC2626'
-            })
-            return
-        }
-
         const noches = calcularNoches()
-        if (noches <= 0) {
-            await Swal.fire({
-                icon: 'error',
-                title: 'Fechas inválidas',
-                text: 'La fecha de salida debe ser posterior a la fecha de entrada',
-                confirmButtonColor: '#DC2626'
-            })
-            return
-        }
+        const total = noches * room.price
+        const fechaFmt = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 
-        setIsSubmitting(true)
+        const msg = [
+            `🏨 *SOLICITUD DE RESERVA - Adventur Hotels*`,
+            ``,
+            `👤 *Nombre:* ${formData.nombre}`,
+            ``,
+            `🛏 *Habitación:* ${room.name}`,
+            `💰 *Precio por noche:* S/. ${room.price}`,
+            ``,
+            `📅 *Fechas de estadía*`,
+            `• Check-in: ${fechaFmt(formData.fechaInicio)}`,
+            `• Check-out: ${fechaFmt(formData.fechaFin)}`,
+            `• Noches: ${noches}`,
+            `• Huéspedes: ${formData.huespedes}`,
+            ``,
+            `💵 *Total estimado: S/. ${total.toLocaleString('es-PE')}*`,
+            ``,
+            `Por favor confirmar disponibilidad. ¡Gracias! 🙏`,
+        ].join('\n')
 
-        try {
-            // Verificar si el usuario está autenticado
-            const { data: { user } } = await supabase.auth.getUser()
-            
-            if (!user) {
-                await Swal.fire({
-                    icon: 'info',
-                    title: 'Inicia sesión',
-                    text: 'Debes iniciar sesión para realizar una reserva',
-                    confirmButtonColor: '#DC2626',
-                    confirmButtonText: 'Ir a Login'
-                })
-                router.push('/login')
-                return
-            }
-
-            // Buscar el alojamiento correspondiente a esta habitación
-            const { data: alojamiento, error: alojamientoError } = await supabase
-                .from('alojamientos')
-                .select('id')
-                .eq('id', room.id)
-                .eq('activo', true)
-                .maybeSingle()
-
-            let alojamientoId = alojamiento?.id || room.id
-
-            const total = calcularTotal()
-            const adelanto = total * 0.3 // 30% de adelanto
-
-            // Crear código de reserva único
-            const codigoReserva = `RES-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
-
-            // Insertar reserva
-            const { data: reserva, error } = await supabase
-                .from('reservas')
-                .insert([{
-                    usuario_id: user.id,
-                    alojamiento_id: alojamientoId,
-                    fecha_inicio: formData.fechaInicio,
-                    fecha_fin: formData.fechaFin,
-                    personas: formData.huespedes,
-                    total: total,
-                    adelanto: adelanto,
-                    codigo_reserva: codigoReserva,
-                    estado: 'pendiente'
-                }])
-                .select()
-
-            if (error) throw error
-
-            setShowReservaModal(false)
-            
-            await Swal.fire({
-                icon: 'success',
-                title: '¡Reserva confirmada!',
-                html: `
-                    <div class="text-left space-y-3">
-                        <p class="text-gray-700">Tu reserva ha sido creada exitosamente.</p>
-                        <div class="bg-blue-50 p-4 rounded-lg">
-                            <p class="font-semibold text-blue-900 mb-2">Código de reserva:</p>
-                            <p class="text-2xl font-bold text-blue-600">${codigoReserva}</p>
-                        </div>
-                        <div class="bg-gray-50 p-4 rounded-lg space-y-2">
-                            <p><span class="font-semibold">Habitación:</span> ${room.name}</p>
-                            <p><span class="font-semibold">Check-in:</span> ${new Date(formData.fechaInicio).toLocaleDateString('es-PE')}</p>
-                            <p><span class="font-semibold">Check-out:</span> ${new Date(formData.fechaFin).toLocaleDateString('es-PE')}</p>
-                            <p><span class="font-semibold">Noches:</span> ${noches}</p>
-                            <p><span class="font-semibold">Huéspedes:</span> ${formData.huespedes}</p>
-                            <p class="text-xl font-bold text-green-600 pt-2 border-t">Total: S/. ${total.toLocaleString()}</p>
-                            <p class="text-sm text-gray-600">Adelanto requerido: S/. ${adelanto.toLocaleString()}</p>
-                        </div>
-                    </div>
-                `,
-                confirmButtonColor: '#DC2626',
-                confirmButtonText: 'Ver mis reservas',
-                showCancelButton: true,
-                cancelButtonText: 'Cerrar',
-                cancelButtonColor: '#6B7280'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    router.push('/reservas')
-                }
-            })
-
-            // Resetear formulario
-            setFormData({
-                fechaInicio: '',
-                fechaFin: '',
-                huespedes: 1
-            })
-
-        } catch (error) {
-            console.error('Error al crear reserva:', error)
-            
-            // Mostrar error más específico
-            let errorMessage = 'Hubo un problema al crear tu reserva. Por favor intenta nuevamente.'
-            
-            if (error instanceof Error) {
-                if (error.message.includes('alojamiento')) {
-                    errorMessage = 'No se pudo encontrar o crear el alojamiento. Por favor contacta con soporte.'
-                } else if (error.message.includes('usuario')) {
-                    errorMessage = 'Sesión expirada. Por favor inicia sesión nuevamente.'
-                } else {
-                    errorMessage = error.message
-                }
-            }
-            
-            await Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: errorMessage,
-                confirmButtonColor: '#DC2626'
-            })
-        } finally {
-            setIsSubmitting(false)
-        }
+        window.open(`https://wa.me/51918146783?text=${encodeURIComponent(msg)}`, '_blank')
+        setShowReservaModal(false)
+        setFormData({ nombre: '', fechaInicio: '', fechaFin: '', huespedes: 1 })
     }
 
     return (
@@ -814,189 +711,139 @@ export default function HabitacionDetailPage() {
                 </div>
             </section>
 
-            {/* Modal de Reserva Mejorado */}
+            {/* Modal de Reserva */}
             {showReservaModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-300">
-                        {/* Header del Modal */}
-                        <div className="sticky top-0 bg-gradient-to-r from-red-600 to-red-700 text-white p-6 rounded-t-2xl">
-                            <div className="flex items-center justify-between">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+                    <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full max-h-[95vh] overflow-hidden flex flex-col">
+
+                        {/* Header */}
+                        <div className="relative overflow-hidden h-40 flex-shrink-0">
+                            <img src={room.images[0]} alt={room.name} className="absolute inset-0 w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-red-700/60 to-transparent" />
+                            <div className="relative z-10 flex items-end justify-between px-6 pb-5 h-full">
                                 <div>
-                                    <h2 className="text-2xl font-bold mb-1">Reserva tu Habitación</h2>
-                                    <p className="text-red-100">{room.name}</p>
+                                    <span className="inline-block bg-red-600 text-white text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full mb-2">Solicitar reserva</span>
+                                    <h2 className="text-xl font-bold text-white leading-tight">Reserva tu Habitación</h2>
+                                    <p className="text-white/75 text-sm mt-0.5">{room.name}</p>
                                 </div>
-                                <button
-                                    onClick={() => setShowReservaModal(false)}
-                                    className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all"
-                                >
-                                    <X className="w-6 h-6" />
+                                <button onClick={() => setShowReservaModal(false)}
+                                    className="w-10 h-10 bg-black/30 hover:bg-black/50 rounded-full flex items-center justify-center border border-white/20 transition-all flex-shrink-0">
+                                    <X className="w-5 h-5 text-white" />
                                 </button>
                             </div>
                         </div>
 
-                        {/* Contenido del Modal */}
-                        <form onSubmit={handleSubmitReserva} className="p-6 space-y-6">
-                            {/* Imagen de la habitación */}
-                            <div className="relative h-48 rounded-xl overflow-hidden">
-                                <img
-                                    src={room.images[0]}
-                                    alt={room.name}
-                                    className="w-full h-full object-cover"
+                        {/* Info precio */}
+                        <div className="flex items-center justify-between px-6 py-3.5 bg-gray-900 flex-shrink-0">
+                            <div className="flex items-baseline gap-1.5">
+                                <span className="text-2xl font-bold text-white">S/. {room.price}</span>
+                                <span className="text-gray-400 text-sm">/ noche</span>
+                            </div>
+                            <div className="flex items-center gap-3 text-xs text-gray-300">
+                                <span className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-red-400" />{room.capacity} pers.</span>
+                                <span className="w-px h-3 bg-gray-600" />
+                                <span className="flex items-center gap-1.5"><Maximize className="w-3.5 h-3.5 text-red-400" />{room.size}m²</span>
+                                <span className="w-px h-3 bg-gray-600" />
+                                <span className="flex items-center gap-1.5"><Bed className="w-3.5 h-3.5 text-red-400" />{room.beds.split(' ')[2] || '1'} cama</span>
+                            </div>
+                        </div>
+
+                        {/* Formulario */}
+                        <form onSubmit={handleEnviarWhatsApp} className="overflow-y-auto flex-1 px-6 py-5 space-y-5">
+
+                            {/* Nombre */}
+                            <div>
+                                <label className="block text-sm font-bold text-gray-800 mb-2">Nombre completo</label>
+                                <input
+                                    type="text"
+                                    value={formData.nombre}
+                                    onChange={e => setFormData({ ...formData, nombre: e.target.value })}
+                                    placeholder="¿Cómo te llamas?"
+                                    required
+                                    className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-red-500 focus:outline-none text-gray-900 text-sm transition-colors placeholder-gray-400"
                                 />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                                <div className="absolute bottom-4 left-4 right-4">
-                                    <div className="flex items-center justify-between text-white">
-                                        <div>
-                                            <p className="text-sm opacity-90">Precio por noche</p>
-                                            <p className="text-3xl font-bold">S/. {room.price}</p>
-                                        </div>
-                                        {room.originalPrice && (
-                                            <div className="bg-green-500 px-3 py-1 rounded-full text-sm font-semibold">
-                                                -{Math.round((1 - room.price / room.originalPrice) * 100)}% OFF
-                                            </div>
-                                        )}
+                            </div>
+
+                            {/* Fechas */}
+                            <div>
+                                <p className="text-sm font-bold text-gray-800 mb-2">Fechas de estadía</p>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Check-in</label>
+                                        <input
+                                            type="date"
+                                            value={formData.fechaInicio}
+                                            min={minDate}
+                                            onChange={e => setFormData({ ...formData, fechaInicio: e.target.value, fechaFin: '' })}
+                                            required
+                                            suppressHydrationWarning
+                                            className="w-full px-3 py-3 border-2 border-gray-200 rounded-xl focus:border-red-500 focus:outline-none text-gray-900 text-sm transition-colors"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">
+                                            Check-out {calcularNoches() > 0 && <span className="text-red-500 normal-case font-bold">· {calcularNoches()} noche{calcularNoches() > 1 ? 's' : ''}</span>}
+                                        </label>
+                                        <input
+                                            type="date"
+                                            value={formData.fechaFin}
+                                            min={formData.fechaInicio || minDate}
+                                            onChange={e => setFormData({ ...formData, fechaFin: e.target.value })}
+                                            required
+                                            suppressHydrationWarning
+                                            className="w-full px-3 py-3 border-2 border-gray-200 rounded-xl focus:border-red-500 focus:outline-none text-gray-900 text-sm transition-colors"
+                                        />
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Información de la habitación */}
-                            <div className="grid grid-cols-3 gap-4">
-                                <div className="bg-blue-50 p-4 rounded-xl text-center">
-                                    <Users className="w-6 h-6 text-blue-600 mx-auto mb-2" />
-                                    <p className="text-xs text-gray-600 mb-1">Capacidad</p>
-                                    <p className="font-bold text-gray-900">{room.capacity} personas</p>
-                                </div>
-                                <div className="bg-purple-50 p-4 rounded-xl text-center">
-                                    <Maximize className="w-6 h-6 text-purple-600 mx-auto mb-2" />
-                                    <p className="text-xs text-gray-600 mb-1">Tamaño</p>
-                                    <p className="font-bold text-gray-900">{room.size}m²</p>
-                                </div>
-                                <div className="bg-green-50 p-4 rounded-xl text-center">
-                                    <Bed className="w-6 h-6 text-green-600 mx-auto mb-2" />
-                                    <p className="text-xs text-gray-600 mb-1">Cama</p>
-                                    <p className="font-bold text-gray-900">{room.beds.split(' ')[2]}</p>
-                                </div>
-                            </div>
-
-                            {/* Formulario de fechas */}
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        <Calendar className="w-4 h-4 inline mr-2" />
-                                        Fecha de entrada
-                                    </label>
-                                    <input
-                                        type="date"
-                                        value={formData.fechaInicio}
-                                        onChange={(e) => setFormData({ ...formData, fechaInicio: e.target.value })}
-                                        min={new Date().toISOString().split('T')[0]}
-                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-red-600 focus:ring-2 focus:ring-red-100 transition-all text-gray-900"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        <Calendar className="w-4 h-4 inline mr-2" />
-                                        Fecha de salida
-                                    </label>
-                                    <input
-                                        type="date"
-                                        value={formData.fechaFin}
-                                        onChange={(e) => setFormData({ ...formData, fechaFin: e.target.value })}
-                                        min={formData.fechaInicio || new Date().toISOString().split('T')[0]}
-                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-red-600 focus:ring-2 focus:ring-red-100 transition-all text-gray-900"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        <Users className="w-4 h-4 inline mr-2" />
-                                        Número de huéspedes
-                                    </label>
-                                    <input
-                                        type="number"
-                                        value={formData.huespedes}
-                                        onChange={(e) => setFormData({ ...formData, huespedes: parseInt(e.target.value) })}
-                                        min={1}
-                                        max={room.capacity}
-                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-red-600 focus:ring-2 focus:ring-red-100 transition-all text-gray-900"
-                                        required
-                                    />
-                                    <p className="text-xs text-gray-500 mt-1">Capacidad máxima: {room.capacity} personas</p>
+                            {/* Huéspedes */}
+                            <div>
+                                <label className="block text-sm font-bold text-gray-800 mb-2">Huéspedes</label>
+                                <div className="flex items-center border-2 border-gray-200 rounded-xl overflow-hidden">
+                                    <button type="button"
+                                        onClick={() => setFormData(f => ({ ...f, huespedes: Math.max(1, f.huespedes - 1) }))}
+                                        className="w-14 h-12 flex items-center justify-center text-gray-600 hover:bg-red-50 hover:text-red-600 text-xl font-bold transition-colors border-r-2 border-gray-200">
+                                        −
+                                    </button>
+                                    <div className="flex-1 text-center">
+                                        <span className="text-xl font-bold text-gray-900">{formData.huespedes}</span>
+                                        <span className="text-xs text-gray-400 ml-2">/ máx. {room.capacity}</span>
+                                    </div>
+                                    <button type="button"
+                                        onClick={() => setFormData(f => ({ ...f, huespedes: Math.min(room.capacity, f.huespedes + 1) }))}
+                                        className="w-14 h-12 flex items-center justify-center text-gray-600 hover:bg-red-50 hover:text-red-600 text-xl font-bold transition-colors border-l-2 border-gray-200">
+                                        +
+                                    </button>
                                 </div>
                             </div>
 
-                            {/* Resumen de la reserva */}
-                            {formData.fechaInicio && formData.fechaFin && calcularNoches() > 0 && (
-                                <div className="bg-gradient-to-br from-blue-50 to-purple-50 p-6 rounded-xl border-2 border-blue-100">
-                                    <h3 className="font-bold text-gray-900 mb-4 text-lg">Resumen de tu reserva</h3>
-                                    <div className="space-y-3">
-                                        <div className="flex justify-between text-gray-700">
-                                            <span>S/. {room.price} × {calcularNoches()} {calcularNoches() === 1 ? 'noche' : 'noches'}</span>
-                                            <span className="font-semibold">S/. {(room.price * calcularNoches()).toLocaleString()}</span>
-                                        </div>
-                                        <div className="flex justify-between text-gray-700">
-                                            <span>Huéspedes</span>
-                                            <span className="font-semibold">{formData.huespedes} {formData.huespedes === 1 ? 'persona' : 'personas'}</span>
-                                        </div>
-                                        <div className="border-t-2 border-blue-200 pt-3 flex justify-between items-center">
-                                            <span className="text-lg font-bold text-gray-900">Total</span>
-                                            <span className="text-3xl font-bold text-red-600">S/. {calcularTotal().toLocaleString()}</span>
-                                        </div>
-                                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-3">
-                                            <p className="text-sm text-yellow-800">
-                                                <CreditCard className="w-4 h-4 inline mr-1" />
-                                                Se requiere un adelanto del 30%: <span className="font-bold">S/. {(calcularTotal() * 0.3).toLocaleString()}</span>
-                                            </p>
-                                        </div>
+                            {/* Resumen */}
+                            {calcularNoches() > 0 && (
+                                <div className="bg-gray-900 rounded-2xl p-4 text-white">
+                                    <p className="text-xs text-gray-400 uppercase tracking-widest mb-3">Resumen</p>
+                                    <div className="flex justify-between text-sm text-gray-300 mb-2">
+                                        <span>S/. {room.price} × {calcularNoches()} {calcularNoches() === 1 ? 'noche' : 'noches'}</span>
+                                        <span>S/. {(room.price * calcularNoches()).toLocaleString()}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center border-t border-gray-700 pt-3">
+                                        <span className="font-semibold text-gray-200">Total estimado</span>
+                                        <span className="text-2xl font-bold text-red-400">S/. {(room.price * calcularNoches()).toLocaleString()}</span>
                                     </div>
                                 </div>
                             )}
 
-                            {/* Beneficios */}
-                            <div className="bg-green-50 p-4 rounded-xl border border-green-200">
-                                <h4 className="font-semibold text-green-900 mb-3">Incluido en tu reserva:</h4>
-                                <div className="space-y-2">
-                                    <div className="flex items-center gap-2 text-sm text-green-800">
-                                        <Check className="w-4 h-4 flex-shrink-0" />
-                                        <span>Cancelación gratuita hasta 48 horas antes</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-sm text-green-800">
-                                        <Check className="w-4 h-4 flex-shrink-0" />
-                                        <span>Confirmación inmediata por email</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-sm text-green-800">
-                                        <Check className="w-4 h-4 flex-shrink-0" />
-                                        <span>Sin cargos ocultos</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Botones de acción */}
-                            <div className="flex gap-3 pt-4">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowReservaModal(false)}
-                                    className="flex-1 px-6 py-4 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
-                                    disabled={isSubmitting}
-                                >
+                            {/* Botones */}
+                            <div className="flex gap-3 pb-2">
+                                <button type="button" onClick={() => setShowReservaModal(false)}
+                                    className="flex-1 py-3.5 border-2 border-gray-200 text-gray-700 font-semibold rounded-2xl hover:bg-gray-50 transition-all text-sm">
                                     Cancelar
                                 </button>
-                                <button
-                                    type="submit"
-                                    disabled={isSubmitting || !formData.fechaInicio || !formData.fechaFin}
-                                    className="flex-1 px-6 py-4 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold rounded-xl transition-all transform hover:-translate-y-0.5 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                                >
-                                    {isSubmitting ? (
-                                        <span className="flex items-center justify-center gap-2">
-                                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                            Procesando...
-                                        </span>
-                                    ) : (
-                                        'Confirmar Reserva'
-                                    )}
+                                <button type="submit"
+                                    disabled={!formData.nombre || !formData.fechaInicio || !formData.fechaFin}
+                                    className="flex-1 py-3.5 bg-[#25D366] hover:bg-[#20c05c] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-2xl transition-all hover:shadow-lg flex items-center justify-center gap-2 text-sm">
+                                    <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current flex-shrink-0"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                                    Enviar por WhatsApp
                                 </button>
                             </div>
                         </form>

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import type { Pago, Reserva, Alojamiento } from '@/types/basedatos'
 import { CreditCard, CheckCircle, Clock, XCircle, DollarSign, Calendar, Receipt, TrendingUp, Wallet } from 'lucide-react'
+import Swal from 'sweetalert2'
 
 export const dynamic = 'force-dynamic'
 
@@ -79,17 +80,38 @@ export default function PagosPage() {
     }
 
     async function crearPago(reserva: ReservaPendiente) {
+        const { value: metodo } = await Swal.fire({
+            title: 'Selecciona el método de pago',
+            input: 'select',
+            inputOptions: {
+                yape: 'Yape',
+                plin: 'Plin',
+                transferencia: 'Transferencia Bancaria',
+                tarjeta: 'Tarjeta de Crédito/Débito',
+                efectivo: 'Efectivo',
+            },
+            inputPlaceholder: 'Selecciona un método',
+            showCancelButton: true,
+            confirmButtonText: 'Confirmar Pago',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#16a34a',
+            inputValidator: (value) => {
+                if (!value) return 'Debes seleccionar un método de pago'
+            }
+        })
+
+        if (!metodo) return
+
         try {
             const { data: { user } } = await supabase.auth.getUser()
             if (!user) return
 
-            // Crear el pago con estado pendiente
-            const { data: pago, error: pagoError } = await supabase
+            const { error: pagoError } = await supabase
                 .from('pagos')
                 .insert({
                     reserva_id: reserva.id,
                     monto: reserva.adelanto,
-                    metodo: 'transferencia',
+                    metodo,
                     estado: 'pendiente',
                     fecha_pago: new Date().toISOString()
                 })
@@ -98,12 +120,24 @@ export default function PagosPage() {
 
             if (pagoError) throw pagoError
 
-            alert('Pago registrado. Por favor realiza la transferencia y espera la confirmación.')
+            await Swal.fire({
+                icon: 'success',
+                title: '¡Pago registrado!',
+                text: `Pago por ${metodo} registrado. Por favor realiza la transferencia y espera la confirmación.`,
+                confirmButtonColor: '#3B82F6',
+                timer: 3000,
+                showConfirmButton: false
+            })
             loadPagos()
             loadReservasPendientes()
         } catch (error) {
             console.error('Error creando pago:', error)
-            alert('No se pudo crear el pago')
+            await Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudo registrar el pago',
+                confirmButtonColor: '#3B82F6'
+            })
         }
     }
 

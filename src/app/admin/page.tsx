@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { adminService } from '@/services/admin.servicio'
-import { Hotel, Calendar, Users, DollarSign, TrendingUp, Clock, CheckCircle, AlertCircle, ArrowRight, Activity, BarChart3, PieChart, RefreshCw, Loader2, Target } from 'lucide-react'
+import { Hotel, Calendar, Users, DollarSign, TrendingUp, Clock, CheckCircle, AlertCircle, ArrowRight, Activity, BarChart3, RefreshCw, Loader2 } from 'lucide-react'
 
 export default function AdminPage() {
     const [loading, setLoading] = useState(true)
@@ -20,6 +20,7 @@ export default function AdminPage() {
 
     const [recentActivity, setRecentActivity] = useState<any[]>([])
     const [isRefreshing, setIsRefreshing] = useState(false)
+    const [monthlyData, setMonthlyData] = useState<{ month: string; value: number; raw: number }[]>([])
 
     useEffect(() => {
         loadDashboardData()
@@ -28,12 +29,14 @@ export default function AdminPage() {
     const loadDashboardData = async () => {
         try {
             setLoading(true)
-            const [dashboardStats, activities] = await Promise.all([
+            const [dashboardStats, activities, monthly] = await Promise.all([
                 adminService.getDashboardStats(),
-                adminService.getRecentActivity(8)
+                adminService.getRecentActivity(8),
+                adminService.getMonthlyRevenue()
             ])
             setStats(dashboardStats)
             setRecentActivity(activities)
+            setMonthlyData(monthly)
         } catch (error) {
             console.error('Error loading dashboard:', error)
         } finally {
@@ -47,22 +50,7 @@ export default function AdminPage() {
         setIsRefreshing(false)
     }
 
-    const monthlyData = [
-        { month: 'Ene', value: 65 },
-        { month: 'Feb', value: 85 },
-        { month: 'Mar', value: 75 },
-        { month: 'Abr', value: 90 },
-        { month: 'May', value: 70 },
-        { month: 'Jun', value: 95 },
-        { month: 'Jul', value: 88 },
-        { month: 'Ago', value: 78 },
-        { month: 'Sep', value: 92 },
-        { month: 'Oct', value: 85 },
-        { month: 'Nov', value: 80 },
-        { month: 'Dic', value: 75 },
-    ]
-
-    const maxValue = Math.max(...monthlyData.map(d => d.value))
+    const maxValue = Math.max(...monthlyData.map(d => d.value), 1)
 
     if (loading) {
         return (
@@ -162,10 +150,13 @@ export default function AdminPage() {
                         </div>
                     </div>
                     <div className="flex items-end justify-between h-64 gap-3">
-                        {monthlyData.map((data, idx) => (
-                            <div key={data.month} className="flex-1 flex flex-col items-center gap-2">
-                                <div className="w-full bg-gray-100 rounded-t-xl relative overflow-hidden group cursor-pointer hover:bg-gray-200 transition-all"
-                                     style={{ height: `${(data.value / maxValue) * 100}%` }}>
+                        {monthlyData.map((data) => (
+                            <div key={data.month} className="flex-1 flex flex-col items-center gap-2 group relative">
+                                <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                                    S/. {data.raw.toLocaleString()}
+                                </div>
+                                <div className="w-full bg-gray-100 rounded-t-xl relative overflow-hidden cursor-pointer hover:bg-gray-200 transition-all"
+                                     style={{ height: `${Math.max(data.value, 4)}%` }}>
                                     <div className="absolute inset-0 bg-gradient-to-t from-blue-600 to-blue-400 group-hover:from-blue-700 group-hover:to-blue-500 transition-all"
                                          style={{ height: '100%' }}></div>
                                 </div>

@@ -287,6 +287,45 @@ export class AdminService {
 
     if (error) throw error
   }
+
+  async deleteReserva(id: string) {
+    const { error } = await this.supabase
+      .from('reservas')
+      .delete()
+      .eq('id', id)
+
+    if (error) throw error
+  }
+
+  async getMonthlyRevenue(): Promise<{ month: string; value: number; raw: number }[]> {
+    try {
+      const year = new Date().getFullYear()
+      const { data } = await this.supabase
+        .from('pagos')
+        .select('monto, fecha_pago')
+        .eq('estado', 'aprobado')
+        .gte('fecha_pago', `${year}-01-01`)
+        .lte('fecha_pago', `${year}-12-31`)
+
+      const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
+      const totals = Array(12).fill(0)
+
+      data?.forEach(pago => {
+        const month = new Date(pago.fecha_pago).getMonth()
+        totals[month] += Number(pago.monto)
+      })
+
+      const maxVal = Math.max(...totals, 1)
+      return months.map((month, i) => ({
+        month,
+        raw: totals[i],
+        value: Math.round((totals[i] / maxVal) * 100)
+      }))
+    } catch {
+      const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
+      return months.map(month => ({ month, value: 0, raw: 0 }))
+    }
+  }
 }
 
 export const adminService = new AdminService()

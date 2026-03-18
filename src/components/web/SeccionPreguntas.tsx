@@ -49,11 +49,21 @@ export function FAQSection() {
         <section className="py-20 bg-gray-50">
             <div className="max-w-4xl mx-auto px-6">
                 <div className="text-center mb-12">
-                    <h2 className="text-3xl font-bold text-gray-900 mb-4 font-serif">
-                        Preguntas Frecuentes
+                    <div className="inline-block mb-4">
+                        <span className="px-4 py-1.5 bg-red-50 text-red-600 text-xs font-semibold tracking-[0.3em] uppercase rounded-full">
+                            FAQ
+                        </span>
+                    </div>
+                    <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 font-serif">
+                        Preguntas <span className="text-red-600">Frecuentes</span>
                     </h2>
-                    <p className="text-gray-600">
-                        Encuentra respuestas a las preguntas más comunes
+                    <div className="flex items-center justify-center gap-3 mb-6">
+                        <div className="h-px w-20 bg-gradient-to-r from-transparent via-red-600 to-red-600" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse" />
+                        <div className="h-px w-20 bg-gradient-to-l from-transparent via-red-600 to-red-600" />
+                    </div>
+                    <p className="text-gray-600 max-w-2xl mx-auto text-base leading-relaxed">
+                        Encuentra respuestas a las preguntas más comunes sobre tu estadía
                     </p>
                 </div>
 

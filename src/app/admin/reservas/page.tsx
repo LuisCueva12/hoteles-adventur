@@ -145,7 +145,7 @@ export default function ReservasAdminPage() {
 
         if (result.isConfirmed) {
             try {
-                // Implementar eliminación si es necesario
+                await adminService.deleteReserva(reserva.id)
                 await loadReservas()
                 await Swal.fire({
                     icon: 'success',

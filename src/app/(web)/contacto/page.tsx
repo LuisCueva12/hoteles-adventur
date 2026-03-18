@@ -111,19 +111,22 @@ export default function ContactoPage() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/70" />
                 
-                {/* Partículas flotantes */}
+                {/* Partículas flotantes con valores fijos para evitar hydration mismatch */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                    {[...Array(20)].map((_, i) => (
-                        <div
-                            key={i}
-                            className="absolute w-1 h-1 bg-white/20 rounded-full animate-float"
-                            style={{
-                                left: `${Math.random() * 100}%`,
-                                top: `${Math.random() * 100}%`,
-                                animationDelay: `${Math.random() * 5}s`,
-                                animationDuration: `${8 + Math.random() * 12}s`
-                            }}
-                        />
+                    {[
+                        { l: 12, t: 8,  d: 0,   dur: 10 }, { l: 28, t: 22, d: 1.2, dur: 14 },
+                        { l: 45, t: 5,  d: 0.5, dur: 9  }, { l: 67, t: 35, d: 2.1, dur: 12 },
+                        { l: 83, t: 15, d: 0.8, dur: 16 }, { l: 7,  t: 55, d: 3.0, dur: 11 },
+                        { l: 35, t: 70, d: 1.7, dur: 13 }, { l: 55, t: 48, d: 0.3, dur: 8  },
+                        { l: 72, t: 62, d: 2.5, dur: 15 }, { l: 90, t: 40, d: 1.0, dur: 10 },
+                        { l: 20, t: 85, d: 4.0, dur: 12 }, { l: 48, t: 90, d: 0.6, dur: 9  },
+                        { l: 63, t: 78, d: 3.3, dur: 14 }, { l: 78, t: 88, d: 1.5, dur: 11 },
+                        { l: 95, t: 72, d: 2.8, dur: 16 }, { l: 15, t: 30, d: 0.4, dur: 10 },
+                        { l: 33, t: 45, d: 1.9, dur: 13 }, { l: 58, t: 18, d: 3.5, dur: 9  },
+                        { l: 75, t: 55, d: 0.7, dur: 14 }, { l: 88, t: 25, d: 2.2, dur: 11 },
+                    ].map((p, i) => (
+                        <div key={i} className="absolute w-1 h-1 bg-white/20 rounded-full animate-float"
+                            style={{ left: `${p.l}%`, top: `${p.t}%`, animationDelay: `${p.d}s`, animationDuration: `${p.dur}s` }} />
                     ))}
                 </div>
                 

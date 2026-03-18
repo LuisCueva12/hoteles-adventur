@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
-import { X, Send, Bot, User, Sparkles, Loader2, Minimize2, Maximize2, RotateCcw, Copy, Check, Mic, MicOff, Download, ThumbsUp, ThumbsDown, Moon, Sun, Search, Calendar, DollarSign, MapPin } from 'lucide-react'
+import { X, Send, Bot, User, Sparkles, Loader2, Minimize2, Maximize2, RotateCcw, Copy, Check, Mic, MicOff, Download, ThumbsUp, ThumbsDown, Moon, Sun, Search, Calendar, DollarSign, MapPin, Hotel, Wrench, Gift, BookOpen } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import Image from 'next/image'
 
@@ -31,12 +31,12 @@ interface Habitacion {
 }
 
 const QUICK_QUESTIONS = [
-    { icon: '🏨', text: '¿Qué habitaciones tienen disponibles?', category: 'rooms' },
-    { icon: '💰', text: '¿Cuáles son los precios?', category: 'pricing' },
-    { icon: '✨', text: '¿Qué servicios ofrecen?', category: 'services' },
-    { icon: '📍', text: '¿Dónde están ubicados?', category: 'location' },
-    { icon: '📅', text: 'Quiero hacer una reserva', category: 'booking' },
-    { icon: '🎁', text: '¿Tienen ofertas especiales?', category: 'offers' },
+    { icon: Hotel,    text: '¿Qué habitaciones tienen disponibles?', category: 'rooms' },
+    { icon: DollarSign, text: '¿Cuáles son los precios?', category: 'pricing' },
+    { icon: Wrench,   text: '¿Qué servicios ofrecen?', category: 'services' },
+    { icon: MapPin,   text: '¿Dónde están ubicados?', category: 'location' },
+    { icon: Calendar, text: 'Quiero hacer una reserva', category: 'booking' },
+    { icon: Gift,     text: '¿Tienen ofertas especiales?', category: 'offers' },
 ]
 
 const SMART_SUGGESTIONS: Record<string, string[]> = {
@@ -243,7 +243,7 @@ export default function AIChatbot() {
         setMessages([
             {
                 role: 'assistant',
-                content: '¡Hola! 👋 Soy tu asistente inteligente de Adventur, tu hotel de lujo.\n\nPuedo ayudarte con:\n• Información de habitaciones en tiempo real\n• Precios y disponibilidad\n• Servicios y amenidades\n• Reservas y consultas\n\n¿En qué puedo ayudarte hoy? ✨',
+                content: '¡Hola! Soy tu asistente inteligente de Adventur, tu hotel de lujo.\n\nPuedo ayudarte con:\n• Información de habitaciones en tiempo real\n• Precios y disponibilidad\n• Servicios y amenidades\n• Reservas y consultas\n\n¿En qué puedo ayudarte hoy?',
                 timestamp: new Date(),
                 feedback: null
             }
@@ -384,7 +384,7 @@ export default function AIChatbot() {
             console.error('Error:', error)
             const errorMessage: Message = {
                 role: 'assistant',
-                content: `Lo siento, hubo un error: ${error.message}. Por favor, intenta de nuevo o contacta directamente al hotel. 📞`,
+                content: `Lo siento, hubo un error: ${error.message}. Por favor, intenta de nuevo o contacta directamente al hotel.`,
                 timestamp: new Date(),
                 feedback: null
             }
@@ -825,7 +825,9 @@ export default function AIChatbot() {
                                                             : 'bg-white border-2 border-gray-200 hover:border-red-500 hover:bg-red-50 text-gray-700 hover:text-red-600'
                                                     }`}
                                                 >
-                                                    <span className="text-2xl mb-2 block group-hover:scale-110 transition-transform">{question.icon}</span>
+                                                    <span className="mb-2 block group-hover:scale-110 transition-transform">
+                                                        {React.createElement(question.icon, { className: 'w-5 h-5' })}
+                                                    </span>
                                                     <span className="font-medium">{question.text}</span>
                                                 </button>
                                             ))}
