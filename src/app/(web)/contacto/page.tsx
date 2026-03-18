@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { Mail, Phone, MessageCircle, Send, CheckCircle, AlertCircle, User, MessageSquare, MapPin, Clock, Facebook, Instagram, Music } from 'lucide-react'
@@ -134,7 +134,7 @@ export default function ContactoPage() {
                         </span>
                     </div>
                     
-                    <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-fadeInUp animation-delay-100 drop-shadow-2xl" style={{ fontFamily: 'Georgia, serif' }}>
+                    <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-fadeInUp animation-delay-100 drop-shadow-2xl font-serif">
                         <span className="text-red-500">Contáctanos</span>
                     </h1>
                     
@@ -173,7 +173,7 @@ export default function ContactoPage() {
                             <span className="inline-block px-4 py-1.5 bg-red-50 text-red-600 text-xs font-semibold tracking-[0.3em] uppercase rounded-full mb-4">
                                 Formulario de contacto
                             </span>
-                            <h2 className="text-4xl font-bold text-gray-900 mb-4" style={{ fontFamily: 'Georgia, serif' }}>
+                            <h2 className="text-4xl font-bold text-gray-900 mb-4 font-serif">
                                 Envíanos un <span className="text-red-600">mensaje</span>
                             </h2>
                             <p className="text-gray-600 text-lg">
@@ -444,7 +444,7 @@ export default function ContactoPage() {
                             <span className="inline-block px-4 py-1.5 bg-red-50 text-red-600 text-xs font-semibold tracking-[0.3em] uppercase rounded-full mb-4">
                                 Datos de contacto
                             </span>
-                            <h2 className="text-4xl font-bold text-gray-900 mb-4" style={{ fontFamily: 'Georgia, serif' }}>
+                            <h2 className="text-4xl font-bold text-gray-900 mb-4 font-serif">
                                 Información de <span className="text-red-600">contacto</span>
                             </h2>
                         </div>

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Download, Share2, Heart, Eye, Calendar, Maximize2, Grid3x3 } from 'lucide-react'
@@ -91,7 +91,7 @@ export default function GaleriaPage() {
           <div className="inline-block px-6 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white text-sm font-semibold mb-6 border border-white/30">
             GALERÍA VISUAL • {images.length} IMÁGENES
           </div>
-          <h1 className="text-5xl md:text-7xl font-bold text-white mb-6">
+          <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 font-serif">
             Nuestra <span className="text-yellow-300">Galería</span>
           </h1>
           <p className="text-xl text-red-100 max-w-2xl">

@@ -1,4 +1,4 @@
-import { Check, X } from 'lucide-react'
+﻿import { Check, X } from 'lucide-react'
 
 interface Feature {
     name: string
@@ -26,7 +26,7 @@ export function ComparisonTable() {
         <section className="py-20 bg-white">
             <div className="max-w-7xl mx-auto px-6">
                 <div className="text-center mb-12">
-                    <h2 className="text-3xl font-bold text-gray-900 mb-4" style={{ fontFamily: 'Georgia, serif' }}>
+                    <h2 className="text-3xl font-bold text-gray-900 mb-4 font-serif">
                         Compara Nuestras Habitaciones
                     </h2>
                     <p className="text-gray-600">

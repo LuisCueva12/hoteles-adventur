@@ -1,4 +1,4 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
 
@@ -7,7 +7,7 @@ export default function AccesoDenegado() {
         <div className="min-h-screen flex items-center justify-center bg-gray-50 px-6">
             <div className="text-center">
                 <div className="mb-8">
-                    <h1 className="text-9xl font-bold text-red-600" style={{ fontFamily: 'Georgia, serif' }}>
+                    <h1 className="text-9xl font-bold text-red-600 font-serif">
                         403
                     </h1>
                     <div className="flex items-center justify-center gap-2 mt-4">
@@ -17,7 +17,7 @@ export default function AccesoDenegado() {
                     </div>
                 </div>
 
-                <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                <h2 className="text-3xl font-bold text-gray-900 mb-4 font-serif">
                     Acceso Denegado
                 </h2>
                 <p className="text-gray-600 mb-8 max-w-md mx-auto">

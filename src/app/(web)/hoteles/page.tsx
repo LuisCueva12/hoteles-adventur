@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
@@ -56,7 +56,7 @@ function HotelesContent() {
                 />
                 <div className="absolute inset-0 bg-black/50" />
                 <div className="relative z-10 text-center text-white px-6">
-                    <h1 className="text-5xl font-bold mb-2">Nuestras Habitaciones</h1>
+                    <h1 className="text-5xl font-bold mb-2 font-serif">Nuestras Habitaciones</h1>
                     <p className="text-gray-300">Encuentra tu espacio perfecto</p>
                 </div>
             </section>

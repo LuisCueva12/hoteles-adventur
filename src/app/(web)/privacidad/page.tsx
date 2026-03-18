@@ -1,4 +1,4 @@
-export default function PrivacidadPage() {
+﻿export default function PrivacidadPage() {
     return (
         <div className="bg-white">
             <section className="relative h-[30vh] flex items-center justify-center overflow-hidden">
@@ -9,7 +9,7 @@ export default function PrivacidadPage() {
                 />
                 <div className="absolute inset-0 bg-black/60" />
                 <div className="relative z-10 text-center text-white px-6">
-                    <h1 className="text-4xl font-bold mb-2" style={{ fontFamily: 'Georgia, serif' }}>
+                    <h1 className="text-4xl font-bold mb-2 font-serif">
                         Política de Privacidad
                     </h1>
                 </div>
@@ -21,7 +21,7 @@ export default function PrivacidadPage() {
                         Última actualización: Febrero 2026
                     </p>
 
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">1. Información que Recopilamos</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-4 font-serif">1. Información que Recopilamos</h2>
                     <p className="text-gray-600 mb-4">
                         En Adventur Hotels, recopilamos la siguiente información personal:
                     </p>
@@ -32,7 +32,7 @@ export default function PrivacidadPage() {
                         <li>Historial de estadías y preferencias</li>
                     </ul>
 
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">2. Cómo Usamos su Información</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-4 font-serif">2. Cómo Usamos su Información</h2>
                     <p className="text-gray-600 mb-4">
                         Utilizamos su información personal para:
                     </p>
@@ -44,12 +44,12 @@ export default function PrivacidadPage() {
                         <li>Cumplir con obligaciones legales y regulatorias</li>
                     </ul>
 
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">3. Protección de Datos</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-4 font-serif">3. Protección de Datos</h2>
                     <p className="text-gray-600 mb-6">
                         Implementamos medidas de seguridad técnicas y organizativas para proteger su información personal contra acceso no autorizado, pérdida o alteración. Utilizamos encriptación SSL para todas las transacciones en línea.
                     </p>
 
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">4. Compartir Información</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-4 font-serif">4. Compartir Información</h2>
                     <p className="text-gray-600 mb-4">
                         No vendemos ni alquilamos su información personal a terceros. Podemos compartir su información con:
                     </p>
@@ -59,12 +59,12 @@ export default function PrivacidadPage() {
                         <li>Socios comerciales con su consentimiento explícito</li>
                     </ul>
 
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">5. Cookies y Tecnologías Similares</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-4 font-serif">5. Cookies y Tecnologías Similares</h2>
                     <p className="text-gray-600 mb-6">
                         Utilizamos cookies y tecnologías similares para mejorar su experiencia en nuestro sitio web, analizar el tráfico y personalizar el contenido. Puede configurar su navegador para rechazar cookies, aunque esto puede afectar la funcionalidad del sitio.
                     </p>
 
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">6. Sus Derechos</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-4 font-serif">6. Sus Derechos</h2>
                     <p className="text-gray-600 mb-4">
                         Usted tiene derecho a:
                     </p>
@@ -76,17 +76,17 @@ export default function PrivacidadPage() {
                         <li>Retirar su consentimiento en cualquier momento</li>
                     </ul>
 
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">7. Retención de Datos</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-4 font-serif">7. Retención de Datos</h2>
                     <p className="text-gray-600 mb-6">
                         Conservamos su información personal durante el tiempo necesario para cumplir con los propósitos descritos en esta política, a menos que la ley requiera o permita un período de retención más largo.
                     </p>
 
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">8. Cambios a esta Política</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-4 font-serif">8. Cambios a esta Política</h2>
                     <p className="text-gray-600 mb-6">
                         Podemos actualizar esta política de privacidad periódicamente. Le notificaremos sobre cambios significativos publicando la nueva política en nuestro sitio web.
                     </p>
 
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">9. Contacto</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-4 font-serif">9. Contacto</h2>
                     <p className="text-gray-600 mb-2">
                         Para ejercer sus derechos o hacer preguntas sobre esta política:
                     </p>

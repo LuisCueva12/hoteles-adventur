@@ -1,4 +1,4 @@
-const EVENTS = [
+﻿const EVENTS = [
     {
         day: '25',
         month: 'ABR',
@@ -28,7 +28,7 @@ export function EventosSeccion() {
             <div className="max-w-7xl mx-auto px-6">
                 <div className="text-center mb-14">
                     <p className="text-red-600 text-xs font-semibold tracking-[0.3em] uppercase mb-2">Proximos</p>
-                    <h2 className="text-3xl font-bold text-gray-900" style={{ fontFamily: 'Georgia, serif' }}>
+                    <h2 className="text-3xl font-bold text-gray-900 font-serif">
                         Eventos
                     </h2>
                     <div className="flex items-center justify-center gap-2 mt-4">

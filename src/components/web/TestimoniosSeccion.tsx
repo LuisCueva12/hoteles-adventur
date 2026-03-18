@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 
@@ -48,7 +48,7 @@ export function TestimoniosSeccion() {
                     <p className="text-red-600 text-xs font-semibold tracking-[0.3em] uppercase mb-3">
                         Testimonios
                     </p>
-                    <h2 className="text-3xl font-bold text-gray-900 mb-4" style={{ fontFamily: 'Georgia, serif' }}>
+                    <h2 className="text-3xl font-bold text-gray-900 mb-4 font-serif">
                         Lo que dicen nuestros huéspedes
                     </h2>
                     <div className="flex items-center justify-center gap-2">

@@ -1,4 +1,4 @@
-import { Star, Handshake, Leaf, Gem, Award, Users, TrendingUp, Heart, Shield, Zap, Target, Globe } from 'lucide-react'
+﻿import { Star, Handshake, Leaf, Gem, Award, Users, TrendingUp, Heart, Shield, Zap, Target, Globe } from 'lucide-react'
 
 export default function NosotrosPage() {
     return (
@@ -34,7 +34,7 @@ export default function NosotrosPage() {
                         </span>
                     </div>
                     
-                    <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-fadeInUp animation-delay-100 drop-shadow-2xl" style={{ fontFamily: 'Georgia, serif' }}>
+                    <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-fadeInUp animation-delay-100 drop-shadow-2xl font-serif">
                         Sobre <span className="text-red-500">Nosotros</span>
                     </h1>
                     
@@ -59,7 +59,7 @@ export default function NosotrosPage() {
                             </span>
                         </div>
                         
-                        <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6" style={{ fontFamily: 'Georgia, serif' }}>
+                        <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 font-serif">
                             Bienvenido a <span className="text-red-600">Adventur Hotels</span>
                         </h2>
                         
@@ -134,7 +134,7 @@ export default function NosotrosPage() {
                                 <div className={`inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br ${stat.color} rounded-2xl mb-4 transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg`}>
                                     <span className="text-3xl">{stat.icon}</span>
                                 </div>
-                                <p className="text-4xl font-bold text-gray-900 mb-2 group-hover:text-red-600 transition-colors">{stat.num}</p>
+                                <p className="text-4xl font-bold text-gray-900 mb-2 group-hover:text-red-600 transition-colors font-sans">{stat.num}</p>
                                 <p className="text-gray-600 text-sm uppercase tracking-wider font-medium">{stat.label}</p>
                             </div>
                         </div>
@@ -148,7 +148,7 @@ export default function NosotrosPage() {
                         </span>
                     </div>
                     
-                    <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4" style={{ fontFamily: 'Georgia, serif' }}>
+                    <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 font-serif">
                         Nuestros <span className="text-red-600">Valores</span>
                     </h2>
                     
@@ -191,7 +191,7 @@ export default function NosotrosPage() {
                 {/* Nueva sección: Por qué elegirnos */}
                 <div className="bg-gradient-to-br from-gray-50 to-white rounded-3xl p-12 mb-20">
                     <div className="text-center mb-12">
-                        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4" style={{ fontFamily: 'Georgia, serif' }}>
+                        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 font-serif">
                             ¿Por qué elegir <span className="text-red-600">Adventur Hotels</span>?
                         </h2>
                         <p className="text-gray-600 max-w-2xl mx-auto">

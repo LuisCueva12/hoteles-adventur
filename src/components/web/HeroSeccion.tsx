@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
@@ -103,7 +103,7 @@ export function HeroSeccion() {
                     </span>
                 </div>
                 
-                <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold italic mb-6 animate-fadeInUp animation-delay-100 drop-shadow-2xl" style={{ fontFamily: 'Georgia, serif' }}>
+                <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold italic mb-6 animate-fadeInUp animation-delay-100 drop-shadow-2xl font-serif">
                     {HERO_IMAGES[currentSlide].title}
                 </h1>
                 

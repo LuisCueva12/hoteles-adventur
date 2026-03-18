@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
@@ -111,7 +111,7 @@ export function HabitacionesSeccion() {
                         </span>
                     </div>
                     
-                    <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+                    <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 font-serif">
                         Bienvenido al <span className="text-red-600">Hotel</span>
                     </h2>
                     

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
@@ -72,7 +72,7 @@ export function OfertasEspeciales() {
                         <TrendingUp className="w-4 h-4" />
                         <span className="text-xs font-semibold uppercase tracking-wider">Ofertas Limitadas</span>
                     </div>
-                    <h2 className="text-4xl font-bold text-gray-900 mb-4" style={{ fontFamily: 'Georgia, serif' }}>
+                    <h2 className="text-4xl font-bold text-gray-900 mb-4 font-serif">
                         Ofertas Especiales
                     </h2>
                     <p className="text-gray-600 max-w-2xl mx-auto">

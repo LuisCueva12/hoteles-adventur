@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import Link from 'next/link'
@@ -34,7 +34,7 @@ export function PorQueElegirnosSeccion() {
                         </span>
                     </div>
                     
-                    <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+                    <h2 className="text-4xl md:text-5xl font-bold text-white mb-4 font-serif">
                         Por qué <span className="text-red-500">elegirnos</span>
                     </h2>
                     

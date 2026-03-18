@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { ChevronDown } from 'lucide-react'
@@ -49,7 +49,7 @@ export function FAQSection() {
         <section className="py-20 bg-gray-50">
             <div className="max-w-4xl mx-auto px-6">
                 <div className="text-center mb-12">
-                    <h2 className="text-3xl font-bold text-gray-900 mb-4" style={{ fontFamily: 'Georgia, serif' }}>
+                    <h2 className="text-3xl font-bold text-gray-900 mb-4 font-serif">
                         Preguntas Frecuentes
                     </h2>
                     <p className="text-gray-600">

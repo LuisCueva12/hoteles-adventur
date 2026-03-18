@@ -1,4 +1,4 @@
-import { Check, Car, Wifi, Briefcase, Bell, Sparkles, Lock, Dog, Accessibility, Clock, Coffee, Utensils, Dumbbell, Calendar, Shield, MapPin } from 'lucide-react'
+﻿import { Check, Car, Wifi, Briefcase, Bell, Sparkles, Lock, Dog, Accessibility, Clock, Coffee, Utensils, Dumbbell, Calendar, Shield, MapPin } from 'lucide-react'
 
 export default function ServiciosPage() {
     return (
@@ -34,7 +34,7 @@ export default function ServiciosPage() {
                         </span>
                     </div>
                     
-                    <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-fadeInUp animation-delay-100 drop-shadow-2xl" style={{ fontFamily: 'Georgia, serif' }}>
+                    <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-fadeInUp animation-delay-100 drop-shadow-2xl font-serif">
                         Nuestros <span className="text-red-500">Servicios</span>
                     </h1>
                     
@@ -58,7 +58,7 @@ export default function ServiciosPage() {
                         </span>
                     </div>
                     
-                    <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4" style={{ fontFamily: 'Georgia, serif' }}>
+                    <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 font-serif">
                         Servicios <span className="text-red-600">Premium</span>
                     </h2>
                     
@@ -175,7 +175,7 @@ export default function ServiciosPage() {
                                 </span>
                             </div>
                             
-                            <h3 className="text-3xl md:text-4xl font-bold mb-4" style={{ fontFamily: 'Georgia, serif' }}>
+                            <h3 className="text-3xl md:text-4xl font-bold mb-4 font-serif">
                                 Servicios <span className="text-red-500">Adicionales</span>
                             </h3>
                             
