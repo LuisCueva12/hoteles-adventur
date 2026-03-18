@@ -381,26 +381,27 @@ export default function HabitacionDetailPage() {
     const handleEnviarWhatsApp = (e: React.FormEvent) => {
         e.preventDefault()
         const noches = calcularNoches()
-        const total = noches * room.price
+        const total = noches * room.price * formData.huespedes
         const fechaFmt = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 
         const msg = [
-            `🏨 *SOLICITUD DE RESERVA - Adventur Hotels*`,
+            `*SOLICITUD DE RESERVA - Adventur Hotels*`,
             ``,
-            `👤 *Nombre:* ${formData.nombre}`,
+            `*Nombre:* ${formData.nombre}`,
             ``,
-            `🛏 *Habitación:* ${room.name}`,
-            `💰 *Precio por noche:* S/. ${room.price}`,
+            `*Habitacion:* ${room.name}`,
+            `*Precio por noche:* S/. ${room.price} por persona`,
             ``,
-            `📅 *Fechas de estadía*`,
-            `• Check-in: ${fechaFmt(formData.fechaInicio)}`,
-            `• Check-out: ${fechaFmt(formData.fechaFin)}`,
-            `• Noches: ${noches}`,
-            `• Huéspedes: ${formData.huespedes}`,
+            `*Fechas de estadia*`,
+            `- Check-in: ${fechaFmt(formData.fechaInicio)}`,
+            `- Check-out: ${fechaFmt(formData.fechaFin)}`,
+            `- Noches: ${noches}`,
+            `- Huespedes: ${formData.huespedes}`,
             ``,
-            `💵 *Total estimado: S/. ${total.toLocaleString('es-PE')}*`,
+            `*Total estimado: S/. ${total.toLocaleString('es-PE')}*`,
+            `(S/. ${room.price} x ${noches} noche${noches > 1 ? 's' : ''} x ${formData.huespedes} huesped${formData.huespedes > 1 ? 'es' : ''})`,
             ``,
-            `Por favor confirmar disponibilidad. ¡Gracias! 🙏`,
+            `Por favor confirmar disponibilidad. Gracias!`,
         ].join('\n')
 
         window.open(`https://wa.me/51918146783?text=${encodeURIComponent(msg)}`, '_blank')
@@ -822,13 +823,17 @@ export default function HabitacionDetailPage() {
                             {calcularNoches() > 0 && (
                                 <div className="bg-gray-900 rounded-2xl p-4 text-white">
                                     <p className="text-xs text-gray-400 uppercase tracking-widest mb-3">Resumen</p>
-                                    <div className="flex justify-between text-sm text-gray-300 mb-2">
+                                    <div className="flex justify-between text-sm text-gray-300 mb-1">
                                         <span>S/. {room.price} × {calcularNoches()} {calcularNoches() === 1 ? 'noche' : 'noches'}</span>
                                         <span>S/. {(room.price * calcularNoches()).toLocaleString()}</span>
                                     </div>
+                                    <div className="flex justify-between text-sm text-gray-300 mb-2">
+                                        <span>{formData.huespedes} {formData.huespedes === 1 ? 'huésped' : 'huéspedes'} × S/. {room.price}</span>
+                                        <span>× {formData.huespedes}</span>
+                                    </div>
                                     <div className="flex justify-between items-center border-t border-gray-700 pt-3">
                                         <span className="font-semibold text-gray-200">Total estimado</span>
-                                        <span className="text-2xl font-bold text-red-400">S/. {(room.price * calcularNoches()).toLocaleString()}</span>
+                                        <span className="text-2xl font-bold text-red-400">S/. {(room.price * calcularNoches() * formData.huespedes).toLocaleString()}</span>
                                     </div>
                                 </div>
                             )}
