@@ -41,10 +41,10 @@ export function RegisterForm({ onSubmit, loading }: RegisterFormProps) {
   }, [password])
 
   const getStrengthColor = (score: number) => {
-    if (score <= 1) return 'bg-red-500'
-    if (score === 2) return 'bg-yellow-500'
+    if (score <= 1) return 'bg-yellow-300'
+    if (score === 2) return 'bg-yellow-400'
     if (score === 3) return 'bg-blue-500'
-    return 'bg-green-500'
+    return 'bg-yellow-400'
   }
 
   const getStrengthText = (score: number) => {
@@ -94,10 +94,10 @@ export function RegisterForm({ onSubmit, loading }: RegisterFormProps) {
               {...register('nombre')}
               className={`w-full px-3 py-2 pr-8 border-2 rounded-lg focus:outline-none focus:ring-2 transition-all text-sm bg-white text-gray-900 placeholder-gray-400 ${
                 errors.nombre
-                  ? 'border-red-400 focus:ring-red-500'
+                  ? 'border-yellow-400 focus:ring-yellow-400'
                   : isNombreValid
                   ? 'border-green-400 focus:ring-green-500'
-                  : 'border-gray-300 hover:border-gray-400 focus:ring-red-500'
+                  : 'border-gray-300 hover:border-gray-400 focus:ring-yellow-400'
               }`}
               placeholder="Luis"
               disabled={loading}
@@ -107,7 +107,7 @@ export function RegisterForm({ onSubmit, loading }: RegisterFormProps) {
             )}
           </div>
           {errors.nombre && (
-            <p className="text-[10px] text-red-600">⚠️ {errors.nombre.message}</p>
+            <p className="text-[10px] text-yellow-400">⚠️ {errors.nombre.message}</p>
           )}
         </div>
 
@@ -122,10 +122,10 @@ export function RegisterForm({ onSubmit, loading }: RegisterFormProps) {
               {...register('apellido')}
               className={`w-full px-3 py-2 pr-8 border-2 rounded-lg focus:outline-none focus:ring-2 transition-all text-sm bg-white text-gray-900 placeholder-gray-400 ${
                 errors.apellido
-                  ? 'border-red-400 focus:ring-red-500'
+                  ? 'border-yellow-400 focus:ring-yellow-400'
                   : isApellidoValid
                   ? 'border-green-400 focus:ring-green-500'
-                  : 'border-gray-300 hover:border-gray-400 focus:ring-red-500'
+                  : 'border-gray-300 hover:border-gray-400 focus:ring-yellow-400'
               }`}
               placeholder="Cueva"
               disabled={loading}
@@ -135,7 +135,7 @@ export function RegisterForm({ onSubmit, loading }: RegisterFormProps) {
             )}
           </div>
           {errors.apellido && (
-            <p className="text-[10px] text-red-600">⚠️ {errors.apellido.message}</p>
+            <p className="text-[10px] text-yellow-400">⚠️ {errors.apellido.message}</p>
           )}
         </div>
       </div>
@@ -151,10 +151,10 @@ export function RegisterForm({ onSubmit, loading }: RegisterFormProps) {
             {...register('email')}
             className={`w-full px-3 py-2 pr-8 border-2 rounded-lg focus:outline-none focus:ring-2 transition-all text-sm bg-white text-gray-900 placeholder-gray-400 ${
               errors.email
-                ? 'border-red-400 focus:ring-red-500'
+                ? 'border-yellow-400 focus:ring-yellow-400'
                 : isEmailValid
                 ? 'border-green-400 focus:ring-green-500'
-                : 'border-gray-300 hover:border-gray-400 focus:ring-red-500'
+                : 'border-gray-300 hover:border-gray-400 focus:ring-yellow-400'
             }`}
             placeholder="tu@email.com"
             disabled={loading}
@@ -164,7 +164,7 @@ export function RegisterForm({ onSubmit, loading }: RegisterFormProps) {
           )}
         </div>
         {errors.email && (
-          <p className="text-[10px] text-red-600">⚠️ {errors.email.message}</p>
+          <p className="text-[10px] text-yellow-400">⚠️ {errors.email.message}</p>
         )}
       </div>
 
@@ -179,8 +179,8 @@ export function RegisterForm({ onSubmit, loading }: RegisterFormProps) {
             {...register('password')}
             className={`w-full px-3 py-2 pr-8 border-2 rounded-lg focus:outline-none focus:ring-2 transition-all text-sm bg-white text-gray-900 placeholder-gray-400 ${
               errors.password
-                ? 'border-red-400 focus:ring-red-500'
-                : 'border-gray-300 hover:border-gray-400 focus:ring-red-500'
+                ? 'border-yellow-400 focus:ring-yellow-400'
+                : 'border-gray-300 hover:border-gray-400 focus:ring-yellow-400'
             }`}
             placeholder="••••••••"
             disabled={loading}
@@ -188,14 +188,14 @@ export function RegisterForm({ onSubmit, loading }: RegisterFormProps) {
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-600 transition-colors p-0.5 rounded hover:bg-red-50"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-yellow-400 transition-colors p-0.5 rounded hover:bg-yellow-50"
             tabIndex={-1}
           >
             {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
           </button>
         </div>
         {errors.password && (
-          <p className="text-[10px] text-red-600">⚠️ {errors.password.message}</p>
+          <p className="text-[10px] text-yellow-400">⚠️ {errors.password.message}</p>
         )}
         
         {password && password.length > 0 && (
@@ -212,16 +212,16 @@ export function RegisterForm({ onSubmit, loading }: RegisterFormProps) {
               </span>
             </div>
             <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[10px]">
-              <div className={`flex items-center gap-1 ${password.length >= 8 ? 'text-green-600' : 'text-gray-400'}`}>
+              <div className={`flex items-center gap-1 ${password.length >= 8 ? 'text-yellow-400' : 'text-gray-400'}`}>
                 {password.length >= 8 ? '✓' : '○'} 8+ caracteres
               </div>
-              <div className={`flex items-center gap-1 ${/[A-Z]/.test(password) && /[a-z]/.test(password) ? 'text-green-600' : 'text-gray-400'}`}>
+              <div className={`flex items-center gap-1 ${/[A-Z]/.test(password) && /[a-z]/.test(password) ? 'text-yellow-400' : 'text-gray-400'}`}>
                 {/[A-Z]/.test(password) && /[a-z]/.test(password) ? '✓' : '○'} Mayús/minús
               </div>
-              <div className={`flex items-center gap-1 ${/[0-9]/.test(password) ? 'text-green-600' : 'text-gray-400'}`}>
+              <div className={`flex items-center gap-1 ${/[0-9]/.test(password) ? 'text-yellow-400' : 'text-gray-400'}`}>
                 {/[0-9]/.test(password) ? '✓' : '○'} Números
               </div>
-              <div className={`flex items-center gap-1 ${/[^a-zA-Z0-9]/.test(password) ? 'text-green-600' : 'text-gray-400'}`}>
+              <div className={`flex items-center gap-1 ${/[^a-zA-Z0-9]/.test(password) ? 'text-yellow-400' : 'text-gray-400'}`}>
                 {/[^a-zA-Z0-9]/.test(password) ? '✓' : '○'} Símbolos
               </div>
             </div>
@@ -240,8 +240,8 @@ export function RegisterForm({ onSubmit, loading }: RegisterFormProps) {
             {...register('confirmPassword')}
             className={`w-full px-3 py-2 pr-8 border-2 rounded-lg focus:outline-none focus:ring-2 transition-all text-sm bg-white text-gray-900 placeholder-gray-400 ${
               errors.confirmPassword
-                ? 'border-red-400 focus:ring-red-500'
-                : 'border-gray-300 hover:border-gray-400 focus:ring-red-500'
+                ? 'border-yellow-400 focus:ring-yellow-400'
+                : 'border-gray-300 hover:border-gray-400 focus:ring-yellow-400'
             }`}
             placeholder="••••••••"
             disabled={loading}
@@ -249,14 +249,14 @@ export function RegisterForm({ onSubmit, loading }: RegisterFormProps) {
           <button
             type="button"
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-600 transition-colors p-0.5 rounded hover:bg-red-50"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-yellow-400 transition-colors p-0.5 rounded hover:bg-yellow-50"
             tabIndex={-1}
           >
             {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
           </button>
         </div>
         {errors.confirmPassword && (
-          <p className="text-[10px] text-red-600">⚠️ {errors.confirmPassword.message}</p>
+          <p className="text-[10px] text-yellow-400">⚠️ {errors.confirmPassword.message}</p>
         )}
       </div>
 
@@ -276,7 +276,7 @@ export function RegisterForm({ onSubmit, loading }: RegisterFormProps) {
       <button
         type="submit"
         disabled={loading}
-        className="w-full py-2.5 px-4 bg-gradient-to-r from-red-600 via-red-600 to-red-700 hover:from-red-700 hover:via-red-700 hover:to-red-800 text-white font-semibold rounded-lg focus:outline-none focus:ring-4 focus:ring-red-500/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:-translate-y-0.5 hover:shadow-xl disabled:transform-none text-sm relative overflow-hidden group"
+        className="w-full py-2.5 px-4 bg-gradient-to-r from-yellow-400 via-red-600 to-yellow-500 hover:from-yellow-400 hover:via-red-700 hover:to-red-800 text-white font-semibold rounded-lg focus:outline-none focus:ring-4 focus:ring-yellow-400/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:-translate-y-0.5 hover:shadow-xl disabled:transform-none text-sm relative overflow-hidden group"
       >
         <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
         {loading ? (

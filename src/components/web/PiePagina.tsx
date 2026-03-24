@@ -39,7 +39,7 @@ export function Footer() {
                     <div className="mb-4">
                         <Logo className="h-10" variant="footer" />
                     </div>
-                    <h4 className="text-white font-semibold mb-4 uppercase text-sm tracking-widest">Direccion</h4>
+                    <h4 className="text-white font-semibold mb-4 uppercase text-sm tracking-widest">Dirección</h4>
                     <p className="text-sm leading-relaxed">Jr. Amalia Puga 635</p>
                     <p className="text-sm mt-1">Cajamarca, Perú</p>
                     <p className="text-sm mt-3">+51 976 123 456</p>
@@ -65,20 +65,20 @@ export function Footer() {
 
                 <div>
                     <h4 className="text-white font-semibold mb-4 uppercase text-sm tracking-widest">Newsletter</h4>
-                    <p className="text-sm mb-4">Suscribete para recibir las ultimas noticias y ofertas.</p>
+                    <p className="text-sm mb-4">Suscríbete para recibir las últimas noticias y ofertas.</p>
                     <form onSubmit={handleNewsletterSubmit} className="flex gap-2">
                         <input
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder="Tu email"
-                            className="flex-1 px-3 py-2 text-sm bg-gray-800 text-white border border-gray-700 rounded-l outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/50 transition-all"
+                            className="flex-1 px-3 py-2 text-sm bg-gray-800 text-white border border-gray-700 rounded-l outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/50 transition-all"
                             required
                             aria-label="Email para newsletter"
                         />
                         <button
                             type="submit"
-                            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-r transition-all duration-300 hover:shadow-lg"
+                            className="px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-gray-900 text-sm font-semibold rounded-r transition-all duration-300 hover:shadow-lg"
                             aria-label="Suscribirse al newsletter"
                         >
                             OK
@@ -92,7 +92,7 @@ export function Footer() {
                             href="https://facebook.com/adventurhotels"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-9 h-9 rounded-full bg-gray-800 hover:bg-red-600 flex items-center justify-center flex-shrink-0 transition-all duration-300 text-white hover:scale-110"
+                            className="w-9 h-9 rounded-full bg-gray-800 hover:bg-yellow-400 flex items-center justify-center flex-shrink-0 transition-all duration-300 text-gray-900 hover:scale-110"
                             title="Facebook"
                             aria-label="Síguenos en Facebook"
                         >
@@ -102,7 +102,7 @@ export function Footer() {
                             href="https://instagram.com/adventurhotels"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-9 h-9 rounded-full bg-gray-800 hover:bg-red-600 flex items-center justify-center flex-shrink-0 transition-all duration-300 text-white hover:scale-110"
+                            className="w-9 h-9 rounded-full bg-gray-800 hover:bg-yellow-400 flex items-center justify-center flex-shrink-0 transition-all duration-300 text-gray-900 hover:scale-110"
                             title="Instagram"
                             aria-label="Síguenos en Instagram"
                         >
@@ -112,7 +112,7 @@ export function Footer() {
                             href="https://tiktok.com/@adventurhotels"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-9 h-9 rounded-full bg-gray-800 hover:bg-red-600 flex items-center justify-center flex-shrink-0 transition-all duration-300 text-white hover:scale-110"
+                            className="w-9 h-9 rounded-full bg-gray-800 hover:bg-yellow-400 flex items-center justify-center flex-shrink-0 transition-all duration-300 text-gray-900 hover:scale-110"
                             title="TikTok"
                             aria-label="Síguenos en TikTok"
                         >
@@ -122,7 +122,7 @@ export function Footer() {
                             href="https://wa.me/51976123456"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-9 h-9 rounded-full bg-gray-800 hover:bg-red-600 flex items-center justify-center flex-shrink-0 transition-all duration-300 text-white hover:scale-110"
+                            className="w-9 h-9 rounded-full bg-gray-800 hover:bg-yellow-400 flex items-center justify-center flex-shrink-0 transition-all duration-300 text-gray-900 hover:scale-110"
                             title="WhatsApp"
                             aria-label="Contáctanos por WhatsApp"
                         >

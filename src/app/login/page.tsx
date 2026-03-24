@@ -180,7 +180,7 @@ export default function LoginPage() {
               </Link>
 
               <div className="inline-flex items-center gap-1.5 bg-black/[0.05] backdrop-blur-[1px] border border-white/[0.03] rounded-full px-3 py-1.5">
-                <div className="w-1.5 h-1.5 bg-amber-400 rounded-full" />
+                <div className="w-1.5 h-1.5 bg-yellow-300 rounded-full" />
                 <span className="text-[10px] font-semibold text-white uppercase tracking-widest drop-shadow-lg">Premium</span>
               </div>
             </div>
@@ -189,7 +189,7 @@ export default function LoginPage() {
               <div>
                 <h2 className="text-3xl xl:text-4xl font-bold text-white leading-tight mb-2.5 drop-shadow-lg">
                   Bienvenido a <br />
-                  <span className="text-amber-400">Adventur</span>
+                  <span className="text-yellow-400">Adventur</span>
                 </h2>
                 <p className="text-sm text-slate-100 font-light leading-relaxed drop-shadow-md">
                   Experiencias exclusivas en los mejores hoteles de Cajamarca
@@ -221,7 +221,7 @@ export default function LoginPage() {
                 {[...Array(5)].map((_, i) => (
                   <Star 
                     key={i} 
-                    className="w-3.5 h-3.5 fill-amber-400 text-amber-400 drop-shadow" 
+                    className="w-3.5 h-3.5 fill-amber-400 text-yellow-400 drop-shadow" 
                   />
                 ))}
               </div>
@@ -325,11 +325,11 @@ export default function LoginPage() {
               <div className="bg-white rounded-xl shadow-sm border border-slate-200/60 p-3 sm:p-3.5">
                 <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 mb-2.5 sm:mb-3">
                   <div className="flex items-center gap-1.5 sm:gap-2 text-xs text-slate-600">
-                    <Shield className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-green-600" />
+                    <Shield className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-yellow-400" />
                     <span className="font-medium">Pago Seguro</span>
                   </div>
                   <div className="flex items-center gap-1.5 sm:gap-2 text-xs text-slate-600">
-                    <Lock className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-green-600" />
+                    <Lock className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-yellow-400" />
                     <span className="font-medium">SSL 256-bit</span>
                   </div>
                 </div>

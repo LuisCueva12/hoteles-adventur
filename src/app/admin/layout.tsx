@@ -276,8 +276,8 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
             <div className="min-h-screen flex items-center justify-center bg-gray-50 px-6">
                 <div className="text-center max-w-md">
                     <div className="mb-8">
-                        <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <svg className="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg className="w-10 h-10 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                             </svg>
                         </div>
@@ -291,13 +291,13 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
                         <div className="flex flex-col sm:flex-row gap-3 justify-center">
                             <Link
                                 href="/"
-                                className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors inline-block"
+                                className="px-6 py-3 bg-yellow-400 hover:bg-yellow-400 text-gray-900 font-semibold rounded-lg transition-colors inline-block"
                             >
                                 Ir al inicio
                             </Link>
                             <Link
                                 href="/login"
-                                className="px-6 py-3 border-2 border-red-600 text-red-600 hover:bg-red-600 hover:text-white font-semibold rounded-lg transition-colors inline-block"
+                                className="px-6 py-3 border-2 border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-gray-900 font-semibold rounded-lg transition-colors inline-block"
                             >
                                 Cambiar de cuenta
                             </Link>
@@ -388,12 +388,12 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
                                     <span className="flex-1">{item.label}</span>
                                 )}
                                 {isSidebarOpen && item.badge && (
-                                    <span className="px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded-full animate-pulse">
+                                    <span className="px-2 py-0.5 bg-yellow-300 text-white text-xs font-bold rounded-full animate-pulse">
                                         {item.badge}
                                     </span>
                                 )}
                                 {!isSidebarOpen && item.badge && (
-                                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-300 rounded-full animate-pulse" />
                                 )}
                             </Link>
                         )
@@ -412,7 +412,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
                     </Link>
                     <button
                         onClick={handleLogout}
-                        className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-gray-600 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 hover:text-red-700 transition-all duration-200 group w-full ${!isSidebarOpen && 'justify-center'}`}
+                        className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-gray-600 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 hover:text-yellow-400 transition-all duration-200 group w-full ${!isSidebarOpen && 'justify-center'}`}
                         title={!isSidebarOpen ? 'Cerrar sesión' : undefined}
                     >
                         <LogOut size={20} className="group-hover:scale-110 transition-transform duration-200 flex-shrink-0" />

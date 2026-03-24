@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useSyncExternalStore } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { 
@@ -172,10 +172,14 @@ export default function HabitacionDetailPage() {
         fechaFin: '',
         huespedes: 1,
     })
-    const [minDate, setMinDate] = useState('')
+    const isClient = useSyncExternalStore(
+        () => () => undefined,
+        () => true,
+        () => false,
+    )
+    const minDate = isClient ? new Date().toISOString().split('T')[0] : ''
 
     useEffect(() => {
-        setMinDate(new Date().toISOString().split('T')[0])
         if (typeof window !== 'undefined') {
             const sp = new URLSearchParams(window.location.search)
             const checkIn = sp.get('checkIn')
@@ -344,7 +348,7 @@ export default function HabitacionDetailPage() {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
-                    <Loader2 className="w-12 h-12 text-red-600 animate-spin mx-auto mb-4" />
+                    <Loader2 className="w-12 h-12 text-yellow-400 animate-spin mx-auto mb-4" />
                     <p className="text-gray-600">Cargando habitación...</p>
                 </div>
             </div>
@@ -356,7 +360,7 @@ export default function HabitacionDetailPage() {
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
                     <h1 className="text-2xl font-bold text-gray-900 mb-4">Habitación no encontrada</h1>
-                    <Link href="/hoteles" className="text-red-600 hover:underline">
+                    <Link href="/hoteles" className="text-yellow-400 hover:underline">
                         Volver a habitaciones
                     </Link>
                 </div>
@@ -415,9 +419,9 @@ export default function HabitacionDetailPage() {
             <div className="bg-gray-50 border-b border-gray-200">
                 <div className="max-w-7xl mx-auto px-6 py-3">
                     <div className="flex items-center gap-2 text-sm">
-                        <Link href="/" className="text-gray-600 hover:text-red-600">Inicio</Link>
+                        <Link href="/" className="text-gray-600 hover:text-yellow-400">Inicio</Link>
                         <ChevronRight className="w-4 h-4 text-gray-400" />
-                        <Link href="/hoteles" className="text-gray-600 hover:text-red-600">Habitaciones</Link>
+                        <Link href="/hoteles" className="text-gray-600 hover:text-yellow-400">Habitaciones</Link>
                         <ChevronRight className="w-4 h-4 text-gray-400" />
                         <span className="text-gray-900 font-semibold">{room.name}</span>
                     </div>
@@ -458,13 +462,13 @@ export default function HabitacionDetailPage() {
                                 onClick={() => toggleFavorite(room.id)}
                                 className={`p-3 rounded-full border-2 transition-all duration-300 ${
                                     isFavorite(room.id)
-                                        ? 'border-red-600 bg-red-50 text-red-600'
-                                        : 'border-gray-300 text-gray-700 hover:border-red-600'
+                                        ? 'border-yellow-400 bg-yellow-50 text-yellow-400'
+                                        : 'border-gray-300 text-gray-700 hover:border-yellow-400'
                                 }`}
                             >
                                 <Heart className={`w-6 h-6 ${isFavorite(room.id) ? 'fill-current' : ''}`} />
                             </button>
-                            <button className="p-3 rounded-full border-2 border-gray-300 text-gray-700 hover:border-red-600 transition-all">
+                            <button className="p-3 rounded-full border-2 border-gray-300 text-gray-700 hover:border-yellow-400 transition-all">
                                 <Share2 className="w-6 h-6" />
                             </button>
                         </div>
@@ -530,22 +534,22 @@ export default function HabitacionDetailPage() {
                             <h2 className="text-2xl font-bold text-gray-900 mb-6">Características</h2>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 <div className="bg-gray-50 p-4 rounded-lg text-center">
-                                    <Users className="w-8 h-8 text-red-600 mx-auto mb-2" />
+                                    <Users className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
                                     <p className="text-sm text-gray-600 mb-1">Capacidad</p>
                                     <p className="font-semibold text-gray-900">{room.capacity} personas</p>
                                 </div>
                                 <div className="bg-gray-50 p-4 rounded-lg text-center">
-                                    <Maximize className="w-8 h-8 text-red-600 mx-auto mb-2" />
+                                    <Maximize className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
                                     <p className="text-sm text-gray-600 mb-1">Tamaño</p>
                                     <p className="font-semibold text-gray-900">{room.size}m²</p>
                                 </div>
                                 <div className="bg-gray-50 p-4 rounded-lg text-center">
-                                    <Bed className="w-8 h-8 text-red-600 mx-auto mb-2" />
+                                    <Bed className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
                                     <p className="text-sm text-gray-600 mb-1">Cama</p>
                                     <p className="font-semibold text-gray-900">{room.beds.split(' ')[2]}</p>
                                 </div>
                                 <div className="bg-gray-50 p-4 rounded-lg text-center">
-                                    <Eye className="w-8 h-8 text-red-600 mx-auto mb-2" />
+                                    <Eye className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
                                     <p className="text-sm text-gray-600 mb-1">Vista</p>
                                     <p className="font-semibold text-gray-900">{room.view.split(' ')[1]}</p>
                                 </div>
@@ -564,8 +568,8 @@ export default function HabitacionDetailPage() {
                             <h2 className="text-2xl font-bold text-gray-900 mb-4">Lo que hace especial esta habitación</h2>
                             <div className="grid md:grid-cols-2 gap-4">
                                 {room.highlights.map((highlight: string, idx: number) => (
-                                    <div key={idx} className="flex items-start gap-3 bg-green-50 p-4 rounded-lg">
-                                        <Award className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                                    <div key={idx} className="flex items-start gap-3 bg-yellow-50 p-4 rounded-lg">
+                                        <Award className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
                                         <span className="text-gray-700">{highlight}</span>
                                     </div>
                                 ))}
@@ -579,9 +583,9 @@ export default function HabitacionDetailPage() {
                                 {room.amenities.map((amenity: { icon: any; name: string; description: string }, idx: number) => {
                                     const Icon = amenity.icon
                                     return (
-                                        <div key={idx} className="flex items-start gap-4 p-4 border border-gray-200 rounded-lg hover:border-red-600 hover:shadow-md transition-all">
-                                            <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                                <Icon className="w-6 h-6 text-red-600" />
+                                        <div key={idx} className="flex items-start gap-4 p-4 border border-gray-200 rounded-lg hover:border-yellow-400 hover:shadow-md transition-all">
+                                            <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                                <Icon className="w-6 h-6 text-yellow-400" />
                                             </div>
                                             <div>
                                                 <h3 className="font-semibold text-gray-900 mb-1">{amenity.name}</h3>
@@ -641,7 +645,7 @@ export default function HabitacionDetailPage() {
                                 {room.nearbyAttractions.map((attraction: { name: string; distance: string; time: string }, idx: number) => (
                                     <div key={idx} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                                         <div className="flex items-center gap-3">
-                                            <MapPin className="w-5 h-5 text-red-600" />
+                                            <MapPin className="w-5 h-5 text-yellow-400" />
                                             <span className="font-semibold text-gray-900">{attraction.name}</span>
                                         </div>
                                         <div className="text-right">
@@ -666,7 +670,7 @@ export default function HabitacionDetailPage() {
                                     <span className="text-gray-600">/ noche</span>
                                 </div>
                                 {room.originalPrice && (
-                                    <div className="mt-2 inline-block bg-red-100 text-red-600 px-3 py-1 rounded-full text-sm font-semibold">
+                                    <div className="mt-2 inline-block bg-yellow-100 text-yellow-400 px-3 py-1 rounded-full text-sm font-semibold">
                                         Ahorra {Math.round((1 - room.price / room.originalPrice) * 100)}%
                                     </div>
                                 )}
@@ -674,7 +678,7 @@ export default function HabitacionDetailPage() {
 
                             <button
                                 onClick={() => setShowReservaModal(true)}
-                                className="w-full py-4 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl mb-4"
+                                className="w-full py-4 bg-yellow-400 hover:bg-yellow-400 text-gray-900 font-semibold rounded-lg transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl mb-4"
                             >
                                 Reservar Ahora
                             </button>
@@ -685,15 +689,15 @@ export default function HabitacionDetailPage() {
 
                             <div className="space-y-3 pt-6 border-t border-gray-200">
                                 <div className="flex items-center gap-3 text-sm text-gray-700">
-                                    <Check className="w-5 h-5 text-green-600" />
+                                    <Check className="w-5 h-5 text-yellow-400" />
                                     <span>Cancelación gratuita</span>
                                 </div>
                                 <div className="flex items-center gap-3 text-sm text-gray-700">
-                                    <Check className="w-5 h-5 text-green-600" />
+                                    <Check className="w-5 h-5 text-yellow-400" />
                                     <span>Confirmación inmediata</span>
                                 </div>
                                 <div className="flex items-center gap-3 text-sm text-gray-700">
-                                    <Check className="w-5 h-5 text-green-600" />
+                                    <Check className="w-5 h-5 text-yellow-400" />
                                     <span>Mejor precio garantizado</span>
                                 </div>
                             </div>
@@ -701,7 +705,7 @@ export default function HabitacionDetailPage() {
                             <div className="mt-6 pt-6 border-t border-gray-200">
                                 <Link 
                                     href="/contacto"
-                                    className="flex items-center justify-center gap-2 text-red-600 hover:text-red-700 font-semibold"
+                                    className="flex items-center justify-center gap-2 text-yellow-400 hover:text-yellow-400 font-semibold"
                                 >
                                     <Phone className="w-5 h-5" />
                                     <span>¿Necesitas ayuda?</span>
@@ -723,7 +727,7 @@ export default function HabitacionDetailPage() {
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-red-700/60 to-transparent" />
                             <div className="relative z-10 flex items-end justify-between px-6 pb-5 h-full">
                                 <div>
-                                    <span className="inline-block bg-red-600 text-white text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full mb-2">Solicitar reserva</span>
+                                    <span className="inline-block bg-yellow-400 text-gray-900 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full mb-2">Solicitar reserva</span>
                                     <h2 className="text-xl font-bold text-white leading-tight">Reserva tu Habitación</h2>
                                     <p className="text-white/75 text-sm mt-0.5">{room.name}</p>
                                 </div>
@@ -741,11 +745,11 @@ export default function HabitacionDetailPage() {
                                 <span className="text-gray-400 text-sm">/ noche</span>
                             </div>
                             <div className="flex items-center gap-3 text-xs text-gray-300">
-                                <span className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-red-400" />{room.capacity} pers.</span>
+                                <span className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-yellow-400" />{room.capacity} pers.</span>
                                 <span className="w-px h-3 bg-gray-600" />
-                                <span className="flex items-center gap-1.5"><Maximize className="w-3.5 h-3.5 text-red-400" />{room.size}m²</span>
+                                <span className="flex items-center gap-1.5"><Maximize className="w-3.5 h-3.5 text-yellow-400" />{room.size}m²</span>
                                 <span className="w-px h-3 bg-gray-600" />
-                                <span className="flex items-center gap-1.5"><Bed className="w-3.5 h-3.5 text-red-400" />{room.beds.split(' ')[2] || '1'} cama</span>
+                                <span className="flex items-center gap-1.5"><Bed className="w-3.5 h-3.5 text-yellow-400" />{room.beds.split(' ')[2] || '1'} cama</span>
                             </div>
                         </div>
 
@@ -761,7 +765,7 @@ export default function HabitacionDetailPage() {
                                     onChange={e => setFormData({ ...formData, nombre: e.target.value })}
                                     placeholder="¿Cómo te llamas?"
                                     required
-                                    className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-red-500 focus:outline-none text-gray-900 text-sm transition-colors placeholder-gray-400"
+                                    className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-yellow-400 focus:outline-none text-gray-900 text-sm transition-colors placeholder-gray-400"
                                 />
                             </div>
 
@@ -778,12 +782,12 @@ export default function HabitacionDetailPage() {
                                             onChange={e => setFormData({ ...formData, fechaInicio: e.target.value, fechaFin: '' })}
                                             required
                                             suppressHydrationWarning
-                                            className="w-full px-3 py-3 border-2 border-gray-200 rounded-xl focus:border-red-500 focus:outline-none text-gray-900 text-sm transition-colors"
+                                            className="w-full px-3 py-3 border-2 border-gray-200 rounded-xl focus:border-yellow-400 focus:outline-none text-gray-900 text-sm transition-colors"
                                         />
                                     </div>
                                     <div>
                                         <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">
-                                            Check-out {calcularNoches() > 0 && <span className="text-red-500 normal-case font-bold">· {calcularNoches()} noche{calcularNoches() > 1 ? 's' : ''}</span>}
+                                            Check-out {calcularNoches() > 0 && <span className="text-yellow-400 normal-case font-bold">· {calcularNoches()} noche{calcularNoches() > 1 ? 's' : ''}</span>}
                                         </label>
                                         <input
                                             type="date"
@@ -792,7 +796,7 @@ export default function HabitacionDetailPage() {
                                             onChange={e => setFormData({ ...formData, fechaFin: e.target.value })}
                                             required
                                             suppressHydrationWarning
-                                            className="w-full px-3 py-3 border-2 border-gray-200 rounded-xl focus:border-red-500 focus:outline-none text-gray-900 text-sm transition-colors"
+                                            className="w-full px-3 py-3 border-2 border-gray-200 rounded-xl focus:border-yellow-400 focus:outline-none text-gray-900 text-sm transition-colors"
                                         />
                                     </div>
                                 </div>
@@ -804,7 +808,7 @@ export default function HabitacionDetailPage() {
                                 <div className="flex items-center border-2 border-gray-200 rounded-xl overflow-hidden">
                                     <button type="button"
                                         onClick={() => setFormData(f => ({ ...f, huespedes: Math.max(1, f.huespedes - 1) }))}
-                                        className="w-14 h-12 flex items-center justify-center text-gray-600 hover:bg-red-50 hover:text-red-600 text-xl font-bold transition-colors border-r-2 border-gray-200">
+                                        className="w-14 h-12 flex items-center justify-center text-gray-600 hover:bg-yellow-50 hover:text-yellow-400 text-xl font-bold transition-colors border-r-2 border-gray-200">
                                         −
                                     </button>
                                     <div className="flex-1 text-center">
@@ -813,7 +817,7 @@ export default function HabitacionDetailPage() {
                                     </div>
                                     <button type="button"
                                         onClick={() => setFormData(f => ({ ...f, huespedes: Math.min(room.capacity, f.huespedes + 1) }))}
-                                        className="w-14 h-12 flex items-center justify-center text-gray-600 hover:bg-red-50 hover:text-red-600 text-xl font-bold transition-colors border-l-2 border-gray-200">
+                                        className="w-14 h-12 flex items-center justify-center text-gray-600 hover:bg-yellow-50 hover:text-yellow-400 text-xl font-bold transition-colors border-l-2 border-gray-200">
                                         +
                                     </button>
                                 </div>
@@ -833,7 +837,7 @@ export default function HabitacionDetailPage() {
                                     </div>
                                     <div className="flex justify-between items-center border-t border-gray-700 pt-3">
                                         <span className="font-semibold text-gray-200">Total estimado</span>
-                                        <span className="text-2xl font-bold text-red-400">S/. {(room.price * calcularNoches() * formData.huespedes).toLocaleString()}</span>
+                                        <span className="text-2xl font-bold text-yellow-400">S/. {(room.price * calcularNoches() * formData.huespedes).toLocaleString()}</span>
                                     </div>
                                 </div>
                             )}

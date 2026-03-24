@@ -35,8 +35,8 @@ export function InsigniasConfianza() {
                             key={badge.title} 
                             className="flex flex-col items-center text-center p-4 hover:bg-white rounded-lg transition-all duration-300 hover:shadow-md animate-fadeInUp"
                         >
-                                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-3 transform hover:scale-110 transition-transform duration-300">
-                                    <Icon className="w-6 h-6 text-red-600" />
+                                <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mb-3 transform hover:scale-110 transition-transform duration-300">
+                                    <Icon className="w-6 h-6 text-yellow-400" />
                                 </div>
                                 <h3 className="font-semibold text-gray-900 text-sm mb-1">
                                     {badge.title}

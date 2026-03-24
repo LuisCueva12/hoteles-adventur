@@ -35,11 +35,11 @@ export function NotificationsPanel({
     const getIcon = (type: string) => {
         switch (type) {
             case 'success':
-                return <Check className="w-5 h-5 text-green-600" />
+                return <Check className="w-5 h-5 text-yellow-400" />
             case 'warning':
-                return <AlertCircle className="w-5 h-5 text-yellow-600" />
+                return <AlertCircle className="w-5 h-5 text-yellow-400" />
             case 'error':
-                return <AlertCircle className="w-5 h-5 text-red-600" />
+                return <AlertCircle className="w-5 h-5 text-yellow-400" />
             default:
                 return <Info className="w-5 h-5 text-blue-600" />
         }
@@ -48,11 +48,11 @@ export function NotificationsPanel({
     const getIconBg = (type: string) => {
         switch (type) {
             case 'success':
-                return 'bg-green-100'
+                return 'bg-yellow-100'
             case 'warning':
                 return 'bg-yellow-100'
             case 'error':
-                return 'bg-red-100'
+                return 'bg-yellow-100'
             default:
                 return 'bg-blue-100'
         }
@@ -97,7 +97,7 @@ export function NotificationsPanel({
                         </button>
                         <button
                             onClick={onClearAll}
-                            className="flex-1 px-3 py-2 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-all"
+                            className="flex-1 px-3 py-2 text-xs font-semibold text-yellow-400 bg-yellow-50 hover:bg-yellow-100 rounded-lg transition-all"
                         >
                             Limpiar todo
                         </button>

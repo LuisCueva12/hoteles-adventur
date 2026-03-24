@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
@@ -108,7 +108,7 @@ export function HeroSeccion() {
 
             <div className="relative z-10 text-center text-white px-6 max-w-4xl">
                 <div className="mb-6 animate-fadeInDown">
-                    <span className="inline-block px-4 py-1.5 bg-red-600/20 backdrop-blur-sm border border-red-500/30 rounded-full text-red-400 text-xs font-semibold tracking-[0.3em] uppercase">
+                    <span className="inline-block px-4 py-1.5 bg-yellow-400/20 backdrop-blur-sm border border-yellow-400/30 rounded-full text-yellow-400 text-xs font-semibold tracking-[0.3em] uppercase">
                         Bienvenido a
                     </span>
                 </div>
@@ -118,9 +118,9 @@ export function HeroSeccion() {
                 </h1>
                 
                 <div className="flex items-center justify-center gap-3 mb-8 animate-fadeInUp animation-delay-150">
-                    <div className="h-px w-12 bg-gradient-to-r from-transparent to-red-500" />
-                    <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                    <div className="h-px w-12 bg-gradient-to-l from-transparent to-red-500" />
+                    <div className="h-px w-12 bg-gradient-to-r from-transparent to-yellow-300" />
+                    <div className="w-2 h-2 bg-yellow-300 rounded-full animate-pulse" />
+                    <div className="h-px w-12 bg-gradient-to-l from-transparent to-yellow-300" />
                 </div>
                 
                 <p className="text-xl md:text-2xl text-gray-200 mb-10 tracking-wide animate-fadeInUp animation-delay-200 font-light">
@@ -129,9 +129,8 @@ export function HeroSeccion() {
                 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fadeInUp animation-delay-300">
                     <Link href="/hoteles"
-                        className="group relative px-10 py-4 bg-red-600 text-white font-semibold text-sm tracking-widest uppercase overflow-hidden transition-all duration-300 hover:shadow-2xl hover:shadow-red-600/50 hover:scale-105">
+                        className="group relative px-10 py-4 bg-yellow-400 text-gray-900 font-semibold text-sm tracking-widest uppercase overflow-hidden transition-all duration-300 hover:bg-yellow-500 hover:shadow-2xl hover:scale-105">
                         <span className="relative z-10">Explorar ahora</span>
-                        <div className="absolute inset-0 bg-gradient-to-r from-red-700 to-red-600 translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-300" />
                     </Link>
                     
                     <Link href="/nosotros"
@@ -159,7 +158,7 @@ export function HeroSeccion() {
 
             <button
                 onClick={prevSlide}
-                className="absolute left-6 top-1/2 -translate-y-1/2 w-14 h-14 bg-white/10 hover:bg-red-600 backdrop-blur-md text-white flex items-center justify-center rounded-full transition-all duration-300 hover:scale-110 z-20 focus:outline-none focus:ring-2 focus:ring-red-500 border border-white/20 group"
+                className="absolute left-6 top-1/2 -translate-y-1/2 w-14 h-14 bg-white/10 hover:bg-yellow-400 backdrop-blur-md text-gray-900 flex items-center justify-center rounded-full transition-all duration-300 hover:scale-110 z-20 focus:outline-none focus:ring-2 focus:ring-yellow-400 border border-white/20 group"
                 aria-label="Diapositiva anterior"
             >
                 <svg className="w-6 h-6 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -168,7 +167,7 @@ export function HeroSeccion() {
             </button>
             <button
                 onClick={nextSlide}
-                className="absolute right-6 top-1/2 -translate-y-1/2 w-14 h-14 bg-white/10 hover:bg-red-600 backdrop-blur-md text-white flex items-center justify-center rounded-full transition-all duration-300 hover:scale-110 z-20 focus:outline-none focus:ring-2 focus:ring-red-500 border border-white/20 group"
+                className="absolute right-6 top-1/2 -translate-y-1/2 w-14 h-14 bg-white/10 hover:bg-yellow-400 backdrop-blur-md text-gray-900 flex items-center justify-center rounded-full transition-all duration-300 hover:scale-110 z-20 focus:outline-none focus:ring-2 focus:ring-yellow-400 border border-white/20 group"
                 aria-label="Siguiente diapositiva"
             >
                 <svg className="w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -183,7 +182,7 @@ export function HeroSeccion() {
                         onClick={() => goToSlide(index)}
                         className={`h-2 rounded-full transition-all duration-300 ${
                             index === currentSlide 
-                                ? 'bg-red-600 w-12 shadow-lg shadow-red-600/50' 
+                                ? 'bg-yellow-400 w-12 shadow-lg shadow-yellow-400/50' 
                                 : 'bg-white/40 w-2 hover:bg-white/70 hover:w-8'
                         }`}
                         aria-label={`Ir a la diapositiva ${index + 1}`}

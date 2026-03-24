@@ -154,8 +154,8 @@ export default function PagosPage() {
             <div className="flex items-center justify-center min-h-[600px]">
                 <div className="text-center">
                     <div className="relative w-20 h-20 mx-auto mb-6">
-                        <div className="absolute inset-0 border-4 border-red-200 rounded-full animate-ping" />
-                        <div className="relative w-20 h-20 border-4 border-red-600 border-t-transparent rounded-full animate-spin" />
+                        <div className="absolute inset-0 border-4 border-yellow-200 rounded-full animate-ping" />
+                        <div className="relative w-20 h-20 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin" />
                     </div>
                     <p className="text-lg font-semibold text-gray-900 mb-2">Cargando pagos...</p>
                     <p className="text-sm text-gray-500">Por favor espera un momento</p>
@@ -167,7 +167,7 @@ export default function PagosPage() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 px-4 sm:px-0">
             {/* Header mejorado y responsive */}
-            <div className="bg-gradient-to-r from-red-600 via-red-700 to-red-800 text-white rounded-2xl p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8 relative overflow-hidden shadow-2xl">
+            <div className="bg-gradient-to-r from-yellow-400 via-red-700 to-red-800 text-white rounded-2xl p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8 relative overflow-hidden shadow-2xl">
                 <div className="absolute top-0 right-0 w-32 sm:w-64 h-32 sm:h-64 bg-white/10 rounded-full blur-3xl" />
                 <div className="absolute bottom-0 left-0 w-32 sm:w-64 h-32 sm:h-64 bg-red-900/30 rounded-full blur-3xl" />
                 
@@ -175,7 +175,7 @@ export default function PagosPage() {
                     <div className="flex items-center justify-between mb-4 sm:mb-6">
                         <div>
                             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 animate-fadeInUp">Mis Pagos</h1>
-                            <p className="text-sm sm:text-base text-red-100 animate-fadeInUp animation-delay-100">Historial de transacciones</p>
+                            <p className="text-sm sm:text-base text-yellow-100 animate-fadeInUp animation-delay-100">Historial de transacciones</p>
                         </div>
                         <div className="hidden md:block">
                             <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/20">
@@ -195,11 +195,11 @@ export default function PagosPage() {
                             <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-green-500 to-green-600 rounded-lg sm:rounded-xl flex items-center justify-center">
                                 <DollarSign className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
                             </div>
-                            <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
+                            <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400" />
                         </div>
                         <p className="text-xs sm:text-sm font-bold text-gray-600 mb-1">Total Pagado</p>
                         <p className="text-2xl sm:text-3xl font-bold text-gray-900">S/. {totalPagado.toFixed(2)}</p>
-                        <p className="text-[10px] sm:text-xs text-green-600 mt-2 flex items-center gap-1">
+                        <p className="text-[10px] sm:text-xs text-yellow-400 mt-2 flex items-center gap-1">
                             <CheckCircle className="w-3 h-3" />
                             Pagos aprobados
                         </p>
@@ -207,17 +207,17 @@ export default function PagosPage() {
                 </div>
 
                 <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-100 p-4 sm:p-6 relative overflow-hidden group hover:shadow-2xl transition-all animate-fadeInUp animation-delay-100">
-                    <div className="absolute top-0 right-0 w-24 sm:w-32 h-24 sm:h-32 bg-gradient-to-br from-yellow-500/10 to-yellow-600/10 rounded-full blur-2xl group-hover:scale-150 transition-transform" />
+                    <div className="absolute top-0 right-0 w-24 sm:w-32 h-24 sm:h-32 bg-gradient-to-br from-yellow-400/10 to-yellow-500/10 rounded-full blur-2xl group-hover:scale-150 transition-transform" />
                     <div className="relative z-10">
                         <div className="flex items-center justify-between mb-3 sm:mb-4">
-                            <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg sm:rounded-xl flex items-center justify-center">
+                            <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-lg sm:rounded-xl flex items-center justify-center">
                                 <Clock className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
                             </div>
-                            <Receipt className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600" />
+                            <Receipt className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400" />
                         </div>
                         <p className="text-xs sm:text-sm font-bold text-gray-600 mb-1">Pagos Pendientes</p>
                         <p className="text-2xl sm:text-3xl font-bold text-gray-900">{pagos.filter(p => p.estado === 'pendiente').length}</p>
-                        <p className="text-[10px] sm:text-xs text-yellow-600 mt-2 flex items-center gap-1">
+                        <p className="text-[10px] sm:text-xs text-yellow-400 mt-2 flex items-center gap-1">
                             <Clock className="w-3 h-3" />
                             En proceso
                         </p>
@@ -253,7 +253,7 @@ export default function PagosPage() {
                                 onClick={() => setFilter(estado)}
                                 className={`flex-1 py-2 sm:py-3 lg:py-4 px-2 sm:px-4 lg:px-6 text-xs sm:text-sm font-bold rounded-xl transition-all duration-300 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 ${
                                     filter === estado
-                                        ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg shadow-red-600/30'
+                                        ? 'bg-gradient-to-r from-yellow-400 to-yellow-500 text-white shadow-lg shadow-red-600/30'
                                         : 'text-gray-600 hover:bg-gray-50'
                                 }`}
                             >
@@ -273,7 +273,7 @@ export default function PagosPage() {
             {reservasPendientes.length > 0 && (
                 <div className="mb-8">
                     <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                        <Clock className="w-6 h-6 text-yellow-600" />
+                        <Clock className="w-6 h-6 text-yellow-400" />
                         Reservas Pendientes de Pago
                     </h2>
                     <div className="space-y-4">
@@ -286,7 +286,7 @@ export default function PagosPage() {
                                 <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
                                     <div className="flex-1">
                                         <div className="flex items-start gap-3 mb-3">
-                                            <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                                            <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0">
                                                 <CreditCard className="w-6 h-6 text-white" />
                                             </div>
                                             <div>
@@ -321,7 +321,7 @@ export default function PagosPage() {
                                     </div>
                                     <button
                                         onClick={() => crearPago(reserva)}
-                                        className="w-full lg:w-auto px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                                        className="w-full lg:w-auto px-6 py-3 bg-gradient-to-r from-green-600 to-yellow-300 hover:from-yellow-300 hover:to-yellow-400 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
                                     >
                                         <CreditCard className="w-5 h-5" />
                                         Pagar Adelanto
@@ -344,7 +344,7 @@ export default function PagosPage() {
                     </p>
                     <a
                         href="/reservas"
-                        className="inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white text-sm sm:text-base font-bold rounded-xl transition-all shadow-lg hover:shadow-2xl hover:shadow-red-600/30 transform hover:-translate-y-0.5"
+                        className="inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-400 hover:to-red-800 text-white text-sm sm:text-base font-bold rounded-xl transition-all shadow-lg hover:shadow-2xl hover:shadow-red-600/30 transform hover:-translate-y-0.5"
                     >
                         <Receipt className="w-4 h-4 sm:w-5 sm:h-5" />
                         Ver Reservas
@@ -369,9 +369,9 @@ export default function PagosPage() {
                                         </p>
                                     </div>
                                     <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 ml-2 flex-shrink-0 ${
-                                        pago.estado === 'aprobado' ? 'bg-green-100 text-green-700' :
-                                        pago.estado === 'pendiente' ? 'bg-yellow-100 text-yellow-700' :
-                                        'bg-red-100 text-red-700'
+                                        pago.estado === 'aprobado' ? 'bg-yellow-100 text-yellow-400' :
+                                        pago.estado === 'pendiente' ? 'bg-yellow-100 text-yellow-400' :
+                                        'bg-yellow-100 text-yellow-400'
                                     }`}>
                                         {pago.estado === 'aprobado' && <CheckCircle className="w-2.5 h-2.5" />}
                                         {pago.estado === 'pendiente' && <Clock className="w-2.5 h-2.5" />}
@@ -383,11 +383,11 @@ export default function PagosPage() {
                                 {/* Información del pago */}
                                 <div className="grid grid-cols-2 gap-3 mb-3">
                                     <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-2.5">
-                                        <p className="text-[10px] font-bold text-green-700 mb-0.5 flex items-center gap-1">
+                                        <p className="text-[10px] font-bold text-yellow-400 mb-0.5 flex items-center gap-1">
                                             <DollarSign className="w-2.5 h-2.5" />
                                             Monto
                                         </p>
-                                        <p className="text-base font-bold text-green-900">S/. {pago.monto.toFixed(2)}</p>
+                                        <p className="text-base font-bold text-yellow-400">S/. {pago.monto.toFixed(2)}</p>
                                     </div>
                                     <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-2.5">
                                         <p className="text-[10px] font-bold text-blue-700 mb-0.5 flex items-center gap-1">
@@ -487,15 +487,15 @@ export default function PagosPage() {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm">
                                                 <div className="flex items-center gap-2">
-                                                    <DollarSign className="w-4 h-4 text-green-600" />
+                                                    <DollarSign className="w-4 h-4 text-yellow-400" />
                                                     <span className="font-bold text-gray-900 text-lg">S/. {pago.monto.toFixed(2)}</span>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm">
                                                 <span className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 w-fit ${
-                                                    pago.estado === 'aprobado' ? 'bg-green-100 text-green-700' :
-                                                    pago.estado === 'pendiente' ? 'bg-yellow-100 text-yellow-700' :
-                                                    'bg-red-100 text-red-700'
+                                                    pago.estado === 'aprobado' ? 'bg-yellow-100 text-yellow-400' :
+                                                    pago.estado === 'pendiente' ? 'bg-yellow-100 text-yellow-400' :
+                                                    'bg-yellow-100 text-yellow-400'
                                                 }`}>
                                                     {pago.estado === 'aprobado' && <CheckCircle className="w-3 h-3" />}
                                                     {pago.estado === 'pendiente' && <Clock className="w-3 h-3" />}

@@ -1,4 +1,4 @@
-﻿import { Check, Car, Wifi, Briefcase, Bell, Sparkles, Lock, Dog, Accessibility, Clock, Coffee, Utensils, Dumbbell, Calendar, Shield, MapPin } from 'lucide-react'
+import { Check, Car, Wifi, Briefcase, Bell, Sparkles, Lock, Dog, Accessibility, Clock, Coffee, Utensils, Dumbbell, Calendar, Shield, MapPin } from 'lucide-react'
 
 export default function ServiciosPage() {
     return (
@@ -32,19 +32,19 @@ export default function ServiciosPage() {
                 
                 <div className="relative z-10 text-center text-white px-6 max-w-4xl">
                     <div className="mb-6 animate-fadeInDown">
-                        <span className="inline-block px-4 py-1.5 bg-red-600/20 backdrop-blur-sm border border-red-500/30 rounded-full text-red-400 text-xs font-semibold tracking-[0.3em] uppercase">
+                        <span className="inline-block px-4 py-1.5 bg-yellow-400/20 backdrop-blur-sm border border-yellow-400/30 rounded-full text-yellow-400 text-xs font-semibold tracking-[0.3em] uppercase">
                             Experiencias Premium
                         </span>
                     </div>
                     
                     <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-fadeInUp animation-delay-100 drop-shadow-2xl font-serif">
-                        Nuestros <span className="text-red-500">Servicios</span>
+                        Nuestros <span className="text-yellow-400">Servicios</span>
                     </h1>
                     
                     <div className="flex items-center justify-center gap-3 mb-6 animate-fadeInUp animation-delay-150">
-                        <div className="h-px w-16 bg-gradient-to-r from-transparent to-red-500" />
-                        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                        <div className="h-px w-16 bg-gradient-to-l from-transparent to-red-500" />
+                        <div className="h-px w-16 bg-gradient-to-r from-transparent to-yellow-300" />
+                        <div className="w-2 h-2 bg-yellow-300 rounded-full animate-pulse" />
+                        <div className="h-px w-16 bg-gradient-to-l from-transparent to-yellow-300" />
                     </div>
                     
                     <p className="text-xl text-gray-200 tracking-wide animate-fadeInUp animation-delay-200 max-w-2xl mx-auto">
@@ -56,19 +56,19 @@ export default function ServiciosPage() {
             <section className="max-w-7xl mx-auto px-6 py-24">
                 <div className="text-center mb-16 animate-fadeInUp">
                     <div className="mb-6">
-                        <span className="inline-block px-4 py-1.5 bg-red-50 text-red-600 text-xs font-semibold tracking-[0.3em] uppercase rounded-full">
+                        <span className="inline-block px-4 py-1.5 bg-yellow-50 text-yellow-400 text-xs font-semibold tracking-[0.3em] uppercase rounded-full">
                             Lo que ofrecemos
                         </span>
                     </div>
                     
                     <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 font-serif">
-                        Servicios <span className="text-red-600">Premium</span>
+                        Servicios <span className="text-yellow-400">Premium</span>
                     </h2>
                     
                     <div className="flex items-center justify-center gap-3 mb-6">
-                        <div className="h-px w-20 bg-gradient-to-r from-transparent via-red-600 to-red-600" />
-                        <div className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse" />
-                        <div className="h-px w-20 bg-gradient-to-l from-transparent via-red-600 to-red-600" />
+                        <div className="h-px w-20 bg-gradient-to-r from-transparent via-yellow-300 to-yellow-400" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-yellow-400 animate-pulse" />
+                        <div className="h-px w-20 bg-gradient-to-l from-transparent via-yellow-300 to-yellow-400" />
                     </div>
                     
                     <p className="text-gray-600 max-w-2xl mx-auto text-lg">
@@ -84,7 +84,7 @@ export default function ServiciosPage() {
                             desc: 'Cocina internacional y local preparada por chefs de renombre. Desayuno buffet, almuerzo y cena a la carta.',
                             features: ['Desayuno buffet', 'Menú a la carta', 'Bar de vinos', 'Servicio 24/7'],
                             icon: Utensils,
-                            color: 'from-orange-500 to-red-500'
+                            color: 'from-orange-500 to-yellow-300'
                         },
                         {
                             img: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=600&q=80',
@@ -108,7 +108,7 @@ export default function ServiciosPage() {
                             desc: 'Espacios versátiles para conferencias, bodas y eventos corporativos con capacidad hasta 500 personas.',
                             features: ['Salones privados', 'Equipamiento AV', 'Catering', 'Planificación'],
                             icon: Calendar,
-                            color: 'from-yellow-500 to-orange-500'
+                            color: 'from-yellow-400 to-orange-500'
                         },
                         {
                             img: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&q=80',
@@ -129,7 +129,7 @@ export default function ServiciosPage() {
                     ].map((service, index) => {
                         const IconComponent = service.icon
                         return (
-                            <div key={service.title} className="group bg-white border-2 border-gray-100 rounded-2xl overflow-hidden hover:shadow-2xl hover:border-red-600 transition-all duration-500 animate-fadeInUp hover:-translate-y-3" style={{ animationDelay: `${index * 0.1}s` }}>
+                            <div key={service.title} className="group bg-white border-2 border-gray-100 rounded-2xl overflow-hidden hover:shadow-2xl hover:border-yellow-400 transition-all duration-500 animate-fadeInUp hover:-translate-y-3" style={{ animationDelay: `${index * 0.1}s` }}>
                                 <div className="relative h-56 overflow-hidden">
                                     <img
                                         src={service.img}
@@ -146,14 +146,14 @@ export default function ServiciosPage() {
                                 </div>
                                 
                                 <div className="p-6">
-                                    <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-red-600 transition-colors duration-300">{service.title}</h3>
+                                    <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-yellow-400 transition-colors duration-300">{service.title}</h3>
                                     <p className="text-gray-600 text-sm mb-6 leading-relaxed">{service.desc}</p>
                                     
                                     <div className="space-y-3">
                                         {service.features.map((feature) => (
-                                            <div key={feature} className="flex items-center text-sm text-gray-700 group/item hover:text-red-600 transition-colors">
-                                                <div className="w-5 h-5 bg-red-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0 group-hover/item:bg-red-600 transition-colors">
-                                                    <Check className="w-3 h-3 text-red-600 group-hover/item:text-white transition-colors" />
+                                            <div key={feature} className="flex items-center text-sm text-gray-700 group/item hover:text-yellow-400 transition-colors">
+                                                <div className="w-5 h-5 bg-yellow-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0 group-hover/item:bg-yellow-400 transition-colors">
+                                                    <Check className="w-3 h-3 text-yellow-400 group-hover/item:text-white transition-colors" />
                                                 </div>
                                                 <span className="font-medium">{feature}</span>
                                             </div>
@@ -173,13 +173,13 @@ export default function ServiciosPage() {
                     <div className="relative z-10">
                         <div className="text-center mb-12">
                             <div className="mb-4">
-                                <span className="inline-block px-4 py-1.5 bg-red-600/20 border border-red-600/30 text-red-400 text-xs font-semibold tracking-[0.3em] uppercase rounded-full">
+                                <span className="inline-block px-4 py-1.5 bg-yellow-400/20 border border-yellow-400/30 text-yellow-400 text-xs font-semibold tracking-[0.3em] uppercase rounded-full">
                                     Incluido en tu estadía
                                 </span>
                             </div>
                             
                             <h3 className="text-3xl md:text-4xl font-bold mb-4 font-serif">
-                                Servicios <span className="text-red-500">Adicionales</span>
+                                Servicios <span className="text-yellow-400">Adicionales</span>
                             </h3>
                             
                             <p className="text-gray-400 max-w-2xl mx-auto">
@@ -191,10 +191,10 @@ export default function ServiciosPage() {
                             {[
                                 { Icon: Car, label: 'Estacionamiento gratuito', color: 'from-blue-500 to-blue-600' },
                                 { Icon: Wifi, label: 'WiFi de alta velocidad', color: 'from-purple-500 to-purple-600' },
-                                { Icon: Briefcase, label: 'Servicio de equipaje', color: 'from-yellow-500 to-yellow-600' },
+                                { Icon: Briefcase, label: 'Servicio de equipaje', color: 'from-yellow-400 to-yellow-500' },
                                 { Icon: Bell, label: 'Room service 24/7', color: 'from-green-500 to-green-600' },
                                 { Icon: Sparkles, label: 'Limpieza diaria', color: 'from-pink-500 to-pink-600' },
-                                { Icon: Lock, label: 'Caja de seguridad', color: 'from-red-500 to-red-600' },
+                                { Icon: Lock, label: 'Caja de seguridad', color: 'from-yellow-300 to-yellow-400' },
                                 { Icon: Dog, label: 'Pet friendly', color: 'from-orange-500 to-orange-600' },
                                 { Icon: Accessibility, label: 'Accesibilidad total', color: 'from-cyan-500 to-cyan-600' },
                             ].map((item, index) => {

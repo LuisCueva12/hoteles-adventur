@@ -37,8 +37,8 @@ export function Navbar() {
                             href={link.href}
                             className={`px-3 py-2 text-sm font-medium transition-colors ${
                                 isActive(link.href)
-                                    ? 'text-red-600 border-b-2 border-red-600'
-                                    : 'text-gray-700 hover:text-red-600'
+                                    ? 'text-yellow-400 border-b-2 border-yellow-400'
+                                    : 'text-gray-700 hover:text-yellow-400'
                             }`}
                         >
                             {link.label}
@@ -47,18 +47,18 @@ export function Navbar() {
                 </nav>
 
                 <div className="hidden md:flex items-center gap-3">
-                    <Link href="/login" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
-                        Iniciar sesion
+                    <Link href="/login" className="text-sm text-gray-600 hover:text-gray-900 transition-colors font-medium">
+                        Iniciar sesión
                     </Link>
                     <Link href="/hoteles"
-                        className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded transition-colors">
+                        className="px-5 py-2 bg-yellow-400 hover:bg-yellow-500 text-gray-900 text-sm font-semibold rounded-lg transition-all duration-200 shadow-sm hover:shadow-md">
                         Reservar ahora
                     </Link>
                 </div>
 
                 <button
                     onClick={() => setOpen(!open)} 
-                    className="md:hidden p-2 text-gray-600 hover:text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-red-600 rounded"
+                    className="md:hidden p-2 text-gray-600 hover:text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-400 rounded"
                     aria-label="Menú de navegación"
                     aria-expanded={open}
                 >
@@ -75,19 +75,19 @@ export function Navbar() {
                             key={link.href}
                             href={link.href}
                             className={`text-sm ${
-                                isActive(link.href) ? 'text-red-600 font-semibold' : 'text-gray-700 hover:text-red-600'
+                                isActive(link.href) ? 'text-yellow-400 font-semibold' : 'text-gray-700 hover:text-yellow-400'
                             }`}
                             onClick={() => setOpen(false)}
                         >
                             {link.label}
                         </Link>
                     ))}
-                    <Link href="/login" className="text-sm text-gray-600" onClick={() => setOpen(false)}>
-                        Iniciar sesion
+                    <Link href="/login" className="text-sm text-gray-600 font-medium" onClick={() => setOpen(false)}>
+                        Iniciar sesión
                     </Link>
                     <Link
                         href="/hoteles"
-                        className="px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded text-center"
+                        className="px-4 py-2.5 bg-yellow-400 hover:bg-yellow-500 text-gray-900 text-sm font-semibold rounded-lg text-center transition-colors"
                         onClick={() => setOpen(false)}
                     >
                         Reservar ahora

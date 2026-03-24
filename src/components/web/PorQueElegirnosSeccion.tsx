@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState } from 'react'
 import Link from 'next/link'
@@ -29,19 +29,19 @@ export function PorQueElegirnosSeccion() {
             <div className="max-w-7xl mx-auto px-6 relative z-10">
                 <div className="text-center mb-16 animate-fadeInUp">
                     <div className="inline-block mb-4">
-                        <span className="px-4 py-1.5 bg-red-600/10 border border-red-600/20 text-red-400 text-xs font-semibold tracking-[0.3em] uppercase rounded-full">
+                        <span className="px-4 py-1.5 bg-yellow-400/10 border border-yellow-400/20 text-yellow-400 text-xs font-semibold tracking-[0.3em] uppercase rounded-full">
                             Nuestras Instalaciones
                         </span>
                     </div>
                     
                     <h2 className="text-4xl md:text-5xl font-bold text-white mb-4 font-serif">
-                        Por qué <span className="text-red-500">elegirnos</span>
+                        Por qué <span className="text-yellow-400">elegirnos</span>
                     </h2>
                     
                     <div className="flex items-center justify-center gap-3 mb-8">
-                        <div className="h-px w-20 bg-gradient-to-r from-transparent via-red-600 to-red-600" />
-                        <div className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse" />
-                        <div className="h-px w-20 bg-gradient-to-l from-transparent via-red-600 to-red-600" />
+                        <div className="h-px w-20 bg-gradient-to-r from-transparent to-yellow-400" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-yellow-400 animate-pulse" />
+                        <div className="h-px w-20 bg-gradient-to-l from-transparent to-yellow-400" />
                     </div>
                     
                     <p className="text-gray-400 max-w-2xl mx-auto text-base leading-relaxed mb-10">
@@ -52,8 +52,8 @@ export function PorQueElegirnosSeccion() {
                         {FILTERS.map((f) => (
                             <button key={f} onClick={() => setActive(f)}
                                 className={`px-6 py-2.5 text-xs font-semibold uppercase tracking-wider rounded-full border-2 transition-all duration-300 ${active === f
-                                    ? 'bg-red-600 border-red-600 text-white shadow-lg shadow-red-600/30 scale-105'
-                                    : 'border-gray-700 text-gray-400 hover:border-red-600 hover:text-red-400 hover:bg-red-600/5'
+                                    ? 'bg-yellow-400 border-yellow-400 text-gray-900 shadow-lg shadow-red-600/30 scale-105'
+                                    : 'border-gray-700 text-gray-400 hover:border-yellow-400 hover:text-yellow-400 hover:bg-yellow-400/5'
                                     }`}>
                                 {f}
                             </button>
@@ -75,7 +75,7 @@ export function PorQueElegirnosSeccion() {
                             {/* Contenido */}
                             <div className="absolute inset-0 flex flex-col justify-end p-5">
                                 <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-                                    <span className="inline-block px-3 py-1 bg-red-600 text-white text-xs font-semibold rounded-full mb-2">
+                                    <span className="inline-block px-3 py-1 bg-yellow-400 text-gray-900 text-xs font-semibold rounded-full mb-2">
                                         {item.cat}
                                     </span>
                                     <p className="text-white text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -96,7 +96,7 @@ export function PorQueElegirnosSeccion() {
 
                 <div className="text-center">
                     <Link href="/galeria"
-                        className="inline-flex items-center gap-3 px-12 py-4 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold text-sm uppercase tracking-wider transition-all duration-300 hover:shadow-2xl hover:shadow-red-600/50 transform hover:-translate-y-1 rounded-full group">
+                        className="inline-flex items-center gap-3 px-12 py-4 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold text-sm uppercase tracking-wider transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1 rounded-full group">
                         Ver galería completa
                         <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />

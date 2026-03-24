@@ -1,4 +1,4 @@
-﻿import { Check, X } from 'lucide-react'
+import { Check, X } from 'lucide-react'
 
 interface Feature {
     name: string
@@ -47,7 +47,7 @@ export function ComparisonTable() {
                                 <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900 border-b">
                                     Superior
                                 </th>
-                                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900 border-b bg-red-50">
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900 border-b bg-yellow-50">
                                     Deluxe
                                 </th>
                                 <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900 border-b">
@@ -68,28 +68,28 @@ export function ComparisonTable() {
                                     </td>
                                     <td className="px-6 py-4 text-center border-b">
                                         {feature.estandar ? (
-                                            <Check className="w-5 h-5 text-green-600 mx-auto" />
+                                            <Check className="w-5 h-5 text-yellow-400 mx-auto" />
                                         ) : (
                                             <X className="w-5 h-5 text-gray-300 mx-auto" />
                                         )}
                                     </td>
                                     <td className="px-6 py-4 text-center border-b">
                                         {feature.superior ? (
-                                            <Check className="w-5 h-5 text-green-600 mx-auto" />
+                                            <Check className="w-5 h-5 text-yellow-400 mx-auto" />
                                         ) : (
                                             <X className="w-5 h-5 text-gray-300 mx-auto" />
                                         )}
                                     </td>
-                                    <td className="px-6 py-4 text-center border-b bg-red-50/50">
+                                    <td className="px-6 py-4 text-center border-b bg-yellow-50/50">
                                         {feature.deluxe ? (
-                                            <Check className="w-5 h-5 text-green-600 mx-auto" />
+                                            <Check className="w-5 h-5 text-yellow-400 mx-auto" />
                                         ) : (
                                             <X className="w-5 h-5 text-gray-300 mx-auto" />
                                         )}
                                     </td>
                                     <td className="px-6 py-4 text-center border-b">
                                         {feature.premium ? (
-                                            <Check className="w-5 h-5 text-green-600 mx-auto" />
+                                            <Check className="w-5 h-5 text-yellow-400 mx-auto" />
                                         ) : (
                                             <X className="w-5 h-5 text-gray-300 mx-auto" />
                                         )}

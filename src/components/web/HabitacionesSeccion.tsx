@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
@@ -90,7 +90,7 @@ export function HabitacionesSeccion() {
             <section className="py-24 bg-gradient-to-b from-white via-gray-50 to-white">
                 <div className="max-w-7xl mx-auto px-6">
                     <div className="flex items-center justify-center h-64">
-                        <Loader2 className="w-12 h-12 text-red-600 animate-spin" />
+                        <Loader2 className="w-12 h-12 text-yellow-400 animate-spin" />
                     </div>
                 </div>
             </section>
@@ -100,25 +100,25 @@ export function HabitacionesSeccion() {
     return (
         <section className="py-24 bg-gradient-to-b from-white via-gray-50 to-white relative overflow-hidden">
             {/* Elementos decorativos de fondo */}
-            <div className="absolute top-0 right-0 w-96 h-96 bg-red-50 rounded-full blur-3xl opacity-30" />
+            <div className="absolute top-0 right-0 w-96 h-96 bg-yellow-50 rounded-full blur-3xl opacity-30" />
             <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-50 rounded-full blur-3xl opacity-30" />
             
             <div className="max-w-7xl mx-auto px-6 relative z-10">
                 <div className="text-center mb-16 animate-fadeInUp">
                     <div className="inline-block mb-4">
-                        <span className="px-4 py-1.5 bg-red-50 text-red-600 text-xs font-semibold tracking-[0.3em] uppercase rounded-full">
+                        <span className="px-4 py-1.5 bg-yellow-50 text-yellow-400 text-xs font-semibold tracking-[0.3em] uppercase rounded-full">
                             Nuestras Habitaciones
                         </span>
                     </div>
                     
                     <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 font-serif">
-                        Bienvenido al <span className="text-red-600">Hotel</span>
+                        Bienvenido al <span className="text-yellow-400">Hotel</span>
                     </h2>
                     
                     <div className="flex items-center justify-center gap-3 mb-6">
-                        <div className="h-px w-20 bg-gradient-to-r from-transparent via-red-600 to-red-600" />
-                        <div className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse" />
-                        <div className="h-px w-20 bg-gradient-to-l from-transparent via-red-600 to-red-600" />
+                        <div className="h-px w-20 bg-gradient-to-r from-transparent to-yellow-400" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-yellow-400 animate-pulse" />
+                        <div className="h-px w-20 bg-gradient-to-l from-transparent to-yellow-400" />
                     </div>
                     
                     <p className="text-gray-600 max-w-2xl mx-auto text-base leading-relaxed">
@@ -136,7 +136,7 @@ export function HabitacionesSeccion() {
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent group-hover:from-black/70 transition-all" />
                                 
                                 {/* Badge de precio flotante */}
-                                <div className="absolute top-4 right-4 bg-red-600 text-white px-4 py-2 rounded-full shadow-lg">
+                                <div className="absolute top-4 right-4 bg-yellow-400 text-gray-900 px-4 py-2 rounded-full shadow-lg">
                                     <div className="text-xs font-semibold">desde</div>
                                     <div className="text-lg font-bold">S/. {room.price}</div>
                                     <div className="text-[10px]">/noche</div>
@@ -146,7 +146,7 @@ export function HabitacionesSeccion() {
                                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
                                     <Link 
                                         href={`/hoteles/${room.id}`}
-                                        className="px-8 py-3 bg-white text-gray-900 font-semibold rounded-full transform scale-90 group-hover:scale-100 transition-all duration-300 hover:bg-red-600 hover:text-white shadow-2xl flex items-center gap-2"
+                                        className="px-8 py-3 bg-white text-gray-900 font-semibold rounded-full transform scale-90 group-hover:scale-100 transition-all duration-300 hover:bg-yellow-400 hover:text-gray-900 shadow-2xl flex items-center gap-2"
                                     >
                                         Ver Detalles
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -158,8 +158,8 @@ export function HabitacionesSeccion() {
                             
                             <div className="p-6 bg-white">
                                 <div className="flex items-center justify-between mb-3">
-                                    <h3 className="text-xl font-bold text-gray-900 group-hover:text-red-600 transition-colors">{room.title}</h3>
-                                    <div className="flex items-center gap-1 text-yellow-500">
+                                    <h3 className="text-xl font-bold text-gray-900 group-hover:text-yellow-400 transition-colors">{room.title}</h3>
+                                    <div className="flex items-center gap-1 text-yellow-400">
                                         {[...Array(5)].map((_, i) => (
                                             <svg key={i} className="w-4 h-4 fill-current" viewBox="0 0 20 20">
                                                 <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
@@ -195,7 +195,7 @@ export function HabitacionesSeccion() {
 
                 <div className="text-center">
                     <Link href="/hoteles"
-                        className="inline-flex items-center gap-3 px-12 py-4 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold text-sm uppercase tracking-wider transition-all duration-300 hover:shadow-2xl hover:shadow-red-600/50 transform hover:-translate-y-1 rounded-full group">
+                        className="inline-flex items-center gap-3 px-12 py-4 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold text-sm uppercase tracking-wider transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1 rounded-full group">
                         Ver todas las habitaciones
                         <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />

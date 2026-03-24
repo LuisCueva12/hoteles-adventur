@@ -14,9 +14,9 @@ interface StatCardProps {
 
 const colorClasses = {
     blue: 'bg-blue-100 text-blue-600',
-    green: 'bg-green-100 text-green-600',
-    red: 'bg-red-100 text-red-600',
-    yellow: 'bg-yellow-100 text-yellow-600',
+    green: 'bg-yellow-100 text-yellow-400',
+    red: 'bg-yellow-100 text-yellow-400',
+    yellow: 'bg-yellow-100 text-yellow-400',
     purple: 'bg-purple-100 text-purple-600',
 }
 
@@ -34,7 +34,7 @@ export function StatCard({ title, value, icon, trend, color = 'blue' }: StatCard
                     </div>
                     {trend && (
                         <div className="flex flex-col items-end gap-1">
-                            <span className={`text-xs font-semibold px-2.5 py-1 rounded-lg flex items-center gap-1 border ${trend.isPositive ? 'bg-green-100 text-green-700 border-green-200' : 'bg-red-100 text-red-700 border-red-200'}`}>
+                            <span className={`text-xs font-semibold px-2.5 py-1 rounded-lg flex items-center gap-1 border ${trend.isPositive ? 'bg-yellow-100 text-yellow-400 border-yellow-200' : 'bg-yellow-100 text-yellow-400 border-yellow-200'}`}>
                                 {trend.isPositive ? '↑' : '↓'} {trend.value}
                             </span>
                             <span className="text-[10px] text-gray-500 font-medium">vs mes anterior</span>

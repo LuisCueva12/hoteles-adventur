@@ -71,7 +71,7 @@ export default function AdminPage() {
                         Dashboard
                     </h1>
                     <p className="text-gray-600 flex items-center gap-2">
-                        <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                        <span className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></span>
                         Bienvenido al panel de administración
                     </p>
                 </div>
@@ -93,7 +93,7 @@ export default function AdminPage() {
                         <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
                             <Users className="text-white" size={24} />
                         </div>
-                        <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                        <span className="text-xs font-semibold text-yellow-400 bg-yellow-50 px-2 py-1 rounded-full">
                             +11.01%
                         </span>
                     </div>
@@ -106,7 +106,7 @@ export default function AdminPage() {
                         <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center">
                             <Calendar className="text-white" size={24} />
                         </div>
-                        <span className="text-xs font-semibold text-red-600 bg-red-50 px-2 py-1 rounded-full">
+                        <span className="text-xs font-semibold text-yellow-400 bg-yellow-50 px-2 py-1 rounded-full">
                             -9.05%
                         </span>
                     </div>
@@ -116,10 +116,10 @@ export default function AdminPage() {
 
                 <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all border border-gray-100">
                     <div className="flex items-center justify-between mb-4">
-                        <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center">
+                        <div className="w-12 h-12 bg-yellow-400 rounded-xl flex items-center justify-center">
                             <DollarSign className="text-white" size={24} />
                         </div>
-                        <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                        <span className="text-xs font-semibold text-yellow-400 bg-yellow-50 px-2 py-1 rounded-full">
                             +15.3%
                         </span>
                     </div>
@@ -132,7 +132,7 @@ export default function AdminPage() {
                         <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center">
                             <Hotel className="text-white" size={24} />
                         </div>
-                        <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                        <span className="text-xs font-semibold text-yellow-400 bg-yellow-50 px-2 py-1 rounded-full">
                             +8.2%
                         </span>
                     </div>
@@ -203,7 +203,7 @@ export default function AdminPage() {
                             </svg>
                             <div className="absolute inset-0 flex flex-col items-center justify-center">
                                 <span className="text-4xl font-bold text-gray-900">{stats.ocupacionActual}%</span>
-                                <span className="text-sm text-green-600 font-semibold">+10%</span>
+                                <span className="text-sm text-yellow-400 font-semibold">+10%</span>
                             </div>
                         </div>
                     </div>
@@ -216,17 +216,17 @@ export default function AdminPage() {
                         <div className="text-center">
                             <p className="text-xs text-gray-600 mb-1 font-medium">Meta</p>
                             <p className="text-lg font-bold text-gray-900">S/. 20K</p>
-                            <p className="text-xs text-red-600">↓</p>
+                            <p className="text-xs text-yellow-400">↓</p>
                         </div>
                         <div className="text-center">
                             <p className="text-xs text-gray-600 mb-1 font-medium">Ingresos</p>
                             <p className="text-lg font-bold text-gray-900">S/. {(stats.ingresosMes / 1000).toFixed(0)}K</p>
-                            <p className="text-xs text-green-600">↑</p>
+                            <p className="text-xs text-yellow-400">↑</p>
                         </div>
                         <div className="text-center">
                             <p className="text-xs text-gray-600 mb-1 font-medium">Hoy</p>
                             <p className="text-lg font-bold text-gray-900">S/. 20K</p>
-                            <p className="text-xs text-green-600">↑</p>
+                            <p className="text-xs text-yellow-400">↑</p>
                         </div>
                     </div>
                 </div>
@@ -251,8 +251,8 @@ export default function AdminPage() {
                         {recentActivity.map((activity, idx) => (
                             <div key={idx} className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all group border border-gray-100">
                                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                                    activity.status === 'success' ? 'bg-green-100 text-green-600' :
-                                    activity.status === 'warning' ? 'bg-yellow-100 text-yellow-600' :
+                                    activity.status === 'success' ? 'bg-yellow-100 text-yellow-400' :
+                                    activity.status === 'warning' ? 'bg-yellow-100 text-yellow-400' :
                                     'bg-blue-100 text-blue-600'
                                 }`}>
                                     {activity.type === 'reserva' ? <Calendar size={18} /> :
@@ -273,14 +273,14 @@ export default function AdminPage() {
                     <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
                         <h2 className="text-xl font-bold text-gray-900 mb-4">Estadísticas Rápidas</h2>
                         <div className="space-y-3">
-                            <div className="flex items-center justify-between p-3 bg-green-50 rounded-xl border border-green-100">
+                            <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-xl border border-yellow-100">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center">
+                                    <div className="w-10 h-10 bg-yellow-400 rounded-xl flex items-center justify-center">
                                         <TrendingUp size={18} className="text-white" />
                                     </div>
                                     <span className="text-sm font-semibold text-gray-900">Ocupación</span>
                                 </div>
-                                <span className="text-xl font-bold text-green-600">{stats.ocupacionActual}%</span>
+                                <span className="text-xl font-bold text-yellow-400">{stats.ocupacionActual}%</span>
                             </div>
                             <div className="flex items-center justify-between p-3 bg-blue-50 rounded-xl border border-blue-100">
                                 <div className="flex items-center gap-3">
@@ -293,21 +293,21 @@ export default function AdminPage() {
                             </div>
                             <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-xl border border-yellow-100">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-yellow-500 rounded-xl flex items-center justify-center">
+                                    <div className="w-10 h-10 bg-yellow-400 rounded-xl flex items-center justify-center">
                                         <Clock size={18} className="text-white" />
                                     </div>
                                     <span className="text-sm font-semibold text-gray-900">Check-outs Hoy</span>
                                 </div>
-                                <span className="text-xl font-bold text-yellow-600">{stats.checkoutsHoy}</span>
+                                <span className="text-xl font-bold text-yellow-400">{stats.checkoutsHoy}</span>
                             </div>
-                            <div className="flex items-center justify-between p-3 bg-red-50 rounded-xl border border-red-100">
+                            <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-xl border border-yellow-100">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-red-500 rounded-xl flex items-center justify-center">
+                                    <div className="w-10 h-10 bg-yellow-300 rounded-xl flex items-center justify-center">
                                         <AlertCircle size={18} className="text-white" />
                                     </div>
                                     <span className="text-sm font-semibold text-gray-900">Pendientes</span>
                                 </div>
-                                <span className="text-xl font-bold text-red-600">{stats.pendientes}</span>
+                                <span className="text-xl font-bold text-yellow-400">{stats.pendientes}</span>
                             </div>
                         </div>
                     </div>
@@ -331,7 +331,7 @@ export default function AdminPage() {
                                         <div className="flex items-center gap-3">
                                             <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
                                                 item.color === 'blue' ? 'bg-blue-500' :
-                                                item.color === 'green' ? 'bg-green-500' :
+                                                item.color === 'green' ? 'bg-yellow-400' :
                                                 item.color === 'purple' ? 'bg-purple-500' :
                                                 'bg-orange-500'
                                             }`}>

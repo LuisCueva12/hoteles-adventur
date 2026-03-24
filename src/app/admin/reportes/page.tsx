@@ -241,10 +241,10 @@ export default function ReportesAdminPage() {
                                 <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
                                     <div
                                         className={`h-full rounded-full transition-all duration-500 ${
-                                            item.estado === 'Confirmadas' ? 'bg-green-500' :
-                                            item.estado === 'Pendientes' ? 'bg-yellow-500' :
+                                            item.estado === 'Confirmadas' ? 'bg-yellow-400' :
+                                            item.estado === 'Pendientes' ? 'bg-yellow-400' :
                                             item.estado === 'Completadas' ? 'bg-blue-500' :
-                                            'bg-red-500'
+                                            'bg-yellow-300'
                                         }`}
                                         style={{ width: `${item.porcentaje}%` }}
                                     />
@@ -283,7 +283,7 @@ export default function ReportesAdminPage() {
                                                 {hab.reservas}
                                             </span>
                                         </td>
-                                        <td className="py-4 text-right text-green-600 font-semibold">
+                                        <td className="py-4 text-right text-yellow-400 font-semibold">
                                             S/. {hab.ingresos.toLocaleString()}
                                         </td>
                                     </tr>
@@ -307,17 +307,17 @@ export default function ReportesAdminPage() {
                                 <span className="text-sm text-gray-600 font-medium">Total Reservas</span>
                                 <span className="text-lg font-bold text-gray-900">{stats.totalReservas}</span>
                             </div>
-                            <div className="flex items-center justify-between p-3 bg-red-50 rounded-xl border border-red-200">
-                                <span className="text-sm text-red-700 font-medium">Tasa de Cancelación</span>
-                                <span className="text-lg font-bold text-red-600">
+                            <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-xl border border-yellow-200">
+                                <span className="text-sm text-yellow-400 font-medium">Tasa de Cancelación</span>
+                                <span className="text-lg font-bold text-yellow-400">
                                     {stats.totalReservas > 0 
                                         ? Math.round((reservasPorEstado.find(r => r.estado === 'Canceladas')?.cantidad || 0) / stats.totalReservas * 100)
                                         : 0}%
                                 </span>
                             </div>
-                            <div className="flex items-center justify-between p-3 bg-green-50 rounded-xl border border-green-200">
-                                <span className="text-sm text-green-700 font-medium">Tasa de Ocupación</span>
-                                <span className="text-lg font-bold text-green-600">{stats.tasaOcupacion}%</span>
+                            <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-xl border border-yellow-200">
+                                <span className="text-sm text-yellow-400 font-medium">Tasa de Ocupación</span>
+                                <span className="text-lg font-bold text-yellow-400">{stats.tasaOcupacion}%</span>
                             </div>
                         </div>
                     </div>

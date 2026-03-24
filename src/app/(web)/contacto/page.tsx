@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState } from 'react'
 import { Mail, Phone, MessageCircle, Send, CheckCircle, AlertCircle, User, MessageSquare, MapPin, Clock, Facebook, Instagram, Music } from 'lucide-react'
@@ -132,19 +132,19 @@ export default function ContactoPage() {
                 
                 <div className="relative z-10 text-center text-white px-6 max-w-4xl">
                     <div className="mb-6 animate-fadeInDown">
-                        <span className="inline-block px-4 py-1.5 bg-red-600/20 backdrop-blur-sm border border-red-500/30 rounded-full text-red-400 text-xs font-semibold tracking-[0.3em] uppercase">
+                        <span className="inline-block px-4 py-1.5 bg-yellow-400/20 backdrop-blur-sm border border-yellow-400/30 rounded-full text-yellow-400 text-xs font-semibold tracking-[0.3em] uppercase">
                             Estamos aquí para ti
                         </span>
                     </div>
                     
                     <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-fadeInUp animation-delay-100 drop-shadow-2xl font-serif">
-                        <span className="text-red-500">Contáctanos</span>
+                        <span className="text-yellow-400">Contáctanos</span>
                     </h1>
                     
                     <div className="flex items-center justify-center gap-3 mb-6 animate-fadeInUp animation-delay-150">
-                        <div className="h-px w-16 bg-gradient-to-r from-transparent to-red-500" />
-                        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                        <div className="h-px w-16 bg-gradient-to-l from-transparent to-red-500" />
+                        <div className="h-px w-16 bg-gradient-to-r from-transparent to-yellow-300" />
+                        <div className="w-2 h-2 bg-yellow-300 rounded-full animate-pulse" />
+                        <div className="h-px w-16 bg-gradient-to-l from-transparent to-yellow-300" />
                     </div>
                     
                     <p className="text-xl text-gray-200 tracking-wide animate-fadeInUp animation-delay-200 max-w-2xl mx-auto">
@@ -173,11 +173,11 @@ export default function ContactoPage() {
                 <div className="grid md:grid-cols-2 gap-16">
                     <div className="animate-fadeInLeft">
                         <div className="mb-8">
-                            <span className="inline-block px-4 py-1.5 bg-red-50 text-red-600 text-xs font-semibold tracking-[0.3em] uppercase rounded-full mb-4">
+                            <span className="inline-block px-4 py-1.5 bg-yellow-50 text-yellow-400 text-xs font-semibold tracking-[0.3em] uppercase rounded-full mb-4">
                                 Formulario de contacto
                             </span>
                             <h2 className="text-4xl font-bold text-gray-900 mb-4 font-serif">
-                                Envíanos un <span className="text-red-600">mensaje</span>
+                                Envíanos un <span className="text-yellow-400">mensaje</span>
                             </h2>
                             <p className="text-gray-600 text-lg">
                                 Completa el formulario y nos pondremos en contacto contigo lo antes posible.
@@ -185,7 +185,7 @@ export default function ContactoPage() {
                         </div>
 
                         {/* Botón de WhatsApp destacado */}
-                        <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl p-6 mb-8 hover:shadow-2xl transition-all duration-300 hover:border-green-400 animate-fadeInUp relative overflow-hidden group">
+                        <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-yellow-200 rounded-2xl p-6 mb-8 hover:shadow-2xl transition-all duration-300 hover:border-green-400 animate-fadeInUp relative overflow-hidden group">
                             {/* Efecto de brillo */}
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
                             
@@ -202,7 +202,7 @@ export default function ContactoPage() {
                                 <button
                                     type="button"
                                     onClick={handleWhatsAppContact}
-                                    className="w-full px-6 py-4 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold rounded-xl transition-all duration-300 flex items-center justify-center gap-3 hover:shadow-2xl transform hover:-translate-y-1 hover:scale-105"
+                                    className="w-full px-6 py-4 bg-gradient-to-r from-green-600 to-yellow-300 hover:from-yellow-300 hover:to-yellow-400 text-white font-bold rounded-xl transition-all duration-300 flex items-center justify-center gap-3 hover:shadow-2xl transform hover:-translate-y-1 hover:scale-105"
                                 >
                                     <MessageCircle className="w-6 h-6" />
                                     <span>Abrir WhatsApp</span>
@@ -229,14 +229,14 @@ export default function ContactoPage() {
                                             required
                                             className={`w-full pl-11 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all bg-white placeholder:text-gray-500 ${
                                                 errors.nombre 
-                                                    ? 'border-red-500 focus:ring-red-200' 
-                                                    : 'border-gray-300 focus:ring-red-200 focus:border-red-600'
+                                                    ? 'border-yellow-400 focus:ring-red-200' 
+                                                    : 'border-gray-300 focus:ring-red-200 focus:border-yellow-400'
                                             }`}
                                             placeholder="Juan Pérez"
                                         />
                                     </div>
                                     {errors.nombre && (
-                                        <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                                        <p className="text-xs text-yellow-400 mt-1 flex items-center gap-1">
                                             <AlertCircle className="w-3 h-3" />
                                             {errors.nombre}
                                         </p>
@@ -256,14 +256,14 @@ export default function ContactoPage() {
                                             onChange={handleChange}
                                             className={`w-full pl-11 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all bg-white placeholder:text-gray-500 ${
                                                 errors.telefono 
-                                                    ? 'border-red-500 focus:ring-red-200' 
-                                                    : 'border-gray-300 focus:ring-red-200 focus:border-red-600'
+                                                    ? 'border-yellow-400 focus:ring-red-200' 
+                                                    : 'border-gray-300 focus:ring-red-200 focus:border-yellow-400'
                                             }`}
                                             placeholder="+51 999 999 999"
                                         />
                                     </div>
                                     {errors.telefono && (
-                                        <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                                        <p className="text-xs text-yellow-400 mt-1 flex items-center gap-1">
                                             <AlertCircle className="w-3 h-3" />
                                             {errors.telefono}
                                         </p>
@@ -285,14 +285,14 @@ export default function ContactoPage() {
                                         required
                                         className={`w-full pl-11 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all bg-white placeholder:text-gray-500 ${
                                             errors.email 
-                                                ? 'border-red-500 focus:ring-red-200' 
-                                                : 'border-gray-300 focus:ring-red-200 focus:border-red-600'
+                                                ? 'border-yellow-400 focus:ring-red-200' 
+                                                : 'border-gray-300 focus:ring-red-200 focus:border-yellow-400'
                                         }`}
                                         placeholder="tu@email.com"
                                     />
                                 </div>
                                 {errors.email && (
-                                    <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                                    <p className="text-xs text-yellow-400 mt-1 flex items-center gap-1">
                                         <AlertCircle className="w-3 h-3" />
                                         {errors.email}
                                     </p>
@@ -310,8 +310,8 @@ export default function ContactoPage() {
                                     required
                                     className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all bg-white text-gray-900 ${
                                         errors.asunto 
-                                            ? 'border-red-500 focus:ring-red-200' 
-                                            : 'border-gray-300 focus:ring-red-200 focus:border-red-600'
+                                            ? 'border-yellow-400 focus:ring-red-200' 
+                                            : 'border-gray-300 focus:ring-red-200 focus:border-yellow-400'
                                     }`}
                                 >
                                     <option value="" className="text-gray-500">Selecciona un asunto</option>
@@ -323,7 +323,7 @@ export default function ContactoPage() {
                                     <option value="otro">Otro</option>
                                 </select>
                                 {errors.asunto && (
-                                    <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                                    <p className="text-xs text-yellow-400 mt-1 flex items-center gap-1">
                                         <AlertCircle className="w-3 h-3" />
                                         {errors.asunto}
                                     </p>
@@ -346,7 +346,7 @@ export default function ContactoPage() {
                                                 key={option.value}
                                                 className={`flex flex-col items-center justify-center gap-2 px-4 py-3 border-2 rounded-lg cursor-pointer transition-all ${
                                                     formData.preferencia === option.value
-                                                        ? 'border-red-600 bg-red-50 text-red-600'
+                                                        ? 'border-yellow-400 bg-yellow-50 text-yellow-400'
                                                         : 'border-gray-300 hover:border-gray-400 bg-white'
                                                 }`}
                                             >
@@ -381,14 +381,14 @@ export default function ContactoPage() {
                                         maxLength={500}
                                         className={`w-full pl-11 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all resize-none bg-white placeholder:text-gray-500 ${
                                             errors.mensaje 
-                                                ? 'border-red-500 focus:ring-red-200' 
-                                                : 'border-gray-300 focus:ring-red-200 focus:border-red-600'
+                                                ? 'border-yellow-400 focus:ring-red-200' 
+                                                : 'border-gray-300 focus:ring-red-200 focus:border-yellow-400'
                                         }`}
                                         placeholder="Escribe tu mensaje aquí..."
                                     />
                                 </div>
                                 {errors.mensaje && (
-                                    <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                                    <p className="text-xs text-yellow-400 mt-1 flex items-center gap-1">
                                         <AlertCircle className="w-3 h-3" />
                                         {errors.mensaje}
                                     </p>
@@ -401,8 +401,8 @@ export default function ContactoPage() {
                             {message.text && (
                                 <div className={`p-4 rounded-lg border-2 ${
                                     message.type === 'success' 
-                                        ? 'bg-green-50 text-green-800 border-green-200' 
-                                        : 'bg-red-50 text-red-800 border-red-200'
+                                        ? 'bg-yellow-50 text-yellow-400 border-yellow-200' 
+                                        : 'bg-yellow-50 text-red-800 border-yellow-200'
                                 }`}>
                                     <div className="flex items-start gap-3">
                                         {message.type === 'success' ? (
@@ -418,7 +418,7 @@ export default function ContactoPage() {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full px-8 py-4 bg-red-600 hover:bg-red-700 text-white font-semibold uppercase tracking-wider transition-all duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed rounded-lg shadow-lg hover:shadow-2xl flex items-center justify-center gap-2 transform hover:-translate-y-1 disabled:transform-none"
+                                className="w-full px-8 py-4 bg-yellow-400 hover:bg-yellow-400 text-gray-900 font-semibold uppercase tracking-wider transition-all duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed rounded-lg shadow-lg hover:shadow-2xl flex items-center justify-center gap-2 transform hover:-translate-y-1 disabled:transform-none"
                             >
                                 {loading ? (
                                     <>
@@ -435,7 +435,7 @@ export default function ContactoPage() {
 
                             <p className="text-xs text-gray-500 text-center">
                                 Al enviar este formulario, aceptas nuestra{' '}
-                                <a href="/privacidad" className="text-red-600 hover:underline">
+                                <a href="/privacidad" className="text-yellow-400 hover:underline">
                                     Política de Privacidad
                                 </a>
                             </p>
@@ -444,17 +444,17 @@ export default function ContactoPage() {
 
                     <div className="animate-fadeInRight">
                         <div className="mb-8">
-                            <span className="inline-block px-4 py-1.5 bg-red-50 text-red-600 text-xs font-semibold tracking-[0.3em] uppercase rounded-full mb-4">
+                            <span className="inline-block px-4 py-1.5 bg-yellow-50 text-yellow-400 text-xs font-semibold tracking-[0.3em] uppercase rounded-full mb-4">
                                 Datos de contacto
                             </span>
                             <h2 className="text-4xl font-bold text-gray-900 mb-4 font-serif">
-                                Información de <span className="text-red-600">contacto</span>
+                                Información de <span className="text-yellow-400">contacto</span>
                             </h2>
                         </div>
 
                         <div className="space-y-6 mb-10">
-                            <div className="flex items-start gap-4 p-5 bg-gradient-to-br from-white to-gray-50 rounded-2xl border-2 border-gray-100 animate-fadeInUp animation-delay-100 hover:border-red-600 hover:shadow-xl transition-all duration-300 group">
-                                <div className="w-14 h-14 bg-gradient-to-br from-red-600 to-red-700 rounded-2xl flex items-center justify-center text-white flex-shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
+                            <div className="flex items-start gap-4 p-5 bg-gradient-to-br from-white to-gray-50 rounded-2xl border-2 border-gray-100 animate-fadeInUp animation-delay-100 hover:border-yellow-400 hover:shadow-xl transition-all duration-300 group">
+                                <div className="w-14 h-14 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-2xl flex items-center justify-center text-white flex-shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
                                     <MapPin className="w-7 h-7" />
                                 </div>
                                 <div>
@@ -467,7 +467,7 @@ export default function ContactoPage() {
                                 </div>
                             </div>
 
-                            <div className="flex items-start gap-4 p-5 bg-gradient-to-br from-white to-gray-50 rounded-2xl border-2 border-gray-100 animate-fadeInUp animation-delay-200 hover:border-red-600 hover:shadow-xl transition-all duration-300 group">
+                            <div className="flex items-start gap-4 p-5 bg-gradient-to-br from-white to-gray-50 rounded-2xl border-2 border-gray-100 animate-fadeInUp animation-delay-200 hover:border-yellow-400 hover:shadow-xl transition-all duration-300 group">
                                 <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center text-white flex-shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
                                     <Phone className="w-7 h-7" />
                                 </div>
@@ -481,7 +481,7 @@ export default function ContactoPage() {
                                 </div>
                             </div>
 
-                            <div className="flex items-start gap-4 p-5 bg-gradient-to-br from-white to-gray-50 rounded-2xl border-2 border-gray-100 animate-fadeInUp animation-delay-300 hover:border-red-600 hover:shadow-xl transition-all duration-300 group">
+                            <div className="flex items-start gap-4 p-5 bg-gradient-to-br from-white to-gray-50 rounded-2xl border-2 border-gray-100 animate-fadeInUp animation-delay-300 hover:border-yellow-400 hover:shadow-xl transition-all duration-300 group">
                                 <div className="w-14 h-14 bg-gradient-to-br from-purple-600 to-purple-700 rounded-2xl flex items-center justify-center text-white flex-shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
                                     <Mail className="w-7 h-7" />
                                 </div>
@@ -495,8 +495,8 @@ export default function ContactoPage() {
                                 </div>
                             </div>
 
-                            <div className="flex items-start gap-4 p-5 bg-gradient-to-br from-white to-gray-50 rounded-2xl border-2 border-gray-100 animate-fadeInUp animation-delay-400 hover:border-red-600 hover:shadow-xl transition-all duration-300 group">
-                                <div className="w-14 h-14 bg-gradient-to-br from-green-600 to-green-700 rounded-2xl flex items-center justify-center text-white flex-shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
+                            <div className="flex items-start gap-4 p-5 bg-gradient-to-br from-white to-gray-50 rounded-2xl border-2 border-gray-100 animate-fadeInUp animation-delay-400 hover:border-yellow-400 hover:shadow-xl transition-all duration-300 group">
+                                <div className="w-14 h-14 bg-gradient-to-br from-green-600 to-yellow-300 rounded-2xl flex items-center justify-center text-white flex-shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
                                     <Clock className="w-7 h-7" />
                                 </div>
                                 <div>
@@ -505,13 +505,13 @@ export default function ContactoPage() {
                                         Lunes a Viernes: 8:00 AM - 8:00 PM<br />
                                         Sábados: 9:00 AM - 6:00 PM<br />
                                         Domingos: 10:00 AM - 4:00 PM<br />
-                                        <span className="font-semibold text-red-600">Recepción 24/7</span>
+                                        <span className="font-semibold text-yellow-400">Recepción 24/7</span>
                                     </p>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="bg-gradient-to-br from-gray-50 to-white p-8 rounded-2xl border-2 border-gray-100 hover:border-red-600 transition-all duration-300 hover:shadow-xl">
+                        <div className="bg-gradient-to-br from-gray-50 to-white p-8 rounded-2xl border-2 border-gray-100 hover:border-yellow-400 transition-all duration-300 hover:shadow-xl">
                             <h3 className="text-xl font-bold text-gray-900 mb-6">Síguenos en redes sociales</h3>
                             <div className="flex gap-4 mb-6">
                                 <a
@@ -545,7 +545,7 @@ export default function ContactoPage() {
                                     href="https://wa.me/51976123456"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="w-14 h-14 bg-gradient-to-br from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 hover:rotate-6 shadow-lg"
+                                    className="w-14 h-14 bg-gradient-to-br from-green-600 to-yellow-300 hover:from-yellow-300 hover:to-yellow-400 text-white rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 hover:rotate-6 shadow-lg"
                                     title="WhatsApp"
                                 >
                                     <MessageCircle className="w-6 h-6" />
@@ -556,7 +556,7 @@ export default function ContactoPage() {
                             </p>
                         </div>
 
-                        <div className="mt-8 h-80 bg-gray-200 rounded-2xl overflow-hidden shadow-2xl border-2 border-gray-100 hover:border-red-600 transition-all duration-300">
+                        <div className="mt-8 h-80 bg-gray-200 rounded-2xl overflow-hidden shadow-2xl border-2 border-gray-100 hover:border-yellow-400 transition-all duration-300">
                             <iframe
                                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3951.7234567890123!2d-78.5167!3d-7.1611!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zN8KwMDknNDAuMCJTIDc4wrAzMScwMC4xIlc!5e0!3m2!1ses!2spe!4v1234567890123!5m2!1ses!2spe"
                                 width="100%"

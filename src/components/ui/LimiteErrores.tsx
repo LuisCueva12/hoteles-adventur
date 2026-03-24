@@ -64,8 +64,8 @@ export class ErrorBoundary extends Component<Props, State> {
         <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
           <div className="max-w-md w-full">
             <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
-              <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <AlertTriangle className="w-10 h-10 text-red-600" />
+              <div className="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <AlertTriangle className="w-10 h-10 text-yellow-400" />
               </div>
               
               <h1 className="text-2xl font-bold text-gray-900 mb-3">
@@ -77,12 +77,12 @@ export class ErrorBoundary extends Component<Props, State> {
               </p>
 
               {process.env.NODE_ENV === 'development' && this.state.error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 text-left">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6 text-left">
                   <p className="text-xs font-mono text-red-800 mb-2">
                     <strong>Error:</strong> {this.state.error.message}
                   </p>
                   {this.state.error.stack && (
-                    <pre className="text-xs text-red-700 overflow-auto max-h-32">
+                    <pre className="text-xs text-yellow-400 overflow-auto max-h-32">
                       {this.state.error.stack}
                     </pre>
                   )}
@@ -92,7 +92,7 @@ export class ErrorBoundary extends Component<Props, State> {
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={this.handleReset}
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-all font-semibold"
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-yellow-400 hover:bg-yellow-400 text-gray-900 rounded-xl transition-all font-semibold"
                 >
                   <RefreshCw className="w-5 h-5" />
                   Intentar de nuevo

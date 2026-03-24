@@ -9,7 +9,7 @@ export function LanguageSelector() {
 
     return (
         <div className="relative group">
-            <button className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:text-red-600 transition-colors">
+            <button className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:text-yellow-400 transition-colors">
                 <Globe className="w-4 h-4" />
                 <span className="uppercase">{locale}</span>
             </button>
@@ -18,7 +18,7 @@ export function LanguageSelector() {
                 <button
                     onClick={() => setLocale('es')}
                     className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition-colors rounded-t-lg ${
-                        locale === 'es' ? 'text-red-600 font-semibold' : 'text-gray-700'
+                        locale === 'es' ? 'text-yellow-400 font-semibold' : 'text-gray-700'
                     }`}
                 >
                     🇵🇪 Español
@@ -26,7 +26,7 @@ export function LanguageSelector() {
                 <button
                     onClick={() => setLocale('en')}
                     className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition-colors rounded-b-lg ${
-                        locale === 'en' ? 'text-red-600 font-semibold' : 'text-gray-700'
+                        locale === 'en' ? 'text-yellow-400 font-semibold' : 'text-gray-700'
                     }`}
                 >
                     🇺🇸 English

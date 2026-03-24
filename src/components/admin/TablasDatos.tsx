@@ -49,7 +49,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchable 
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
-        a.download = `export-${Date.now()}.csv`
+        a.download = 'export.csv'
         a.click()
     }
 
@@ -129,7 +129,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchable 
                                                 {onEdit && (
                                                     <button
                                                         onClick={() => onEdit(row)}
-                                                        className="px-2 py-1 text-[11px] bg-yellow-100 text-yellow-700 hover:bg-yellow-200 rounded-md transition-all border border-yellow-200 hover:border-yellow-300 font-medium"
+                                                        className="px-2 py-1 text-[11px] bg-yellow-100 text-yellow-400 hover:bg-yellow-100 rounded-md transition-all border border-yellow-200 hover:border-yellow-300 font-medium"
                                                     >
                                                         Editar
                                                     </button>
@@ -137,7 +137,7 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchable 
                                                 {onDelete && (
                                                     <button
                                                         onClick={() => onDelete(row)}
-                                                        className="px-2 py-1 text-[11px] bg-red-100 text-red-700 hover:bg-red-200 rounded-md transition-all border border-red-200 hover:border-red-300 font-medium"
+                                                        className="px-2 py-1 text-[11px] bg-yellow-100 text-yellow-400 hover:bg-yellow-100 rounded-md transition-all border border-yellow-200 hover:border-yellow-300 font-medium"
                                                     >
                                                         Eliminar
                                                     </button>

@@ -174,7 +174,7 @@ export function SeccionResenas({ alojamientoId }: SeccionResenasProps) {
                                         <span className="text-sm text-gray-600 w-12">{star} ★</span>
                                         <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
                                             <div
-                                                className="h-full bg-yellow-400 transition-all"
+                                                className="h-full bg-yellow-300 transition-all"
                                                 style={{ width: `${percentage}%` }}
                                             />
                                         </div>
@@ -190,7 +190,7 @@ export function SeccionResenas({ alojamientoId }: SeccionResenasProps) {
             {/* Botón para escribir reseña */}
             <button
                 onClick={() => setShowForm(!showForm)}
-                className="w-full py-3 border-2 border-red-600 text-red-600 font-semibold rounded-lg hover:bg-red-50 transition-colors"
+                className="w-full py-3 border-2 border-yellow-400 text-yellow-400 font-semibold rounded-lg hover:bg-yellow-50 transition-colors"
             >
                 <MessageCircle className="w-5 h-5 inline mr-2" />
                 Escribir una reseña
@@ -227,7 +227,7 @@ export function SeccionResenas({ alojamientoId }: SeccionResenasProps) {
                             type="text"
                             value={formData.titulo}
                             onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
-                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
                             placeholder="Resume tu experiencia"
                             maxLength={200}
                         />
@@ -238,7 +238,7 @@ export function SeccionResenas({ alojamientoId }: SeccionResenasProps) {
                         <textarea
                             value={formData.comentario}
                             onChange={(e) => setFormData({ ...formData, comentario: e.target.value })}
-                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 min-h-[120px]"
+                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 min-h-[120px]"
                             placeholder="Cuéntanos sobre tu estadía..."
                             required
                         />
@@ -248,7 +248,7 @@ export function SeccionResenas({ alojamientoId }: SeccionResenasProps) {
                         <button
                             type="submit"
                             disabled={createReview.isPending}
-                            className="flex-1 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+                            className="flex-1 py-2 bg-yellow-400 text-gray-900 font-semibold rounded-lg hover:bg-yellow-400 transition-colors disabled:opacity-50"
                         >
                             {createReview.isPending ? 'Publicando...' : 'Publicar reseña'}
                         </button>
@@ -281,7 +281,7 @@ export function SeccionResenas({ alojamientoId }: SeccionResenasProps) {
                                         <div className="font-semibold text-gray-900">
                                             {review.usuarios?.nombre_completo || 'Usuario'}
                                             {review.verificado && (
-                                                <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                                                <span className="ml-2 text-xs bg-yellow-100 text-yellow-400 px-2 py-1 rounded">
                                                     Verificado
                                                 </span>
                                             )}
@@ -302,7 +302,7 @@ export function SeccionResenas({ alojamientoId }: SeccionResenasProps) {
                                 <p className="text-gray-700 leading-relaxed">{review.comentario}</p>
                                 
                                 {review.respuesta_admin && (
-                                    <div className="mt-4 pl-4 border-l-2 border-red-600 bg-red-50 p-4 rounded">
+                                    <div className="mt-4 pl-4 border-l-2 border-yellow-400 bg-yellow-50 p-4 rounded">
                                         <div className="text-sm font-semibold text-red-900 mb-1">
                                             Respuesta del hotel
                                         </div>

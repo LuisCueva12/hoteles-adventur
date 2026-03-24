@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState } from 'react'
 import { ChevronDown } from 'lucide-react'
@@ -50,17 +50,17 @@ export function FAQSection() {
             <div className="max-w-4xl mx-auto px-6">
                 <div className="text-center mb-12">
                     <div className="inline-block mb-4">
-                        <span className="px-4 py-1.5 bg-red-50 text-red-600 text-xs font-semibold tracking-[0.3em] uppercase rounded-full">
+                        <span className="px-4 py-1.5 bg-yellow-50 text-yellow-400 text-xs font-semibold tracking-[0.3em] uppercase rounded-full">
                             FAQ
                         </span>
                     </div>
                     <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 font-serif">
-                        Preguntas <span className="text-red-600">Frecuentes</span>
+                        Preguntas <span className="text-yellow-400">Frecuentes</span>
                     </h2>
                     <div className="flex items-center justify-center gap-3 mb-6">
-                        <div className="h-px w-20 bg-gradient-to-r from-transparent via-red-600 to-red-600" />
-                        <div className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse" />
-                        <div className="h-px w-20 bg-gradient-to-l from-transparent via-red-600 to-red-600" />
+                        <div className="h-px w-20 bg-gradient-to-r from-transparent via-red-600 to-yellow-400" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-yellow-400 animate-pulse" />
+                        <div className="h-px w-20 bg-gradient-to-l from-transparent via-red-600 to-yellow-400" />
                     </div>
                     <p className="text-gray-600 max-w-2xl mx-auto text-base leading-relaxed">
                         Encuentra respuestas a las preguntas más comunes sobre tu estadía
@@ -82,7 +82,7 @@ export function FAQSection() {
                                     {faq.question}
                                 </span>
                                 <ChevronDown 
-                                    className={`w-5 h-5 text-red-600 flex-shrink-0 transition-transform duration-300 ${
+                                    className={`w-5 h-5 text-yellow-400 flex-shrink-0 transition-transform duration-300 ${
                                         openIndex === index ? 'rotate-180' : ''
                                     }`}
                                 />
@@ -107,7 +107,7 @@ export function FAQSection() {
                     </p>
                     <a 
                         href="/contacto"
-                        className="inline-block px-8 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg"
+                        className="inline-block px-8 py-3 bg-yellow-400 hover:bg-yellow-400 text-gray-900 font-semibold rounded-lg transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg"
                     >
                         Contáctanos
                     </a>

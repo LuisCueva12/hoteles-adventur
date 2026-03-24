@@ -4,8 +4,8 @@ import { useToast, type ToastType } from '@/hooks/useNotificacion'
 
 const ICON_COLORS: Record<ToastType, string> = {
     success: 'text-emerald-600',
-    error: 'text-red-600',
-    warning: 'text-amber-600',
+    error: 'text-yellow-400',
+    warning: 'text-yellow-400',
     info: 'text-blue-600',
 }
 

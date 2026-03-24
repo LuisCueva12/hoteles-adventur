@@ -8,7 +8,7 @@ export interface Notification {
   mensaje: string
   leida: boolean
   url?: string
-  metadata?: any
+  metadata?: unknown
   created_at: string
   updated_at: string
 }
@@ -16,14 +16,13 @@ export interface Notification {
 export class NotificationsService {
   private supabase = createClient()
 
-  // Crear una nueva notificación
   async createNotification(
     usuarioId: string,
     tipo: 'success' | 'warning' | 'info' | 'error',
     titulo: string,
     mensaje: string,
     url?: string,
-    metadata?: any
+    metadata?: unknown,
   ): Promise<boolean> {
     try {
       const { error } = await this.supabase
@@ -35,47 +34,49 @@ export class NotificationsService {
           mensaje,
           url,
           metadata,
-          leida: false
+          leida: false,
         })
 
       if (error) {
-        console.error('Error creando notificación:', error)
+        console.error('Error creando notificacion:', error)
         return false
       }
 
       return true
     } catch (error) {
-      console.error('Error creando notificación:', error)
+      console.error('Error creando notificacion:', error)
       return false
     }
   }
 
-  // Notificar a todos los administradores
   async notifyAdmins(
     tipo: 'success' | 'warning' | 'info' | 'error',
     titulo: string,
     mensaje: string,
     url?: string,
-    metadata?: any
+    metadata?: unknown,
   ): Promise<boolean> {
     try {
-      // Obtener todos los administradores
-      const { data: admins, error: adminError } = await this.supabase
-        .from('usuarios')
-        .select('id')
-        .eq('rol', 'admin_adventur')
+      const response = await fetch('/api/notifications/admins', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          tipo,
+          titulo,
+          mensaje,
+          url,
+          metadata,
+        }),
+      })
 
-      if (adminError || !admins || admins.length === 0) {
-        console.warn('No se encontraron administradores')
+      if (!response.ok) {
+        const data = await response.json().catch(() => null)
+        console.error('Error notificando a administradores:', data?.error || response.statusText)
         return false
       }
 
-      // Crear notificación para cada admin
-      const promises = admins.map(admin =>
-        this.createNotification(admin.id, tipo, titulo, mensaje, url, metadata)
-      )
-
-      await Promise.all(promises)
       return true
     } catch (error) {
       console.error('Error notificando a administradores:', error)
@@ -83,7 +84,6 @@ export class NotificationsService {
     }
   }
 
-  // Obtener notificaciones del usuario actual
   async getNotifications(limit: number = 50): Promise<Notification[]> {
     const { data, error } = await this.supabase
       .from('notificaciones')
@@ -99,7 +99,6 @@ export class NotificationsService {
     return data || []
   }
 
-  // Obtener notificaciones no leídas
   async getUnreadNotifications(): Promise<Notification[]> {
     const { data, error } = await this.supabase
       .from('notificaciones')
@@ -108,14 +107,13 @@ export class NotificationsService {
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Error obteniendo notificaciones no leídas:', error)
+      console.error('Error obteniendo notificaciones no leidas:', error)
       return []
     }
 
     return data || []
   }
 
-  // Contar notificaciones no leídas
   async getUnreadCount(): Promise<number> {
     const { count, error } = await this.supabase
       .from('notificaciones')
@@ -130,7 +128,6 @@ export class NotificationsService {
     return count || 0
   }
 
-  // Marcar notificación como leída
   async markAsRead(id: string): Promise<boolean> {
     const { error } = await this.supabase
       .from('notificaciones')
@@ -138,17 +135,18 @@ export class NotificationsService {
       .eq('id', id)
 
     if (error) {
-      console.error('Error marcando notificación como leída:', error)
+      console.error('Error marcando notificacion como leida:', error)
       return false
     }
 
     return true
   }
 
-  // Marcar todas como leídas
   async markAllAsRead(): Promise<boolean> {
-    const { data: { user } } = await this.supabase.auth.getUser()
-    
+    const {
+      data: { user },
+    } = await this.supabase.auth.getUser()
+
     if (!user) return false
 
     const { error } = await this.supabase
@@ -158,14 +156,13 @@ export class NotificationsService {
       .eq('leida', false)
 
     if (error) {
-      console.error('Error marcando todas como leídas:', error)
+      console.error('Error marcando todas como leidas:', error)
       return false
     }
 
     return true
   }
 
-  // Eliminar notificación
   async deleteNotification(id: string): Promise<boolean> {
     const { error } = await this.supabase
       .from('notificaciones')
@@ -173,17 +170,18 @@ export class NotificationsService {
       .eq('id', id)
 
     if (error) {
-      console.error('Error eliminando notificación:', error)
+      console.error('Error eliminando notificacion:', error)
       return false
     }
 
     return true
   }
 
-  // Eliminar todas las notificaciones
   async deleteAllNotifications(): Promise<boolean> {
-    const { data: { user } } = await this.supabase.auth.getUser()
-    
+    const {
+      data: { user },
+    } = await this.supabase.auth.getUser()
+
     if (!user) return false
 
     const { error } = await this.supabase
@@ -199,7 +197,6 @@ export class NotificationsService {
     return true
   }
 
-  // Suscribirse a cambios en tiempo real
   subscribeToNotifications(callback: (notification: Notification) => void) {
     const channel = this.supabase
       .channel('notificaciones-changes')
@@ -208,11 +205,11 @@ export class NotificationsService {
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'notificaciones'
+          table: 'notificaciones',
         },
         (payload) => {
           callback(payload.new as Notification)
-        }
+        },
       )
       .subscribe()
 
@@ -221,12 +218,11 @@ export class NotificationsService {
     }
   }
 
-  // Formatear tiempo relativo
   getTimeAgo(date: string): string {
     const now = new Date()
     const notificationDate = new Date(date)
     const diff = now.getTime() - notificationDate.getTime()
-    
+
     const minutes = Math.floor(diff / 60000)
     const hours = Math.floor(diff / 3600000)
     const days = Math.floor(diff / 86400000)
@@ -234,7 +230,7 @@ export class NotificationsService {
     if (minutes < 1) return 'Hace un momento'
     if (minutes < 60) return `Hace ${minutes} minuto${minutes > 1 ? 's' : ''}`
     if (hours < 24) return `Hace ${hours} hora${hours > 1 ? 's' : ''}`
-    return `Hace ${days} día${days > 1 ? 's' : ''}`
+    return `Hace ${days} dia${days > 1 ? 's' : ''}`
   }
 }
 

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
@@ -65,21 +65,21 @@ export function OfertasEspeciales() {
     }, [])
 
     return (
-        <section className="py-20 bg-gradient-to-br from-red-50 to-orange-50">
+        <section className="py-20 bg-yellow-50/50">
             <div className="max-w-7xl mx-auto px-6">
                 <div className="text-center mb-14">
                     <div className="inline-block mb-4">
-                        <span className="px-4 py-1.5 bg-red-50 text-red-600 text-xs font-semibold tracking-[0.3em] uppercase rounded-full">
+                        <span className="px-4 py-1.5 bg-yellow-50 text-yellow-400 text-xs font-semibold tracking-[0.3em] uppercase rounded-full">
                             Ofertas Limitadas
                         </span>
                     </div>
                     <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 font-serif">
-                        Ofertas <span className="text-red-600">Especiales</span>
+                        Ofertas <span className="text-yellow-400">Especiales</span>
                     </h2>
                     <div className="flex items-center justify-center gap-3 mb-6">
-                        <div className="h-px w-20 bg-gradient-to-r from-transparent via-red-600 to-red-600" />
-                        <div className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse" />
-                        <div className="h-px w-20 bg-gradient-to-l from-transparent via-red-600 to-red-600" />
+                        <div className="h-px w-20 bg-gradient-to-r from-transparent to-yellow-400" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-yellow-400 animate-pulse" />
+                        <div className="h-px w-20 bg-gradient-to-l from-transparent to-yellow-400" />
                     </div>
                     <p className="text-gray-600 max-w-2xl mx-auto text-base leading-relaxed">
                         Aprovecha nuestras promociones exclusivas y vive una experiencia inolvidable
@@ -91,16 +91,16 @@ export function OfertasEspeciales() {
                         <div 
                             key={oferta.id} 
                             className={`group relative bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 animate-fadeInUp hover:-translate-y-2 ${
-                                oferta.destacado ? 'ring-4 ring-red-600 ring-offset-4' : ''
+                                oferta.destacado ? 'ring-4 ring-yellow-400 ring-offset-4' : ''
                             }`}
                         >
                             {oferta.destacado && (
-                                <div className="absolute top-4 left-4 z-10 bg-yellow-400 text-gray-900 px-3 py-1 rounded-full text-xs font-bold uppercase shadow-lg animate-pulse-slow flex items-center gap-1">
+                                <div className="absolute top-4 left-4 z-10 bg-yellow-300 text-gray-900 px-3 py-1 rounded-full text-xs font-bold uppercase shadow-lg animate-pulse-slow flex items-center gap-1">
                                     <Star className="w-3 h-3 fill-gray-900" /> Más Popular
                                 </div>
                             )}
                             
-                            <div className="absolute top-4 right-4 z-10 bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-lg shadow-lg transform group-hover:scale-110 transition-transform duration-300">
+                            <div className="absolute top-4 right-4 z-10 bg-yellow-400 text-gray-900 px-4 py-2 rounded-lg font-bold text-lg shadow-lg transform group-hover:scale-110 transition-transform duration-300">
                                 {oferta.descuento}
                             </div>
 
@@ -114,7 +114,7 @@ export function OfertasEspeciales() {
                             </div>
 
                             <div className="p-6">
-                                <h3 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-red-600 transition-colors duration-300">
+                                <h3 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-yellow-400 transition-colors duration-300">
                                     {oferta.titulo}
                                 </h3>
                                 <p className="text-gray-600 mb-4 leading-relaxed">
@@ -127,7 +127,7 @@ export function OfertasEspeciales() {
                                 </div>
 
                                 <div className="flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-lg mb-4">
-                                    <Tag className="w-4 h-4 text-red-600" />
+                                    <Tag className="w-4 h-4 text-yellow-400" />
                                     <span className="text-sm font-mono font-semibold text-gray-900">
                                         {oferta.codigo}
                                     </span>
@@ -135,7 +135,7 @@ export function OfertasEspeciales() {
 
                                 <Link 
                                     href={`/hoteles?oferta=${oferta.codigo}`}
-                                    className="block w-full text-center px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg"
+                                    className="block w-full text-center px-6 py-3 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold rounded-lg transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg"
                                 >
                                     Reservar Ahora
                                 </Link>
@@ -150,7 +150,7 @@ export function OfertasEspeciales() {
                     </p>
                     <Link 
                         href="/hoteles"
-                        className="inline-block px-8 py-3 border-2 border-red-600 text-red-600 hover:bg-red-600 hover:text-white font-semibold rounded-lg transition-all duration-300 transform hover:-translate-y-1"
+                        className="inline-block px-8 py-3 border-2 border-yellow-400 text-yellow-600 hover:bg-yellow-400 hover:text-gray-900 font-semibold rounded-lg transition-all duration-300 transform hover:-translate-y-1"
                     >
                         Ver Todas las Habitaciones
                     </Link>

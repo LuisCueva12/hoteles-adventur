@@ -99,10 +99,10 @@ export default function AgregarPasswordPage() {
   }
 
   const getStrengthColor = (score: number) => {
-    if (score <= 1) return 'bg-red-500'
-    if (score === 2) return 'bg-yellow-500'
+    if (score <= 1) return 'bg-yellow-300'
+    if (score === 2) return 'bg-yellow-400'
     if (score === 3) return 'bg-blue-500'
-    return 'bg-green-500'
+    return 'bg-yellow-400'
   }
 
   const getStrengthText = (score: number) => {
@@ -116,7 +116,7 @@ export default function AgregarPasswordPage() {
     return (
       <div className="min-h-screen flex items-center justify-center px-6 py-12 bg-gradient-to-br from-gray-50 to-gray-100">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-red-600 mx-auto mb-4" />
+          <Loader2 className="w-12 h-12 animate-spin text-yellow-400 mx-auto mb-4" />
           <p className="text-gray-600">Verificando usuario...</p>
         </div>
       </div>
@@ -139,7 +139,7 @@ export default function AgregarPasswordPage() {
             </p>
             <button
               onClick={() => router.push('/perfil')}
-              className="w-full py-2.5 px-5 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-lg transition-all text-sm"
+              className="w-full py-2.5 px-5 bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-400 hover:to-red-800 text-white font-semibold rounded-lg transition-all text-sm"
             >
               Ir a mi perfil
             </button>
@@ -154,8 +154,8 @@ export default function AgregarPasswordPage() {
       <div className="w-full max-w-md">
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
           <div className="text-center mb-6">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Lock className="w-8 h-8 text-red-600" />
+            <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Lock className="w-8 h-8 text-yellow-400" />
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
               Agregar contraseña
@@ -193,7 +193,7 @@ export default function AgregarPasswordPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
               <label htmlFor="password" className="block text-xs font-semibold text-gray-700 flex items-center gap-1.5">
-                <Lock className="w-3.5 h-3.5 text-red-600" />
+                <Lock className="w-3.5 h-3.5 text-yellow-400" />
                 Nueva contraseña
               </label>
               <div className="relative">
@@ -202,7 +202,7 @@ export default function AgregarPasswordPage() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-3 py-2.5 pr-10 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all text-sm bg-white text-gray-900 placeholder-gray-400"
+                  className="w-full px-3 py-2.5 pr-10 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-all text-sm bg-white text-gray-900 placeholder-gray-400"
                   placeholder="••••••••"
                   required
                   disabled={loading}
@@ -211,7 +211,7 @@ export default function AgregarPasswordPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-600 transition-colors p-1 rounded-lg hover:bg-red-50"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-yellow-400 transition-colors p-1 rounded-lg hover:bg-yellow-50"
                   tabIndex={-1}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -232,16 +232,16 @@ export default function AgregarPasswordPage() {
                     </span>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div className={`flex items-center gap-1 ${password.length >= 8 ? 'text-green-600' : 'text-gray-400'}`}>
+                    <div className={`flex items-center gap-1 ${password.length >= 8 ? 'text-yellow-400' : 'text-gray-400'}`}>
                       {password.length >= 8 ? '✓' : '○'} 8+ caracteres
                     </div>
-                    <div className={`flex items-center gap-1 ${/[A-Z]/.test(password) && /[a-z]/.test(password) ? 'text-green-600' : 'text-gray-400'}`}>
+                    <div className={`flex items-center gap-1 ${/[A-Z]/.test(password) && /[a-z]/.test(password) ? 'text-yellow-400' : 'text-gray-400'}`}>
                       {/[A-Z]/.test(password) && /[a-z]/.test(password) ? '✓' : '○'} Mayús y minús
                     </div>
-                    <div className={`flex items-center gap-1 ${/[0-9]/.test(password) ? 'text-green-600' : 'text-gray-400'}`}>
+                    <div className={`flex items-center gap-1 ${/[0-9]/.test(password) ? 'text-yellow-400' : 'text-gray-400'}`}>
                       {/[0-9]/.test(password) ? '✓' : '○'} Números
                     </div>
-                    <div className={`flex items-center gap-1 ${/[^a-zA-Z0-9]/.test(password) ? 'text-green-600' : 'text-gray-400'}`}>
+                    <div className={`flex items-center gap-1 ${/[^a-zA-Z0-9]/.test(password) ? 'text-yellow-400' : 'text-gray-400'}`}>
                       {/[^a-zA-Z0-9]/.test(password) ? '✓' : '○'} Símbolos
                     </div>
                   </div>
@@ -261,8 +261,8 @@ export default function AgregarPasswordPage() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className={`w-full px-3 py-2.5 pr-10 border-2 rounded-xl focus:outline-none focus:ring-2 transition-all text-sm bg-white text-gray-900 placeholder-gray-400 ${
                     confirmPassword && password !== confirmPassword
-                      ? 'border-red-400 focus:ring-red-500'
-                      : 'border-gray-300 focus:ring-red-500'
+                      ? 'border-yellow-400 focus:ring-yellow-400'
+                      : 'border-gray-300 focus:ring-yellow-400'
                   }`}
                   placeholder="••••••••"
                   required
@@ -271,17 +271,17 @@ export default function AgregarPasswordPage() {
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-600 transition-colors p-1 rounded-lg hover:bg-red-50"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-yellow-400 transition-colors p-1 rounded-lg hover:bg-yellow-50"
                   tabIndex={-1}
                 >
                   {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
               {confirmPassword && password !== confirmPassword && (
-                <p className="text-xs text-red-600 animate-fadeInUp">⚠️ Las contraseñas no coinciden</p>
+                <p className="text-xs text-yellow-400 animate-fadeInUp">⚠️ Las contraseñas no coinciden</p>
               )}
               {confirmPassword && password === confirmPassword && (
-                <p className="text-xs text-green-600 flex items-center gap-1 animate-fadeInUp">
+                <p className="text-xs text-yellow-400 flex items-center gap-1 animate-fadeInUp">
                   <CheckCircle2 className="w-3.5 h-3.5" /> Las contraseñas coinciden
                 </p>
               )}
@@ -290,7 +290,7 @@ export default function AgregarPasswordPage() {
             <button
               type="submit"
               disabled={loading || !password || password !== confirmPassword || passwordStrength.score < 2}
-              className="w-full py-2.5 px-5 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-lg focus:outline-none focus:ring-4 focus:ring-red-500/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:-translate-y-0.5 hover:shadow-xl disabled:transform-none text-sm"
+              className="w-full py-2.5 px-5 bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-400 hover:to-red-800 text-white font-semibold rounded-lg focus:outline-none focus:ring-4 focus:ring-yellow-400/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:-translate-y-0.5 hover:shadow-xl disabled:transform-none text-sm"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-3">
@@ -306,7 +306,7 @@ export default function AgregarPasswordPage() {
           <div className="mt-6 text-center">
             <button
               onClick={() => router.push('/perfil')}
-              className="text-sm text-gray-600 hover:text-red-600 font-medium hover:underline"
+              className="text-sm text-gray-600 hover:text-yellow-400 font-medium hover:underline"
             >
               Omitir por ahora
             </button>

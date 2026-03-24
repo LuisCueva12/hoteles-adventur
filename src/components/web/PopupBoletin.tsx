@@ -53,8 +53,8 @@ export function NewsletterPopup() {
                 {!isSubmitted ? (
                     <>
                         <div className="text-center mb-6">
-                            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <Mail className="w-8 h-8 text-red-600" />
+                            <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Mail className="w-8 h-8 text-yellow-400" />
                             </div>
                             <h3 className="text-2xl font-bold text-gray-900 mb-2">
                                 ¡Ofertas Exclusivas!
@@ -70,12 +70,12 @@ export function NewsletterPopup() {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 placeholder="Tu email"
-                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-red-600 transition-all"
+                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-yellow-400 transition-all"
                                 required
                             />
                             <button
                                 type="submit"
-                                className="w-full px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg"
+                                className="w-full px-6 py-3 bg-yellow-400 hover:bg-yellow-400 text-gray-900 font-semibold rounded-lg transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg"
                             >
                                 Obtener Descuento
                             </button>
@@ -87,8 +87,8 @@ export function NewsletterPopup() {
                     </>
                 ) : (
                     <div className="text-center py-8">
-                        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Check className="w-8 h-8 text-green-600" />
+                        <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Check className="w-8 h-8 text-yellow-400" />
                         </div>
                         <h3 className="text-2xl font-bold text-gray-900 mb-2">
                             ¡Gracias!

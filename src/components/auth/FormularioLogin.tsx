@@ -71,9 +71,9 @@ export function LoginForm({ onSubmit, loading }: LoginFormProps) {
               {...register('email')}
               className={`w-full pl-9 pr-9 py-2 border-2 rounded-lg focus:outline-none focus:ring-2 transition-all text-sm bg-white text-gray-900 placeholder-slate-400 ${
                 errors.email
-                  ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+                  ? 'border-yellow-300 focus:ring-yellow-400 focus:border-yellow-400'
                   : isEmailValid
-                  ? 'border-green-300 focus:ring-green-500 focus:border-green-500'
+                  ? 'border-yellow-300 focus:ring-green-500 focus:border-green-500'
                   : 'border-slate-200 hover:border-slate-300 focus:ring-orange-500 focus:border-orange-500'
               }`}
               placeholder="tu@email.com"
@@ -84,7 +84,7 @@ export function LoginForm({ onSubmit, loading }: LoginFormProps) {
             )}
           </div>
           {errors.email && (
-            <p className="text-[10px] text-red-600 flex items-center gap-1">
+            <p className="text-[10px] text-yellow-400 flex items-center gap-1">
               <span>⚠️</span> {errors.email.message}
             </p>
           )}
@@ -107,9 +107,9 @@ export function LoginForm({ onSubmit, loading }: LoginFormProps) {
               {...register('password')}
               className={`w-full pl-9 pr-9 py-2 border-2 rounded-lg focus:outline-none focus:ring-2 transition-all text-sm bg-white text-gray-900 placeholder-slate-400 ${
                 errors.password
-                  ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+                  ? 'border-yellow-300 focus:ring-yellow-400 focus:border-yellow-400'
                   : isPasswordValid
-                  ? 'border-green-300 focus:ring-green-500 focus:border-green-500'
+                  ? 'border-yellow-300 focus:ring-green-500 focus:border-green-500'
                   : 'border-slate-200 hover:border-slate-300 focus:ring-orange-500 focus:border-orange-500'
               }`}
               placeholder="••••••••"
@@ -125,7 +125,7 @@ export function LoginForm({ onSubmit, loading }: LoginFormProps) {
             </button>
           </div>
           {errors.password && (
-            <p className="text-[10px] text-red-600 flex items-center gap-1">
+            <p className="text-[10px] text-yellow-400 flex items-center gap-1">
               <span>⚠️</span> {errors.password.message}
             </p>
           )}
@@ -147,7 +147,7 @@ export function LoginForm({ onSubmit, loading }: LoginFormProps) {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-2.5 sm:py-3 px-4 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-semibold rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl text-xs sm:text-sm relative overflow-hidden group"
+          className="w-full py-2.5 sm:py-3 px-4 bg-gradient-to-r from-orange-600 to-yellow-400 hover:from-orange-700 hover:to-yellow-500 text-white font-semibold rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl text-xs sm:text-sm relative overflow-hidden group"
         >
           <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
           {loading ? (

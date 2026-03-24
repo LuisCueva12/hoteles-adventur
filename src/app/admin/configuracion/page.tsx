@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
@@ -322,7 +322,7 @@ export default function ConfiguracionPage() {
                         <div className="space-y-4">
                             <h2 className="text-lg font-bold text-gray-900 mb-4">Datos de Facturación</h2>
                             <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 flex items-start gap-3 mb-4">
-                                <AlertCircle size={18} className="text-yellow-600 flex-shrink-0 mt-0.5" />
+                                <AlertCircle size={18} className="text-yellow-400 flex-shrink-0 mt-0.5" />
                                 <p className="text-sm text-yellow-800">Estos datos se usan para generar comprobantes electrónicos (boletas/facturas) a través de Nubefact.</p>
                             </div>
                             <div className="grid md:grid-cols-2 gap-4">

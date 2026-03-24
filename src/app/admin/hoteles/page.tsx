@@ -408,8 +408,8 @@ export default function HotelesAdminPage() {
             label: 'Precio Base',
             render: (value: number) => (
                 <div className="flex items-center gap-2">
-                    <DollarSign className="w-4 h-4 text-green-600" />
-                    <span className="font-semibold text-green-600">S/. {value.toLocaleString()}</span>
+                    <DollarSign className="w-4 h-4 text-yellow-400" />
+                    <span className="font-semibold text-yellow-400">S/. {value.toLocaleString()}</span>
                 </div>
             )
         },
@@ -429,8 +429,8 @@ export default function HotelesAdminPage() {
             render: (value: boolean) => (
                 <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold border ${
                     value 
-                        ? 'bg-green-100 text-green-700 border-green-200' 
-                        : 'bg-red-100 text-red-700 border-red-200'
+                        ? 'bg-yellow-100 text-yellow-400 border-yellow-200' 
+                        : 'bg-yellow-100 text-yellow-400 border-yellow-200'
                 }`}>
                     {value ? 'Activo' : 'Inactivo'}
                 </span>
@@ -523,14 +523,14 @@ export default function HotelesAdminPage() {
         { 
             label: 'Activos', 
             value: alojamientos.filter(a => a.activo).length, 
-            color: 'text-green-600',
+            color: 'text-yellow-400',
             icon: Home,
-            bgColor: 'bg-green-100'
+            bgColor: 'bg-yellow-100'
         },
         { 
             label: 'Ingresos Promedio', 
             value: `S/. ${Math.round(alojamientos.reduce((sum, a) => sum + a.precio_base, 0) / (alojamientos.length || 1)).toLocaleString()}`, 
-            color: 'text-yellow-600',
+            color: 'text-yellow-400',
             icon: DollarSign,
             bgColor: 'bg-yellow-100'
         },
@@ -731,8 +731,8 @@ export default function HotelesAdminPage() {
                     </div>
 
                     {/* Sección: Ubicación */}
-                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-6 border-2 border-green-200">
-                        <h3 className="text-lg font-bold text-green-900 mb-4 flex items-center gap-2">
+                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-6 border-2 border-yellow-200">
+                        <h3 className="text-lg font-bold text-yellow-400 mb-4 flex items-center gap-2">
                             <MapPin className="w-5 h-5" />
                             Ubicación
                         </h3>
@@ -833,7 +833,7 @@ export default function HotelesAdminPage() {
                                 />
                             </label>
                             {imagePreviews.length >= 10 && (
-                                <p className="text-sm text-red-600 mt-2 font-semibold">⚠️ Máximo 10 imágenes permitidas</p>
+                                <p className="text-sm text-yellow-400 mt-2 font-semibold">⚠️ Máximo 10 imágenes permitidas</p>
                             )}
                         </div>
 
@@ -851,7 +851,7 @@ export default function HotelesAdminPage() {
                                             
                                             {/* Badge de imagen principal */}
                                             {index === principalImageIndex && (
-                                                <div className="absolute top-2 left-2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white px-3 py-1 rounded-lg text-xs font-bold shadow-lg flex items-center gap-1 animate-pulse">
+                                                <div className="absolute top-2 left-2 bg-gradient-to-r from-yellow-300 to-yellow-400 text-white px-3 py-1 rounded-lg text-xs font-bold shadow-lg flex items-center gap-1 animate-pulse">
                                                     ⭐ Principal
                                                 </div>
                                             )}
@@ -866,7 +866,7 @@ export default function HotelesAdminPage() {
                                                 {index !== principalImageIndex && (
                                                     <button
                                                         onClick={() => setPrincipalImageIndex(index)}
-                                                        className="px-4 py-2 bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-white rounded-lg text-sm font-bold shadow-lg transform hover:scale-110 transition-all flex items-center gap-1"
+                                                        className="px-4 py-2 bg-gradient-to-r from-yellow-300 to-yellow-400 hover:from-yellow-400 hover:to-yellow-500 text-white rounded-lg text-sm font-bold shadow-lg transform hover:scale-110 transition-all flex items-center gap-1"
                                                         title="Marcar como principal"
                                                     >
                                                         ⭐ Principal
@@ -874,7 +874,7 @@ export default function HotelesAdminPage() {
                                                 )}
                                                 <button
                                                     onClick={() => handleRemoveImage(index)}
-                                                    className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg text-sm font-bold shadow-lg transform hover:scale-110 transition-all flex items-center gap-1"
+                                                    className="px-4 py-2 bg-gradient-to-r from-yellow-300 to-yellow-400 hover:from-yellow-400 hover:to-yellow-500 text-white rounded-lg text-sm font-bold shadow-lg transform hover:scale-110 transition-all flex items-center gap-1"
                                                     title="Eliminar imagen"
                                                 >
                                                     <X className="w-4 h-4" />
@@ -939,7 +939,7 @@ export default function HotelesAdminPage() {
                                 onClick={() => setFormData({ ...formData, activo: !formData.activo })}
                                 className={`px-8 py-4 rounded-xl font-bold transition-all shadow-lg hover:shadow-xl transform hover:scale-105 ${
                                     formData.activo
-                                        ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white'
+                                        ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-yellow-300 text-white'
                                         : 'bg-gradient-to-r from-gray-400 to-gray-500 hover:from-gray-500 hover:to-gray-600 text-white'
                                 }`}
                             >
@@ -999,7 +999,7 @@ export default function HotelesAdminPage() {
                                                 className="w-full h-40 object-cover transition-transform duration-300 group-hover:scale-110"
                                             />
                                             {foto.es_principal && (
-                                                <div className="absolute top-2 right-2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white px-2 py-1 rounded-lg text-xs font-bold shadow-lg">
+                                                <div className="absolute top-2 right-2 bg-gradient-to-r from-yellow-300 to-yellow-400 text-white px-2 py-1 rounded-lg text-xs font-bold shadow-lg">
                                                     Principal
                                                 </div>
                                             )}
@@ -1032,15 +1032,15 @@ export default function HotelesAdminPage() {
                                 <p className="text-xl font-bold text-blue-900">{selectedAlojamiento.tipo}</p>
                             </div>
 
-                            <div className="p-5 bg-gradient-to-br from-green-50 to-green-100 rounded-2xl border-2 border-green-200 shadow-sm">
+                            <div className="p-5 bg-gradient-to-br from-green-50 to-green-100 rounded-2xl border-2 border-yellow-200 shadow-sm">
                                 <div className="flex items-center gap-3 mb-2">
-                                    <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center">
+                                    <div className="w-10 h-10 bg-yellow-400 rounded-xl flex items-center justify-center">
                                         <DollarSign className="w-5 h-5 text-white" />
                                     </div>
-                                    <p className="text-xs text-green-700 font-bold uppercase tracking-wide">Precio Base</p>
+                                    <p className="text-xs text-yellow-400 font-bold uppercase tracking-wide">Precio Base</p>
                                 </div>
-                                <p className="text-2xl font-bold text-green-900">S/. {selectedAlojamiento.precio_base.toLocaleString()}</p>
-                                <p className="text-xs text-green-700 font-medium mt-1">por noche</p>
+                                <p className="text-2xl font-bold text-yellow-400">S/. {selectedAlojamiento.precio_base.toLocaleString()}</p>
+                                <p className="text-xs text-yellow-400 font-medium mt-1">por noche</p>
                             </div>
 
                             <div className="p-5 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl border-2 border-orange-200 shadow-sm">
@@ -1126,7 +1126,7 @@ export default function HotelesAdminPage() {
                                     className={`px-6 py-3 rounded-xl font-bold transition-all shadow-lg hover:shadow-xl transform hover:scale-105 ${
                                         selectedAlojamiento.activo
                                             ? 'bg-gradient-to-r from-green-500 to-green-600 text-white'
-                                            : 'bg-gradient-to-r from-red-500 to-red-600 text-white'
+                                            : 'bg-gradient-to-r from-yellow-300 to-yellow-400 text-white'
                                     }`}
                                 >
                                     {selectedAlojamiento.activo ? '✓ Activo' : '✕ Inactivo'}

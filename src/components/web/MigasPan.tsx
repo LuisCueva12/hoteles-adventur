@@ -59,7 +59,7 @@ export function MigasPan() {
                             ) : (
                                 <Link
                                     href={crumb.href}
-                                    className="text-gray-600 hover:text-red-600 transition-colors flex items-center gap-1"
+                                    className="text-gray-600 hover:text-yellow-400 transition-colors flex items-center gap-1"
                                 >
                                     {index === 0 && <Home className="w-4 h-4" />}
                                     {crumb.label}
