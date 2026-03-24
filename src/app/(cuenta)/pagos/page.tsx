@@ -167,15 +167,15 @@ export default function PagosPage() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 px-4 sm:px-0">
             {/* Header mejorado y responsive */}
-            <div className="bg-gradient-to-r from-yellow-400 via-red-700 to-red-800 text-white rounded-2xl p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8 relative overflow-hidden shadow-2xl">
+            <div className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-white rounded-2xl p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8 relative overflow-hidden shadow-2xl">
                 <div className="absolute top-0 right-0 w-32 sm:w-64 h-32 sm:h-64 bg-white/10 rounded-full blur-3xl" />
-                <div className="absolute bottom-0 left-0 w-32 sm:w-64 h-32 sm:h-64 bg-red-900/30 rounded-full blur-3xl" />
+                <div className="absolute bottom-0 left-0 w-32 sm:w-64 h-32 sm:h-64 bg-yellow-700/20 rounded-full blur-3xl" />
                 
                 <div className="relative z-10">
                     <div className="flex items-center justify-between mb-4 sm:mb-6">
                         <div>
                             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 animate-fadeInUp">Mis Pagos</h1>
-                            <p className="text-sm sm:text-base text-yellow-100 animate-fadeInUp animation-delay-100">Historial de transacciones</p>
+                            <p className="text-sm sm:text-base text-gray-700 animate-fadeInUp animation-delay-100">Historial de transacciones</p>
                         </div>
                         <div className="hidden md:block">
                             <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/20">
@@ -253,7 +253,7 @@ export default function PagosPage() {
                                 onClick={() => setFilter(estado)}
                                 className={`flex-1 py-2 sm:py-3 lg:py-4 px-2 sm:px-4 lg:px-6 text-xs sm:text-sm font-bold rounded-xl transition-all duration-300 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 ${
                                     filter === estado
-                                        ? 'bg-gradient-to-r from-yellow-400 to-yellow-500 text-white shadow-lg shadow-red-600/30'
+                                        ? 'bg-gradient-to-r from-yellow-400 to-yellow-500 text-white shadow-lg shadow-yellow-400/30'
                                         : 'text-gray-600 hover:bg-gray-50'
                                 }`}
                             >
@@ -321,7 +321,7 @@ export default function PagosPage() {
                                     </div>
                                     <button
                                         onClick={() => crearPago(reserva)}
-                                        className="w-full lg:w-auto px-6 py-3 bg-gradient-to-r from-green-600 to-yellow-300 hover:from-yellow-300 hover:to-yellow-400 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                                        className="w-full lg:w-auto px-6 py-3 bg-gradient-to-r bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold rounded-xl transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
                                     >
                                         <CreditCard className="w-5 h-5" />
                                         Pagar Adelanto
@@ -344,7 +344,7 @@ export default function PagosPage() {
                     </p>
                     <a
                         href="/reservas"
-                        className="inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-400 hover:to-red-800 text-white text-sm sm:text-base font-bold rounded-xl transition-all shadow-lg hover:shadow-2xl hover:shadow-red-600/30 transform hover:-translate-y-0.5"
+                        className="inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-yellow-400 hover:bg-yellow-500 text-gray-900 text-sm sm:text-base font-bold rounded-xl transition-all shadow-lg hover:shadow-2xl hover:shadow-yellow-400/30 transform hover:-translate-y-0.5"
                     >
                         <Receipt className="w-4 h-4 sm:w-5 sm:h-5" />
                         Ver Reservas

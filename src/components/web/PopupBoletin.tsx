@@ -75,7 +75,7 @@ export function NewsletterPopup() {
                             />
                             <button
                                 type="submit"
-                                className="w-full px-6 py-3 bg-yellow-400 hover:bg-yellow-400 text-gray-900 font-semibold rounded-lg transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg"
+                                className="w-full px-6 py-3 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold rounded-lg transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg"
                             >
                                 Obtener Descuento
                             </button>

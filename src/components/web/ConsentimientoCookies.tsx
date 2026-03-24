@@ -41,7 +41,7 @@ export function CookieConsent() {
             <div className="flex gap-3">
               <button
                 onClick={() => updateConsent('accepted')}
-                className="px-6 py-2 bg-yellow-400 hover:bg-yellow-400 text-gray-900 font-semibold rounded-lg transition-all duration-300 text-sm"
+                className="px-6 py-2 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold rounded-lg transition-all duration-300 text-sm"
               >
                 Aceptar
               </button>

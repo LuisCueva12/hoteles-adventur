@@ -91,34 +91,34 @@ export default function ReservasPage() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 px-4 sm:px-0">
             {/* Header mejorado y responsive */}
-            <div className="bg-gradient-to-r from-yellow-400 via-red-700 to-red-800 text-white rounded-2xl p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8 relative overflow-hidden shadow-2xl">
+            <div className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-gray-900 rounded-2xl p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8 relative overflow-hidden shadow-2xl">
                 <div className="absolute top-0 right-0 w-32 sm:w-64 h-32 sm:h-64 bg-white/10 rounded-full blur-3xl" />
-                <div className="absolute bottom-0 left-0 w-32 sm:w-64 h-32 sm:h-64 bg-red-900/30 rounded-full blur-3xl" />
+                <div className="absolute bottom-0 left-0 w-32 sm:w-64 h-32 sm:h-64 bg-yellow-700/20 rounded-full blur-3xl" />
                 
                 <div className="relative z-10">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-4">
                         <div>
-                            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 animate-fadeInUp">Mis Reservas</h1>
-                            <p className="text-sm sm:text-base text-yellow-100 animate-fadeInUp animation-delay-100">Gestiona y revisa todas tus reservas</p>
+                            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 animate-fadeInUp text-gray-900">Mis Reservas</h1>
+                            <p className="text-sm sm:text-base text-gray-700 animate-fadeInUp animation-delay-100">Gestiona y revisa todas tus reservas</p>
                         </div>
                         <div className="flex sm:hidden items-center gap-3 w-full">
                             <div className="flex-1 text-center px-4 py-2 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
                                 <div className="text-xl font-bold">{reservas.length}</div>
-                                <div className="text-xs text-yellow-100">Total</div>
+                                <div className="text-xs text-gray-700">Total</div>
                             </div>
                             <div className="flex-1 text-center px-4 py-2 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
                                 <div className="text-xl font-bold">{reservas.filter(r => r.estado === 'confirmada').length}</div>
-                                <div className="text-xs text-yellow-100">Confirmadas</div>
+                                <div className="text-xs text-gray-700">Confirmadas</div>
                             </div>
                         </div>
                         <div className="hidden md:flex items-center gap-4">
                             <div className="text-center px-6 py-3 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
                                 <div className="text-2xl font-bold">{reservas.length}</div>
-                                <div className="text-xs text-yellow-100">Total</div>
+                                <div className="text-xs text-gray-700">Total</div>
                             </div>
                             <div className="text-center px-6 py-3 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
                                 <div className="text-2xl font-bold">{reservas.filter(r => r.estado === 'confirmada').length}</div>
-                                <div className="text-xs text-yellow-100">Confirmadas</div>
+                                <div className="text-xs text-gray-700">Confirmadas</div>
                             </div>
                         </div>
                     </div>
@@ -135,7 +135,7 @@ export default function ReservasPage() {
                                 onClick={() => setFilter(estado)}
                                 className={`flex-1 py-2 sm:py-3 lg:py-4 px-2 sm:px-4 lg:px-6 text-xs sm:text-sm font-bold rounded-xl transition-all duration-300 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 ${
                                     filter === estado
-                                        ? 'bg-gradient-to-r from-yellow-400 to-yellow-500 text-white shadow-lg shadow-red-600/30'
+                                        ? 'bg-gradient-to-r from-yellow-400 to-yellow-500 text-gray-900 shadow-lg shadow-yellow-400/30'
                                         : 'text-gray-600 hover:bg-gray-50'
                                 }`}
                             >
@@ -162,7 +162,7 @@ export default function ReservasPage() {
                     </p>
                     <a
                         href="/hoteles"
-                        className="inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-400 hover:to-red-800 text-white text-sm sm:text-base font-bold rounded-xl transition-all shadow-lg hover:shadow-2xl hover:shadow-red-600/30 transform hover:-translate-y-0.5"
+                        className="inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-yellow-400 hover:bg-yellow-500 text-gray-900 text-sm sm:text-base font-bold rounded-xl transition-all shadow-lg hover:shadow-2xl hover:shadow-yellow-400/30 transform hover:-translate-y-0.5"
                     >
                         <Hotel className="w-4 h-4 sm:w-5 sm:h-5" />
                         Explorar Alojamientos
@@ -195,9 +195,9 @@ export default function ReservasPage() {
                                     </div>
                                 </div>
                                 <span className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold rounded-lg sm:rounded-xl flex items-center gap-1.5 sm:gap-2 self-start ${
-                                    reserva.estado === 'confirmada' ? 'bg-yellow-100 text-yellow-400' :
-                                    reserva.estado === 'pendiente' ? 'bg-yellow-100 text-yellow-400' :
-                                    'bg-yellow-100 text-yellow-400'
+                                    reserva.estado === 'confirmada' ? 'bg-green-100 text-green-700' :
+                                    reserva.estado === 'pendiente' ? 'bg-yellow-100 text-yellow-700' :
+                                    'bg-red-100 text-red-700'
                                 }`}>
                                     {reserva.estado === 'confirmada' && <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />}
                                     {reserva.estado === 'pendiente' && <Clock className="w-3 h-3 sm:w-4 sm:h-4" />}
@@ -260,7 +260,7 @@ export default function ReservasPage() {
                                         <>
                                             <a
                                                 href="/pagos"
-                                                className="px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-green-600 to-yellow-300 hover:from-yellow-300 hover:to-yellow-400 text-white text-sm sm:text-base font-bold rounded-xl transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                                                className="px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r bg-yellow-400 hover:bg-yellow-500 text-gray-900 text-sm sm:text-base font-bold rounded-xl transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
                                             >
                                                 <CreditCard className="w-4 h-4 sm:w-5 sm:h-5" />
                                                 Pagar Ahora

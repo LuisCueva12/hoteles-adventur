@@ -371,7 +371,7 @@ export default function AIChatbot() {
                       <button
                         key={action.label}
                         onClick={() => void sendMessage(action.prompt)}
-                        className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-red-300 hover:bg-red-50 hover:text-red-700"
+                        className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-yellow-300 hover:bg-yellow-50 hover:text-yellow-700"
                       >
                         {action.label}
                       </button>
@@ -385,7 +385,7 @@ export default function AIChatbot() {
                       <div
                         className={
                           message.role === 'user'
-                            ? 'rounded-[24px] rounded-br-md bg-gradient-to-br from-red-600 to-orange-500 px-4 py-3 text-sm text-white shadow-lg'
+                            ? 'rounded-[24px] rounded-br-md bg-gradient-to-br from-gray-800 to-gray-900 px-4 py-3 text-sm text-white shadow-lg'
                             : 'rounded-[24px] rounded-bl-md border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm'
                         }
                       >
@@ -424,7 +424,7 @@ export default function AIChatbot() {
                                     </span>
                                     <Link
                                       href={`/hoteles/${room.id}`}
-                                      className="rounded-full bg-slate-900 px-3 py-1.5 font-semibold text-white transition hover:bg-red-600"
+                                      className="rounded-full bg-slate-900 px-3 py-1.5 font-semibold text-white transition hover:bg-yellow-500"
                                     >
                                       Ver detalle
                                     </Link>
@@ -443,8 +443,8 @@ export default function AIChatbot() {
                                 href={action.href}
                                 className={
                                   action.variant === 'primary'
-                                    ? 'rounded-full bg-slate-950 px-3 py-2 text-xs font-semibold text-white transition hover:bg-red-600'
-                                    : 'rounded-full border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-red-300 hover:text-red-700'
+                                    ? 'rounded-full bg-slate-950 px-3 py-2 text-xs font-semibold text-white transition hover:bg-yellow-500'
+                                    : 'rounded-full border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-yellow-300 hover:text-yellow-700'
                                 }
                               >
                                 {action.label}
@@ -459,7 +459,7 @@ export default function AIChatbot() {
                               <button
                                 key={`${message.id}-${suggestion}`}
                                 onClick={() => void sendMessage(suggestion)}
-                                className="rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 transition hover:bg-red-100"
+                                className="rounded-full border border-yellow-200 bg-yellow-50 px-3 py-1.5 text-xs font-medium text-yellow-700 transition hover:bg-yellow-100"
                               >
                                 {suggestion}
                               </button>
@@ -479,10 +479,10 @@ export default function AIChatbot() {
                     <div className="mr-10">
                       <div className="rounded-[24px] rounded-bl-md border border-slate-200 bg-white px-4 py-4 shadow-sm">
                         <div className="flex items-center gap-3">
-                          <Loader2 className="h-4 w-4 animate-spin text-red-600" />
+                          <Loader2 className="h-4 w-4 animate-spin text-yellow-500" />
                           <div className="flex gap-1">
-                            <span className="h-2 w-2 animate-bounce rounded-full bg-red-500" />
-                            <span className="h-2 w-2 animate-bounce rounded-full bg-orange-400 [animation-delay:120ms]" />
+                            <span className="h-2 w-2 animate-bounce rounded-full bg-yellow-500" />
+                            <span className="h-2 w-2 animate-bounce rounded-full bg-yellow-400 [animation-delay:120ms]" />
                             <span className="h-2 w-2 animate-bounce rounded-full bg-amber-400 [animation-delay:240ms]" />
                           </div>
                           <span className="text-sm text-slate-500">Preparando una recomendacion precisa...</span>
@@ -501,21 +501,21 @@ export default function AIChatbot() {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={handleReset}
-                        className="rounded-xl border border-slate-200 p-2 text-slate-500 transition hover:border-red-200 hover:text-red-600"
+                        className="rounded-xl border border-slate-200 p-2 text-slate-500 transition hover:border-yellow-300 hover:text-yellow-600"
                         title="Reiniciar chat"
                       >
                         <RefreshCw className="h-4 w-4" />
                       </button>
                       <button
                         onClick={handleCopyTranscript}
-                        className="rounded-xl border border-slate-200 p-2 text-slate-500 transition hover:border-red-200 hover:text-red-600"
+                        className="rounded-xl border border-slate-200 p-2 text-slate-500 transition hover:border-yellow-300 hover:text-yellow-600"
                         title="Copiar conversacion"
                       >
                         <Copy className="h-4 w-4" />
                       </button>
                       <button
                         onClick={handleExport}
-                        className="rounded-xl border border-slate-200 p-2 text-slate-500 transition hover:border-red-200 hover:text-red-600"
+                        className="rounded-xl border border-slate-200 p-2 text-slate-500 transition hover:border-yellow-300 hover:text-yellow-600"
                         title="Exportar conversacion"
                       >
                         <Download className="h-4 w-4" />
