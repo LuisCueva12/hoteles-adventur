@@ -44,6 +44,14 @@ const TIPO_ICONS: Record<string, React.ElementType> = {
     'Casa': Home,
 }
 
+const ORDENES = [
+    { value: 'precio_asc', label: 'Precio mas bajo', helper: 'Las opciones mas accesibles primero' },
+    { value: 'precio_desc', label: 'Precio mas alto', helper: 'Destaca estancias premium y completas' },
+    { value: 'nombre', label: 'Nombre A-Z', helper: 'Explora el catalogo en orden alfabetico' },
+] as const
+
+type Orden = (typeof ORDENES)[number]['value']
+
 function HotelesContent() {
     const searchParams = useSearchParams()
     const router = useRouter()
@@ -64,7 +72,7 @@ function HotelesContent() {
     })
     const [precioMin, setPrecioMin] = useState('')
     const [precioMax, setPrecioMax] = useState('')
-    const [orden, setOrden] = useState<'precio_asc' | 'precio_desc' | 'nombre'>('precio_asc')
+    const [orden, setOrden] = useState<Orden>('precio_asc')
 
     // ── Estado UI ────────────────────────────────────────────────────────────
     const [alojamientos, setAlojamientos] = useState<Alojamiento[]>([])
@@ -77,6 +85,7 @@ function HotelesContent() {
     const [secCategoria, setSecCategoria] = useState(true)
     const [secTipo, setSecTipo] = useState(true)
     const [secPrecio, setSecPrecio] = useState(true)
+    const [secOrganizar, setSecOrganizar] = useState(true)
 
     // Ref para evitar doble fetch en StrictMode
     const fetchRef = useRef(0)
@@ -177,6 +186,7 @@ function HotelesContent() {
     const nFiltros = [busqueda, checkIn, categoria, tipAloj, precioMin, precioMax, huespedes > 1 ? '1' : ''].filter(Boolean).length
     const noches = checkIn && checkOut ? Math.max(0, Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 86400000)) : 0
     const linkParams = checkIn ? `?checkIn=${checkIn}&checkOut=${checkOut}&huespedes=${huespedes}` : ''
+    const ordenActual = ORDENES.find((item) => item.value === orden) ?? ORDENES[0]
 
     const inputCls = "w-full border-2 border-gray-300 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-all"
 
@@ -242,11 +252,11 @@ function HotelesContent() {
                 </div>
             )}
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex gap-6 items-start">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex flex-col gap-6 lg:flex-row lg:items-start">
                 {/* ── SIDEBAR ──────────────────────────────────────────────── */}
                 {sidebarOpen && (
-                    <aside className="w-72 flex-shrink-0">
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden sticky top-24">
+                    <aside className="w-full lg:w-72 lg:flex-shrink-0 lg:self-start lg:sticky lg:top-24">
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                             {/* Header */}
                             <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-yellow-400 to-yellow-500">
                                 <div className="flex items-center gap-2 text-white">
@@ -261,7 +271,54 @@ function HotelesContent() {
                                 )}
                             </div>
 
-                            <div className="max-h-[calc(100vh-200px)] overflow-y-auto">
+                            <div className="overflow-visible lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
+                                <div className="px-5 pt-5">
+                                    <div className="rounded-2xl border border-yellow-100 bg-gradient-to-br from-yellow-50 via-white to-white p-3.5">
+                                        <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-yellow-500">Exploracion</p>
+                                        <div className="mt-2 flex items-start justify-between gap-3">
+                                            <div>
+                                                <p className="text-sm font-semibold text-gray-900">
+                                                    {loading ? 'Actualizando resultados...' : `${alojamientos.length} opciones disponibles`}
+                                                </p>
+                                                <p className="text-xs text-gray-500">Orden actual: {ordenActual.label}</p>
+                                            </div>
+                                            <span className="rounded-full border border-yellow-100 bg-white px-2.5 py-1 text-[11px] font-bold text-gray-600 shadow-sm">
+                                                {vista === 'grid' ? 'Vista grid' : 'Vista lista'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <SidebarSection title="Ordenar resultados" icon={ArrowUpDown} open={secOrganizar} onToggle={() => setSecOrganizar(v => !v)}>
+                                    <div className="space-y-2">
+                                        {ORDENES.map((item) => (
+                                            <button
+                                                key={item.value}
+                                                onClick={() => setOrden(item.value)}
+                                                className={`w-full rounded-2xl border px-3.5 py-3 text-left transition-all ${
+                                                    orden === item.value
+                                                        ? 'border-yellow-400 bg-yellow-50 shadow-sm'
+                                                        : 'border-gray-200 hover:border-yellow-200 hover:bg-gray-50'
+                                                }`}
+                                            >
+                                                <div className="flex items-start justify-between gap-3">
+                                                    <div>
+                                                        <p className="text-sm font-semibold text-gray-900">{item.label}</p>
+                                                        <p className="mt-1 text-xs text-gray-500">{item.helper}</p>
+                                                    </div>
+                                                    <span
+                                                        className={`shrink-0 rounded-full px-2 py-1 text-[11px] font-bold ${
+                                                            orden === item.value ? 'bg-yellow-400 text-gray-900' : 'bg-gray-100 text-gray-500'
+                                                        }`}
+                                                    >
+                                                        {orden === item.value ? 'Activo' : 'Usar'}
+                                                    </span>
+                                                </div>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </SidebarSection>
+
                                 {/* Disponibilidad */}
                                 <SidebarSection title="Disponibilidad" icon={Calendar} open={secFechas} onToggle={() => setSecFechas(v => !v)}>
                                     <div className="space-y-3">
@@ -410,10 +467,19 @@ function HotelesContent() {
                                 )}
                             </p>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-1.5 border-2 border-gray-300 rounded-xl px-3 py-2 bg-white">
+                        <div className="flex items-center gap-2 ml-auto">
+                            <div className="hidden sm:flex items-center gap-2 rounded-2xl border border-gray-200 bg-gray-50 px-3 py-2">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-xl border border-gray-200 bg-white shadow-sm">
+                                    <ArrowUpDown size={14} className="text-yellow-500" />
+                                </div>
+                                <div className="leading-tight">
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gray-400">Orden actual</p>
+                                    <p className="text-sm font-semibold text-gray-900">{ordenActual.label}</p>
+                                </div>
+                            </div>
+                            <div className="hidden items-center gap-1.5 border-2 border-gray-300 rounded-xl px-3 py-2 bg-white">
                                 <ArrowUpDown size={13} className="text-gray-500" />
-                                <select value={orden} onChange={e => setOrden(e.target.value as any)}
+                                <select value={orden} onChange={e => setOrden(e.target.value as Orden)}
                                     className="text-xs font-semibold text-gray-800 outline-none bg-transparent cursor-pointer">
                                     <option value="precio_asc">Precio: menor a mayor</option>
                                     <option value="precio_desc">Precio: mayor a menor</option>

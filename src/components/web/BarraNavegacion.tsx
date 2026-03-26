@@ -47,19 +47,18 @@ export function Navbar() {
                 </nav>
 
                 <div className="hidden md:flex items-center gap-3">
-                    <Link href="/login" className="text-sm text-gray-600 hover:text-gray-900 transition-colors font-medium">
-                        Iniciar sesión
-                    </Link>
-                    <Link href="/hoteles"
-                        className="px-5 py-2 bg-yellow-400 hover:bg-yellow-500 text-gray-900 text-sm font-semibold rounded-lg transition-all duration-200 shadow-sm hover:shadow-md">
+                    <Link
+                        href="/hoteles"
+                        className="px-5 py-2 bg-yellow-400 hover:bg-yellow-500 text-gray-900 text-sm font-semibold rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+                    >
                         Reservar ahora
                     </Link>
                 </div>
 
                 <button
-                    onClick={() => setOpen(!open)} 
+                    onClick={() => setOpen(!open)}
                     className="md:hidden p-2 text-gray-600 hover:text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-400 rounded"
-                    aria-label="Menú de navegación"
+                    aria-label="Menu de navegacion"
                     aria-expanded={open}
                 >
                     <span className={`block w-6 h-0.5 bg-current mb-1.5 transition-transform duration-300 ${open ? 'rotate-45 translate-y-2' : ''}`} />
@@ -82,9 +81,6 @@ export function Navbar() {
                             {link.label}
                         </Link>
                     ))}
-                    <Link href="/login" className="text-sm text-gray-600 font-medium" onClick={() => setOpen(false)}>
-                        Iniciar sesión
-                    </Link>
                     <Link
                         href="/hoteles"
                         className="px-4 py-2.5 bg-yellow-400 hover:bg-yellow-500 text-gray-900 text-sm font-semibold rounded-lg text-center transition-colors"

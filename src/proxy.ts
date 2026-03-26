@@ -4,6 +4,8 @@ import { actualizarSesion } from '@/utils/supabase/middleware'
 const PUBLIC_ROUTES = [
   '/',
   '/login',
+  '/recuperar-password',
+  '/actualizar-password',
   '/hoteles',
   '/nosotros',
   '/servicios',

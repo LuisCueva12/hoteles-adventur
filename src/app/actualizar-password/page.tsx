@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { Lock, Eye, EyeOff, Loader2, CheckCircle2 } from 'lucide-react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Lock, Eye, EyeOff, Loader2, CheckCircle2, Shield, ArrowLeft } from 'lucide-react'
 import { Logo } from '@/components/web/Logo'
 import { useToast } from '@/hooks/useNotificacion'
 import { createClient } from '@/utils/supabase/client'
@@ -13,7 +14,7 @@ function getErrorMessage(error: unknown): string {
     return error.message
   }
 
-  return 'Error al actualizar la contrasena'
+  return 'Error al actualizar la contrasena.'
 }
 
 export default function ActualizarPasswordPage() {
@@ -22,44 +23,132 @@ export default function ActualizarPasswordPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [sessionReady, setSessionReady] = useState(false)
+  const [sessionError, setSessionError] = useState<string | null>(null)
   const [passwordStrength, setPasswordStrength] = useState({ score: 0, feedback: [] as string[] })
-  const supabase = createClient()
+
+  const searchParams = useSearchParams()
+  const supabase = useMemo(() => createClient(), [])
   const { success, error } = useToast()
   const router = useRouter()
 
   useEffect(() => {
-    if (password) {
-      setPasswordStrength(obtenerFortalezaContrasena(password))
+    if (!password) {
+      setPasswordStrength({ score: 0, feedback: [] })
+      return
     }
+
+    setPasswordStrength(obtenerFortalezaContrasena(password))
   }, [password])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!password || loading) return
+  useEffect(() => {
+    let active = true
+    let unsubscribe: (() => void) | undefined
+    let timeoutId: ReturnType<typeof window.setTimeout> | undefined
+
+    async function prepareRecoverySession() {
+      try {
+        setSessionError(null)
+        setSessionReady(false)
+
+        const code = searchParams.get('code')
+        const flow = searchParams.get('flow')
+        const hasHashToken =
+          typeof window !== 'undefined' && window.location.hash.includes('access_token')
+
+        if (code) {
+          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+          if (exchangeError) throw exchangeError
+        }
+
+        const readSession = async () => {
+          const { data, error: sessionLookupError } = await supabase.auth.getSession()
+          if (sessionLookupError) throw sessionLookupError
+          return data.session
+        }
+
+        const currentSession = await readSession()
+        if (currentSession) {
+          if (active) {
+            setSessionReady(true)
+          }
+          return
+        }
+
+        const expectsRecoverySession = Boolean(code) || hasHashToken || flow === 'recovery'
+        if (!expectsRecoverySession) {
+          throw new Error('El enlace de recuperacion no es valido o ya expiro.')
+        }
+
+        const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+          if (active && session) {
+            setSessionError(null)
+            setSessionReady(true)
+          }
+        })
+        unsubscribe = () => authListener.subscription.unsubscribe()
+
+        timeoutId = window.setTimeout(async () => {
+          try {
+            const delayedSession = await readSession()
+
+            if (!active) return
+
+            if (delayedSession) {
+              setSessionError(null)
+              setSessionReady(true)
+              return
+            }
+
+            setSessionError('El enlace de recuperacion no es valido o ya expiro.')
+          } catch (err: unknown) {
+            if (active) {
+              setSessionError(getErrorMessage(err))
+            }
+          }
+        }, 1500)
+      } catch (err: unknown) {
+        if (active) {
+          setSessionError(getErrorMessage(err))
+        }
+      }
+    }
+
+    prepareRecoverySession()
+
+    return () => {
+      active = false
+      if (timeoutId) window.clearTimeout(timeoutId)
+      if (unsubscribe) unsubscribe()
+    }
+  }, [searchParams, supabase])
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!password || loading || !sessionReady) return
 
     if (password !== confirmPassword) {
-      error('Las contrasenas no coinciden')
+      error('Las contrasenas no coinciden.')
       return
     }
 
     if (password.length < 8) {
-      error('La contrasena debe tener al menos 8 caracteres')
+      error('La contrasena debe tener al menos 8 caracteres.')
       return
     }
 
     setLoading(true)
 
     try {
-      const { error: updateError } = await supabase.auth.updateUser({
-        password,
-      })
-
+      const { error: updateError } = await supabase.auth.updateUser({ password })
       if (updateError) throw updateError
 
-      success('Contrasena actualizada exitosamente')
+      await supabase.auth.signOut()
+      success('Contrasena actualizada exitosamente.')
+
       setTimeout(() => {
-        router.push('/login')
-      }, 2000)
+        router.replace('/login')
+      }, 1500)
     } catch (err: unknown) {
       error(getErrorMessage(err))
     } finally {
@@ -68,10 +157,10 @@ export default function ActualizarPasswordPage() {
   }
 
   const getStrengthColor = (score: number) => {
-    if (score <= 1) return 'bg-yellow-300'
+    if (score <= 1) return 'bg-red-400'
     if (score === 2) return 'bg-yellow-400'
     if (score === 3) return 'bg-blue-500'
-    return 'bg-yellow-400'
+    return 'bg-emerald-500'
   }
 
   const getStrengthText = (score: number) => {
@@ -81,26 +170,77 @@ export default function ActualizarPasswordPage() {
     return 'Fuerte'
   }
 
+  if (!sessionReady && !sessionError) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 px-6 py-12">
+        <div className="w-full max-w-md rounded-2xl border border-gray-100 bg-white p-8 text-center shadow-xl">
+          <div className="mb-5 flex justify-center">
+            <Logo className="h-12" />
+          </div>
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-yellow-100">
+            <Loader2 className="h-8 w-8 animate-spin text-yellow-500" />
+          </div>
+          <h1 className="mb-2 text-2xl font-bold text-gray-900">Validando enlace</h1>
+          <p className="text-sm text-gray-600">Estamos preparando tu acceso seguro para cambiar la contrasena.</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (sessionError) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 px-6 py-12">
+        <div className="w-full max-w-md rounded-2xl border border-gray-100 bg-white p-8 shadow-xl">
+          <div className="mb-6 text-center">
+            <Logo className="mx-auto h-12" />
+          </div>
+          <div className="mb-5 flex justify-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-50">
+              <Shield className="h-8 w-8 text-red-500" />
+            </div>
+          </div>
+          <h1 className="mb-2 text-center text-2xl font-bold text-gray-900">Enlace no valido</h1>
+          <p className="text-center text-sm text-gray-600">{sessionError}</p>
+          <div className="mt-6 space-y-3">
+            <Link
+              href="/recuperar-password"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-yellow-500 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-yellow-600"
+            >
+              Solicitar nuevo enlace
+            </Link>
+            <Link
+              href="/login"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-gray-200 px-5 py-2.5 text-sm font-semibold text-gray-700 transition-all hover:bg-gray-50"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Volver al login
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center px-6 py-12 bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 px-6 py-12">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Logo className="h-12 mx-auto" />
+        <div className="mb-8 text-center">
+          <Logo className="mx-auto h-12" />
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
-          <div className="text-center mb-6">
-            <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Lock className="w-8 h-8 text-yellow-400" />
+        <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-xl">
+          <div className="mb-6 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-yellow-100">
+              <Lock className="h-8 w-8 text-yellow-500" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Nueva contrasena</h1>
-            <p className="text-sm text-gray-600">Ingresa tu nueva contrasena segura</p>
+            <h1 className="mb-2 text-2xl font-bold text-gray-900">Nueva contrasena</h1>
+            <p className="text-sm text-gray-600">Ingresa una nueva contrasena segura para tu cuenta.</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <label htmlFor="password" className="block text-xs font-semibold text-gray-700 flex items-center gap-1.5">
-                <Lock className="w-3.5 h-3.5 text-yellow-400" />
+              <label htmlFor="password" className="flex items-center gap-1.5 text-xs font-semibold text-gray-700">
+                <Lock className="h-3.5 w-3.5 text-yellow-500" />
                 Nueva contrasena
               </label>
               <div className="relative">
@@ -109,46 +249,47 @@ export default function ActualizarPasswordPage() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
-                  className="w-full px-3 py-2.5 pr-10 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-all text-sm bg-white text-gray-900 placeholder-gray-400"
+                  className="w-full rounded-xl border-2 border-gray-300 bg-white px-3 py-2.5 pr-10 text-sm text-gray-900 placeholder-gray-400 transition-all focus:border-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-400"
                   placeholder="........"
                   required
                   disabled={loading}
                   minLength={8}
+                  autoComplete="new-password"
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-yellow-400 transition-colors p-1 rounded-lg hover:bg-yellow-50"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1 text-gray-400 transition-colors hover:bg-yellow-50 hover:text-yellow-500"
                   tabIndex={-1}
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
 
               {password && (
-                <div className="space-y-2 animate-fadeInUp">
+                <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-gray-200">
                       <div
-                        className={`h-full transition-all duration-500 rounded-full ${getStrengthColor(passwordStrength.score)}`}
+                        className={`h-full rounded-full transition-all duration-500 ${getStrengthColor(passwordStrength.score)}`}
                         style={{ width: `${(passwordStrength.score / 4) * 100}%` }}
                       />
                     </div>
-                    <span className="text-xs font-semibold text-gray-600 min-w-[50px]">
+                    <span className="min-w-[50px] text-xs font-semibold text-gray-600">
                       {getStrengthText(passwordStrength.score)}
                     </span>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div className={`flex items-center gap-1 ${password.length >= 8 ? 'text-yellow-400' : 'text-gray-400'}`}>
+                    <div className={`flex items-center gap-1 ${password.length >= 8 ? 'text-emerald-600' : 'text-gray-400'}`}>
                       {password.length >= 8 ? 'OK' : 'NO'} 8+ caracteres
                     </div>
-                    <div className={`flex items-center gap-1 ${/[A-Z]/.test(password) && /[a-z]/.test(password) ? 'text-yellow-400' : 'text-gray-400'}`}>
+                    <div className={`flex items-center gap-1 ${/[A-Z]/.test(password) && /[a-z]/.test(password) ? 'text-emerald-600' : 'text-gray-400'}`}>
                       {/[A-Z]/.test(password) && /[a-z]/.test(password) ? 'OK' : 'NO'} Mayus y minus
                     </div>
-                    <div className={`flex items-center gap-1 ${/[0-9]/.test(password) ? 'text-yellow-400' : 'text-gray-400'}`}>
+                    <div className={`flex items-center gap-1 ${/[0-9]/.test(password) ? 'text-emerald-600' : 'text-gray-400'}`}>
                       {/[0-9]/.test(password) ? 'OK' : 'NO'} Numeros
                     </div>
-                    <div className={`flex items-center gap-1 ${/[^a-zA-Z0-9]/.test(password) ? 'text-yellow-400' : 'text-gray-400'}`}>
+                    <div className={`flex items-center gap-1 ${/[^a-zA-Z0-9]/.test(password) ? 'text-emerald-600' : 'text-gray-400'}`}>
                       {/[^a-zA-Z0-9]/.test(password) ? 'OK' : 'NO'} Simbolos
                     </div>
                   </div>
@@ -166,30 +307,32 @@ export default function ActualizarPasswordPage() {
                   type={showConfirmPassword ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={(event) => setConfirmPassword(event.target.value)}
-                  className={`w-full px-3 py-2.5 pr-10 border-2 rounded-xl focus:outline-none focus:ring-2 transition-all text-sm bg-white text-gray-900 placeholder-gray-400 ${
+                  className={`w-full rounded-xl border-2 bg-white px-3 py-2.5 pr-10 text-sm text-gray-900 placeholder-gray-400 transition-all focus:outline-none focus:ring-2 ${
                     confirmPassword && password !== confirmPassword
-                      ? 'border-yellow-400 focus:ring-yellow-400'
-                      : 'border-gray-300 focus:ring-yellow-400'
+                      ? 'border-red-300 focus:border-red-400 focus:ring-red-400'
+                      : 'border-gray-300 focus:border-yellow-400 focus:ring-yellow-400'
                   }`}
                   placeholder="........"
                   required
                   disabled={loading}
+                  autoComplete="new-password"
                 />
                 <button
                   type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-yellow-400 transition-colors p-1 rounded-lg hover:bg-yellow-50"
+                  onClick={() => setShowConfirmPassword((prev) => !prev)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1 text-gray-400 transition-colors hover:bg-yellow-50 hover:text-yellow-500"
                   tabIndex={-1}
                 >
-                  {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
               {confirmPassword && password !== confirmPassword && (
-                <p className="text-xs text-yellow-400 animate-fadeInUp">Las contrasenas no coinciden</p>
+                <p className="text-xs text-red-500">Las contrasenas no coinciden.</p>
               )}
               {confirmPassword && password === confirmPassword && (
-                <p className="text-xs text-yellow-400 flex items-center gap-1 animate-fadeInUp">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Las contrasenas coinciden
+                <p className="flex items-center gap-1 text-xs text-emerald-600">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  Las contrasenas coinciden
                 </p>
               )}
             </div>
@@ -197,11 +340,11 @@ export default function ActualizarPasswordPage() {
             <button
               type="submit"
               disabled={loading || !password || password !== confirmPassword}
-              className="w-full py-2.5 px-5 bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-400 hover:to-red-800 text-white font-semibold rounded-lg focus:outline-none focus:ring-4 focus:ring-yellow-400/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:-translate-y-0.5 hover:shadow-xl disabled:transform-none text-sm"
+              className="w-full rounded-lg bg-gradient-to-r from-yellow-500 to-orange-500 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:from-yellow-500 hover:to-orange-600 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-yellow-400/50 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-3">
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <Loader2 className="h-5 w-5 animate-spin" />
                   <span>Actualizando...</span>
                 </span>
               ) : (

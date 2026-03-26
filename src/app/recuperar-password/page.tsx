@@ -1,99 +1,119 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
+import { ArrowLeft, Mail, Loader2, CheckCircle2, Shield } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import { useToast } from '@/hooks/useNotificacion'
-import Link from 'next/link'
 import { Logo } from '@/components/web/Logo'
-import { ArrowLeft, Mail, Loader2, CheckCircle2, Shield } from 'lucide-react'
+
+const REMEMBER_EMAIL_KEY = 'adventur.login.email'
+
+function normalizeEmail(value: string | null) {
+  return value?.trim().toLowerCase() ?? ''
+}
 
 export default function RecuperarPasswordPage() {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [sent, setSent] = useState(false)
-  const supabase = createClient()
+
+  const searchParams = useSearchParams()
+  const supabase = useMemo(() => createClient(), [])
   const { success, error } = useToast()
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  useEffect(() => {
+    const emailFromQuery = normalizeEmail(searchParams.get('email'))
+    const emailFromStorage =
+      typeof window !== 'undefined' ? normalizeEmail(window.localStorage.getItem(REMEMBER_EMAIL_KEY)) : ''
+
+    setEmail(emailFromQuery || emailFromStorage)
+  }, [searchParams])
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
     if (!email || loading) return
 
     setLoading(true)
 
     try {
+      const redirectTo = new URL('/actualizar-password', window.location.origin)
+      redirectTo.searchParams.set('flow', 'recovery')
+
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/actualizar-password`,
+        redirectTo: redirectTo.toString(),
       })
 
       if (resetError) throw resetError
 
       setSent(true)
-      success('Revisa tu email para restablecer tu contraseña')
-    } catch (err: any) {
-      error(err.message || 'Error al enviar el email de recuperación')
+      success('Revisa tu email para restablecer tu contrasena.')
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error al enviar el email de recuperacion.'
+      error(message)
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6 py-12 bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 px-6 py-12">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-block mb-6">
+        <div className="mb-8 text-center">
+          <Link href="/" className="inline-block">
             <Logo className="h-12" />
           </Link>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
-          <Link 
-            href="/login" 
-            className="inline-flex items-center gap-2 text-gray-600 hover:text-yellow-400 transition-all mb-6 group"
+        <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-xl">
+          <Link
+            href="/login"
+            className="group mb-6 inline-flex items-center gap-2 text-gray-600 transition-all hover:text-yellow-500"
           >
-            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+            <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
             <span className="text-sm font-medium">Volver al login</span>
           </Link>
 
           {!sent ? (
             <>
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Shield className="w-8 h-8 text-yellow-400" />
+              <div className="mb-6 text-center">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-yellow-100">
+                  <Shield className="h-8 w-8 text-yellow-500" />
                 </div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                  ¿Olvidaste tu contraseña?
-                </h1>
+                <h1 className="mb-2 text-2xl font-bold text-gray-900">Recuperar contrasena</h1>
                 <p className="text-sm text-gray-600">
-                  No te preocupes, te enviaremos instrucciones para restablecerla
+                  Te enviaremos un enlace seguro para crear una nueva contrasena.
                 </p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="space-y-2">
-                  <label htmlFor="email" className="block text-xs font-semibold text-gray-700 flex items-center gap-1.5">
-                    <Mail className="w-3.5 h-3.5 text-yellow-400" />
-                    Correo electrónico
+                  <label htmlFor="email" className="flex items-center gap-1.5 text-xs font-semibold text-gray-700">
+                    <Mail className="h-3.5 w-3.5 text-yellow-500" />
+                    Correo electronico
                   </label>
                   <input
                     id="email"
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-3 py-2.5 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-all text-sm bg-white text-gray-900 placeholder-gray-400"
+                    onChange={(event) => setEmail(event.target.value)}
+                    className="w-full rounded-xl border-2 border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 transition-all focus:border-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-400"
                     placeholder="tu@email.com"
                     required
                     disabled={loading}
+                    autoComplete="email"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-2.5 px-5 bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-400 hover:to-red-800 text-white font-semibold rounded-lg focus:outline-none focus:ring-4 focus:ring-yellow-400/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:-translate-y-0.5 hover:shadow-xl disabled:transform-none text-sm"
+                  className="w-full rounded-lg bg-gradient-to-r from-yellow-500 to-orange-500 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:from-yellow-500 hover:to-orange-600 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-yellow-400/50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {loading ? (
                     <span className="flex items-center justify-center gap-3">
-                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <Loader2 className="h-5 w-5 animate-spin" />
                       <span>Enviando...</span>
                     </span>
                   ) : (
@@ -103,25 +123,21 @@ export default function RecuperarPasswordPage() {
               </form>
             </>
           ) : (
-            <div className="text-center py-8">
-              <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle2 className="w-8 h-8 text-yellow-400" />
+            <div className="py-8 text-center">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-yellow-100">
+                <CheckCircle2 className="h-8 w-8 text-yellow-500" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                ¡Email enviado!
-              </h2>
-              <p className="text-sm text-gray-600 mb-6">
-                Revisa tu bandeja de entrada en <span className="font-semibold">{email}</span> y sigue las instrucciones para restablecer tu contraseña.
+              <h2 className="mb-2 text-2xl font-bold text-gray-900">Email enviado</h2>
+              <p className="mb-6 text-sm text-gray-600">
+                Revisa tu bandeja de entrada en <span className="font-semibold">{email}</span> y sigue las instrucciones
+                para restablecer tu contrasena.
               </p>
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-left">
+              <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-left">
                 <p className="text-xs text-blue-800">
-                  <strong>Nota:</strong> Si no ves el email, revisa tu carpeta de spam o correo no deseado.
+                  <strong>Nota:</strong> Si no ves el email, revisa spam o correo no deseado.
                 </p>
               </div>
-              <Link
-                href="/login"
-                className="inline-block mt-6 text-sm text-yellow-400 hover:text-yellow-400 font-medium hover:underline"
-              >
+              <Link href="/login" className="mt-6 inline-block text-sm font-medium text-yellow-500 hover:underline">
                 Volver al login
               </Link>
             </div>
@@ -130,7 +146,7 @@ export default function RecuperarPasswordPage() {
 
         <div className="mt-6 text-center">
           <p className="text-xs text-gray-500">
-            ¿Necesitas ayuda? <a href="/contacto" className="text-yellow-400 hover:text-yellow-400 font-medium hover:underline">Contáctanos</a>
+            Si necesitas ayuda adicional, <Link href="/contacto" className="font-medium text-yellow-500 hover:underline">contactanos</Link>.
           </p>
         </div>
       </div>
