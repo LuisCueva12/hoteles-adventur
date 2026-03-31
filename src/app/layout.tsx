@@ -4,9 +4,11 @@ import { ToastProvider } from '@/hooks/useNotificacion'
 import { Toaster } from '@/components/ui/Notificador'
 import { ErrorBoundary } from '@/components/ui/LimiteErrores'
 import { QueryProvider } from '@/components/providers/ProveedorConsultas'
+import { SiteConfigProvider } from '@/components/providers/ProveedorConfiguracionSitio'
 import { TranslationProvider } from '@/hooks/useTraduccion'
 import { Analytics } from '@/components/web/Analiticas'
 import { generarSEO } from '@/lib/seo'
+import { getSiteConfig } from '@/lib/site-config.server'
 import './_styles/globals.css'
 import './_styles/animations.css'
 
@@ -19,23 +21,27 @@ export const metadata: Metadata = generarSEO({
   url: '/'
 })
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const siteConfig = await getSiteConfig()
+
   return (
     <html lang="es" suppressHydrationWarning data-scroll-behavior="smooth">
       <head>
         <link rel="icon" href="/favicon.ico" />
       </head>
       <body className={`${geist.variable} font-sans antialiased bg-gray-50`}>
-        <ErrorBoundary>
-          <QueryProvider>
-            <TranslationProvider>
-              <ToastProvider>
-                {children}
-                <Toaster />
-              </ToastProvider>
-            </TranslationProvider>
-          </QueryProvider>
-        </ErrorBoundary>
+        <SiteConfigProvider initialConfig={siteConfig}>
+          <ErrorBoundary>
+            <QueryProvider>
+              <TranslationProvider>
+                <ToastProvider>
+                  {children}
+                  <Toaster />
+                </ToastProvider>
+              </TranslationProvider>
+            </QueryProvider>
+          </ErrorBoundary>
+        </SiteConfigProvider>
         <Analytics />
       </body>
     </html>

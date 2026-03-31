@@ -70,7 +70,8 @@ export function HabitacionesSeccion() {
                         img: imagen,
                         title: aloj.nombre,
                         price: aloj.precio_base,
-                        capacity: aloj.capacidad_maxima || 2
+                        capacity: aloj.capacidad_maxima || 2,
+                        slug: (aloj as any).slug || aloj.id,
                     }
                 })
                 setRooms(mappedRooms)
@@ -145,7 +146,7 @@ export function HabitacionesSeccion() {
                                 {/* Botón de ver detalles */}
                                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
                                     <Link 
-                                        href={`/hoteles/${room.id}`}
+                                        href={`/hoteles/${room.slug || room.id}`}
                                         className="px-8 py-3 bg-white text-gray-900 font-semibold rounded-full transform scale-90 group-hover:scale-100 transition-all duration-300 hover:bg-yellow-400 hover:text-gray-900 shadow-2xl flex items-center gap-2"
                                     >
                                         Ver Detalles

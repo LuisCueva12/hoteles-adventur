@@ -5,6 +5,8 @@ import { adminService } from '@/services/admin.servicio'
 import { notificationsService } from '@/services/notificaciones.servicio'
 import { RefreshCw, Loader2, Download, Eye, Edit, Trash2, UserPlus } from 'lucide-react'
 import { Modal } from '@/components/admin/Modal'
+import { createClient } from '@/utils/supabase/client'
+import { uploadProfilePhoto, validateProfilePhotoFile } from '@/utils/supabase/profilePhotos'
 import Swal from 'sweetalert2'
 
 interface Usuario {
@@ -180,6 +182,18 @@ export default function UsuariosAdminPage() {
         const file = e.target.files?.[0]
         if (!file) return
 
+        const fileError = validateProfilePhotoFile(file)
+        if (fileError) {
+            await Swal.fire({
+                icon: 'error',
+                title: 'Archivo invalido',
+                text: fileError,
+                confirmButtonColor: '#3B82F6'
+            })
+            e.target.value = ''
+            return
+        }
+
         // Validar tipo de archivo
         if (!file.type.startsWith('image/')) {
             await Swal.fire({
@@ -212,24 +226,19 @@ export default function UsuariosAdminPage() {
         // Subir a Supabase Storage
         setUploadingPhoto(true)
         try {
-            const { createClient } = await import('@/utils/supabase/client')
             const supabase = createClient()
+            const { data: { user } } = await supabase.auth.getUser()
 
-            const fileExt = file.name.split('.').pop()
-            const fileName = `${selectedUsuario?.id}/${Date.now()}.${fileExt}`
-
-            const { error: uploadError } = await supabase.storage
-                .from('profile-photos')
-                .upload(fileName, file, { upsert: true })
-
-            if (uploadError) {
-                console.error('Upload error:', uploadError)
-                throw new Error(uploadError.message)
+            if (!user || !selectedUsuario?.id) {
+                throw new Error('No se pudo identificar al usuario que realiza la subida.')
             }
 
-            const { data: { publicUrl } } = supabase.storage
-                .from('profile-photos')
-                .getPublicUrl(fileName)
+            const { publicUrl } = await uploadProfilePhoto({
+                supabase,
+                file,
+                ownerUserId: user.id,
+                targetUserId: selectedUsuario.id,
+            })
 
             // Actualizar en la base de datos
             const { error: updateError } = await supabase
@@ -269,11 +278,11 @@ export default function UsuariosAdminPage() {
                 html: `
                     <div class="text-left text-sm">
                         <p class="mb-2">${error.message || 'No se pudo subir la foto'}</p>
-                        <p class="text-xs text-gray-600">Verifica que:</p>
+                        <p class="text-xs text-gray-600">Verifica la configuracion de Storage y los permisos del proyecto.</p>
                         <ul class="list-disc ml-5 text-xs text-gray-600">
-                            <li>El bucket "profile-photos" existe en Storage</li>
+                            <li>Existe el bucket "profile-photos" o el bucket "public"</li>
                             <li>El bucket está marcado como público</li>
-                            <li>Tienes permisos para subir archivos</li>
+                            <li>La tabla usuarios permite guardar la URL en foto_perfil</li>
                         </ul>
                     </div>
                 `,
@@ -281,6 +290,7 @@ export default function UsuariosAdminPage() {
             })
         } finally {
             setUploadingPhoto(false)
+            e.target.value = ''
         }
     }
 

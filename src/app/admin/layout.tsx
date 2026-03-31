@@ -3,11 +3,12 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { LayoutDashboard, Hotel, Calendar, Users, TrendingUp, Settings, Home, LogOut, Menu, X, User, Camera } from 'lucide-react'
+import { LayoutDashboard, Hotel, Calendar, Users, TrendingUp, Settings, Home, LogOut, Menu, X, Camera } from 'lucide-react'
 import { Modal } from '@/components/admin/Modal'
 import { Logo } from '@/components/web/Logo'
 import Image from 'next/image'
 import { createClient } from '@/utils/supabase/client'
+import { uploadProfilePhoto, validateProfilePhotoFile } from '@/utils/supabase/profilePhotos'
 import Swal from 'sweetalert2'
 
 export const dynamic = 'force-dynamic'
@@ -52,150 +53,117 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
     const checkAdminAccess = async () => {
         try {
             setLoading(true)
-            const { data: { user }, error: authError } = await supabase.auth.getUser()
-            
-            if (authError || !user) {
-                console.error('Error de autenticación:', authError)
-                setAccessDenied(true)
-                setLoading(false)
+
+            // Intentar obtener sesión primero, luego el usuario
+            const { data: { session } } = await supabase.auth.getSession()
+
+            if (!session) {
+                // No hay sesión — redirigir al login, no mostrar acceso denegado
+                router.replace('/login?redirect=/admin')
                 return
             }
 
-            // Verificar que el usuario es admin
+            const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+            if (authError || !user) {
+                router.replace('/login?redirect=/admin')
+                return
+            }
+
+            // Verificar rol en la tabla usuarios
             const { data: userData, error: dbError } = await supabase
                 .from('usuarios')
-                .select('rol')
+                .select('rol, nombre, apellido, email, telefono, foto_perfil')
                 .eq('id', user.id)
                 .maybeSingle()
 
-            // Si hay error de base de datos (tabla no existe), permitir acceso temporal
             if (dbError) {
-                console.error('Error de base de datos:', dbError)
-                console.warn('Permitiendo acceso temporal - la tabla usuarios no existe o hay un error de conexión')
-                // Cargar perfil básico sin verificar rol
+                // Error de BD — permitir acceso si hay sesión válida
+                console.warn('DB error, allowing access with session:', dbError.message)
                 setUserId(user.id)
-                setProfileData({
-                    nombre: user.email?.split('@')[0] || 'Admin',
-                    apellido: '',
-                    email: user.email || '',
-                    telefono: '',
-                    rol: 'Admin',
-                    foto: null
-                })
-                setEditForm({
-                    nombre: user.email?.split('@')[0] || 'Admin',
-                    apellido: '',
-                    email: user.email || '',
-                    telefono: '',
-                    rol: 'Admin',
-                    foto: null
-                })
+                const nombre = user.email?.split('@')[0] || 'Admin'
+                setProfileData({ nombre, apellido: '', email: user.email || '', telefono: '', rol: 'Admin', foto: null })
+                setEditForm({ nombre, apellido: '', email: user.email || '', telefono: '', rol: 'Admin', foto: null })
                 setLoading(false)
                 return
             }
 
             if (!userData) {
-                console.warn('Usuario no encontrado en la base de datos:', user.id)
+                // Usuario en auth pero no en tabla — insertarlo y dar acceso
+                await supabase.from('usuarios').upsert({
+                    id: user.id,
+                    email: user.email,
+                    nombre: user.email?.split('@')[0] || 'Admin',
+                    apellido: '',
+                    rol: 'turista'
+                })
                 setAccessDenied(true)
                 setLoading(false)
                 return
             }
 
             if (userData.rol !== 'admin_adventur') {
-                console.warn('Usuario sin permisos de admin:', user.id, userData.rol)
                 setAccessDenied(true)
                 setLoading(false)
                 return
             }
 
-            // Si todo está bien, cargar el perfil
-            await loadUserProfile()
+            // Acceso concedido — cargar perfil
+            setUserId(user.id)
+            const profile = {
+                nombre: userData.nombre || user.email?.split('@')[0] || '',
+                apellido: userData.apellido || '',
+                email: userData.email || user.email || '',
+                telefono: userData.telefono || '',
+                rol: 'Admin',
+                foto: userData.foto_perfil || null
+            }
+            setProfileData(profile)
+            setEditForm(profile)
+            setLoading(false)
         } catch (error) {
             console.error('Error en checkAdminAccess:', error)
-            setAccessDenied(true)
-            setLoading(false)
+            router.replace('/login?redirect=/admin')
         }
     }
 
-    const loadUserProfile = async () => {
-        try {
-            const { data: { user } } = await supabase.auth.getUser()
-            
-            if (!user) {
-                return
-            }
-
-            setUserId(user.id)
-
-            // Obtener datos del usuario desde la tabla usuarios
-            const { data: userData, error } = await supabase
-                .from('usuarios')
-                .select('*')
-                .eq('id', user.id)
-                .single()
-
-            if (error) {
-                console.error('Error loading user:', error)
-                return
-            }
-
-            if (userData) {
-                const profile = {
-                    nombre: userData.nombre || '',
-                    apellido: userData.apellido || '',
-                    email: userData.email || user.email || '',
-                    telefono: userData.telefono || '',
-                    rol: userData.rol === 'admin_adventur' ? 'Admin' : userData.rol === 'propietario' ? 'Propietario' : 'Usuario',
-                    foto: userData.foto_perfil || null
-                }
-                setProfileData(profile)
-                setEditForm(profile)
-            }
-        } catch (error) {
-            console.error('Error:', error)
-        } finally {
-            setLoading(false)
-        }
-    }
 
     const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (!file || !userId) return
 
+        const fileError = validateProfilePhotoFile(file)
+        if (fileError) {
+            await Swal.fire({
+                icon: 'error',
+                title: 'Archivo invalido',
+                text: fileError,
+                confirmButtonColor: '#3B82F6'
+            })
+            e.target.value = ''
+            return
+        }
+
         try {
-            // Subir imagen a Supabase Storage
-            const fileExt = file.name.split('.').pop()
-            const fileName = `${userId}/${Date.now()}.${fileExt}`
+            const { publicUrl } = await uploadProfilePhoto({
+                supabase,
+                file,
+                ownerUserId: userId,
+            })
 
-            const { error: uploadError } = await supabase.storage
-                .from('profile-photos')
-                .upload(fileName, file, { upsert: true })
-
-            if (uploadError) {
-                console.error('Error uploading file:', uploadError)
-                await Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Error al subir la imagen',
-                    confirmButtonColor: '#3B82F6'
-                })
-                return
-            }
 
             // Obtener URL pública
-            const { data: { publicUrl } } = supabase.storage
-                .from('profile-photos')
-                .getPublicUrl(fileName)
-
-            setEditForm({ ...editForm, foto: publicUrl })
+            setEditForm(prev => ({ ...prev, foto: publicUrl }))
         } catch (error) {
             console.error('Error:', error)
             await Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: 'Error al procesar la imagen',
+                text: error instanceof Error ? `No se pudo subir la imagen. ${error.message}` : 'Error al procesar la imagen',
                 confirmButtonColor: '#3B82F6'
             })
+        } finally {
+            e.target.value = ''
         }
     }
 
@@ -652,7 +620,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
                                     onClick={() => setIsEditing(true)}
                                     className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all font-semibold flex items-center gap-2"
                                 >
-                                    <User size={18} />
+                                    <Users size={18} />
                                     Editar Perfil
                                 </button>
                             </div>

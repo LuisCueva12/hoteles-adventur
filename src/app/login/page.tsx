@@ -88,16 +88,28 @@ export default function LoginPage() {
       }
 
       if (authData.user) {
-        const { data: usuario } = await supabase
-          .from('usuarios')
-          .select('nombre, rol')
-          .eq('id', authData.user.id)
-          .maybeSingle()
+        let rol = 'turista'
+        let nombre = ''
+
+        try {
+          const { data: usuario, error: rolError } = await supabase
+            .from('usuarios')
+            .select('nombre, rol')
+            .eq('id', authData.user.id)
+            .maybeSingle()
+
+          if (!rolError && usuario) {
+            rol = usuario.rol ?? 'turista'
+            nombre = usuario.nombre ?? ''
+          }
+        } catch {
+          // Si falla la lectura del rol, no bloqueamos el login
+        }
 
         Registrador.info('User logged in', { userId: authData.user.id })
-        success(`Bienvenido${usuario?.nombre ? `, ${usuario.nombre}` : ''}.`)
+        success(`Bienvenido${nombre ? `, ${nombre}` : ''}.`)
 
-        const defaultDestination = usuario?.rol === 'admin_adventur' ? '/admin' : '/perfil'
+        const defaultDestination = rol === 'admin_adventur' ? '/admin' : '/'
         const destination = redirectTo || defaultDestination
 
         await new Promise((resolve) => setTimeout(resolve, 500))

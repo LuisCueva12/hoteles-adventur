@@ -16,7 +16,9 @@ import {
   Send,
   User,
 } from 'lucide-react'
+import { useSiteConfig } from '@/components/providers/ProveedorConfiguracionSitio'
 import { useToast } from '@/hooks/useNotificacion'
+import { defaultSiteConfig, getFullAddress, getWhatsappPhone } from '@/lib/site-config'
 
 const SUBJECTS = ['reserva', 'cotizacion', 'evento', 'servicio', 'reclamo', 'otro'] as const
 const PREFERENCES = ['email', 'telefono', 'whatsapp'] as const
@@ -36,29 +38,57 @@ type FormState = {
 type FieldErrors = Partial<Record<keyof FormState, string>>
 type Feedback = { type: 'success' | 'info' | 'error'; title: string; text: string } | null
 
-const EMAILS = {
-  general: 'info@adventurhotels.com',
-  reservas: 'reservas@adventurhotels.com',
-  ventas: 'ventas@adventurhotels.com',
-} as const
-
-const PHONE = '+51 976 123 456'
-const ALT_PHONE = '+51 976 654 321'
-const WHATSAPP = (process.env.NEXT_PUBLIC_WHATSAPP_PHONE ?? '51976123456').replace(/\D/g, '')
-
-const SUBJECT_META: Record<SubjectKey, { label: string; description: string; email: string; eta: string }> = {
-  reserva: { label: 'Consulta de reserva', description: 'Disponibilidad, fechas y tarifas.', email: EMAILS.reservas, eta: '10 a 20 min' },
-  cotizacion: { label: 'Solicitar cotizacion', description: 'Grupos, empresas y estancias largas.', email: EMAILS.ventas, eta: 'Menos de 1 hora' },
-  evento: { label: 'Eventos y conferencias', description: 'Salones, coordinacion y bloques.', email: EMAILS.ventas, eta: 'Hasta 2 horas' },
-  servicio: { label: 'Servicios del hotel', description: 'Check-in, amenities y traslados.', email: EMAILS.general, eta: '15 a 30 min' },
-  reclamo: { label: 'Reclamo o sugerencia', description: 'Seguimiento prioritario.', email: EMAILS.general, eta: 'Mismo dia' },
-  otro: { label: 'Otro motivo', description: 'Consultas generales.', email: EMAILS.general, eta: 'Hasta 1 hora' },
-}
-
 const PREFERENCE_META: Record<ContactPreference, { label: string; helper: string; submit: string }> = {
   email: { label: 'Email', helper: 'Preparamos un correo al area correcta.', submit: 'Abrir correo' },
   telefono: { label: 'Telefono', helper: 'Dejamos lista una solicitud de llamada.', submit: 'Solicitar llamada' },
   whatsapp: { label: 'WhatsApp', helper: 'Abrimos una conversacion directa.', submit: 'Abrir WhatsApp' },
+}
+
+function buildSubjectMeta({
+  generalEmail,
+  reservationsEmail,
+}: {
+  generalEmail: string
+  reservationsEmail: string
+}) {
+  return {
+    reserva: {
+      label: 'Consulta de reserva',
+      description: 'Disponibilidad, fechas y tarifas.',
+      email: reservationsEmail,
+      eta: '10 a 20 min',
+    },
+    cotizacion: {
+      label: 'Solicitar cotizacion',
+      description: 'Grupos, empresas y estancias largas.',
+      email: reservationsEmail,
+      eta: 'Menos de 1 hora',
+    },
+    evento: {
+      label: 'Eventos y conferencias',
+      description: 'Salones, coordinacion y bloques.',
+      email: reservationsEmail,
+      eta: 'Hasta 2 horas',
+    },
+    servicio: {
+      label: 'Servicios del hotel',
+      description: 'Check-in, amenities y traslados.',
+      email: generalEmail,
+      eta: '15 a 30 min',
+    },
+    reclamo: {
+      label: 'Reclamo o sugerencia',
+      description: 'Seguimiento prioritario.',
+      email: generalEmail,
+      eta: 'Mismo dia',
+    },
+    otro: {
+      label: 'Otro motivo',
+      description: 'Consultas generales.',
+      email: generalEmail,
+      eta: 'Hasta 1 hora',
+    },
+  } satisfies Record<SubjectKey, { label: string; description: string; email: string; eta: string }>
 }
 
 const INITIAL_STATE: FormState = {
@@ -91,8 +121,8 @@ function onlyDigits(value: string) {
   return value.replace(/\D/g, '')
 }
 
-function getErrors(error: z.ZodError): FieldErrors {
-  const fields = error.flatten().fieldErrors
+function getErrors(error: z.ZodError<z.infer<typeof formSchema>>): FieldErrors {
+  const fields = error.flatten().fieldErrors as Partial<Record<keyof FormState, string[]>>
   return {
     nombre: fields.nombre?.[0],
     email: fields.email?.[0],
@@ -103,16 +133,36 @@ function getErrors(error: z.ZodError): FieldErrors {
 }
 
 export default function ContactoPage() {
+  const { config: siteConfig } = useSiteConfig()
   const [formData, setFormData] = useState<FormState>(INITIAL_STATE)
   const [errors, setErrors] = useState<FieldErrors>({})
   const [loading, setLoading] = useState(false)
   const [feedback, setFeedback] = useState<Feedback>(null)
   const { success, error, info } = useToast()
 
-  const selectedSubject = formData.asunto ? SUBJECT_META[formData.asunto] : null
+  const hotelName = siteConfig.nombre_hotel || defaultSiteConfig.nombre_hotel
+  const generalEmail = siteConfig.email || defaultSiteConfig.email
+  const reservationsEmail = siteConfig.email_reservas || generalEmail
+  const mainPhone = siteConfig.telefono || defaultSiteConfig.telefono
+  const secondaryPhone = siteConfig.telefono_secundario || defaultSiteConfig.telefono_secundario
+  const whatsappPhone = getWhatsappPhone({
+    telefono: siteConfig.telefono || process.env.NEXT_PUBLIC_WHATSAPP_PHONE || defaultSiteConfig.telefono,
+  })
+  const subjectMeta = buildSubjectMeta({
+    generalEmail,
+    reservationsEmail,
+  })
+  const hotelAddress = getFullAddress({
+    direccion: siteConfig.direccion || defaultSiteConfig.direccion,
+    ciudad: siteConfig.ciudad || defaultSiteConfig.ciudad,
+    pais: siteConfig.pais || defaultSiteConfig.pais,
+  })
+  const contactPolicy = siteConfig.politica_checkin || defaultSiteConfig.politica_checkin
+
+  const selectedSubject = formData.asunto ? subjectMeta[formData.asunto] : null
   const selectedPreference = PREFERENCE_META[formData.preferencia]
   const requiresPhone = formData.preferencia === 'telefono' || formData.preferencia === 'whatsapp'
-  const destination = formData.preferencia === 'whatsapp' ? `WhatsApp ${PHONE}` : (selectedSubject?.email ?? EMAILS.general)
+  const destination = formData.preferencia === 'whatsapp' ? `WhatsApp ${mainPhone}` : (selectedSubject?.email ?? generalEmail)
 
   const handleChange = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = event.target
@@ -147,7 +197,7 @@ export default function ContactoPage() {
     }
 
     const data = validation.data
-    const subject = SUBJECT_META[data.asunto]
+    const subject = subjectMeta[data.asunto]
     const preference = PREFERENCE_META[data.preferencia]
     setLoading(true)
     setFeedback(null)
@@ -155,7 +205,7 @@ export default function ContactoPage() {
     try {
       if (data.preferencia === 'whatsapp') {
         const text = [
-          'Hola, quiero ayuda de Adventur Hotels.',
+          `Hola, quiero ayuda de ${hotelName}.`,
           `Motivo: ${subject.label}`,
           `Nombre: ${data.nombre}`,
           `Email: ${data.email}`,
@@ -163,14 +213,14 @@ export default function ContactoPage() {
           'Mensaje:',
           data.mensaje,
         ].join('\n')
-        const url = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(text)}`
+        const url = `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(text)}`
         const popup = window.open(url, '_blank', 'noopener,noreferrer')
         if (!popup) window.location.href = url
         setFeedback({ type: 'success', title: 'WhatsApp listo', text: 'Abrimos la conversacion con tu mensaje prellenado.' })
         success('Se abrio WhatsApp con tu mensaje listo')
       } else {
         const body = [
-          'Nuevo mensaje desde el formulario web de Adventur Hotels',
+          `Nuevo mensaje desde el formulario web de ${hotelName}`,
           '',
           `Motivo: ${subject.label}`,
           `Respuesta estimada: ${subject.eta}`,
@@ -201,7 +251,7 @@ export default function ContactoPage() {
   return (
     <div className="bg-[linear-gradient(180deg,#fffaf0_0%,#ffffff_35%,#f8fafc_100%)]">
       <section className="relative isolate overflow-hidden">
-        <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1920&q=80" alt="Contacto Adventur Hotels" className="absolute inset-0 h-full w-full object-cover" />
+        <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1920&q=80" alt={`Contacto ${hotelName}`} className="absolute inset-0 h-full w-full object-cover" />
         <div className="absolute inset-0 bg-[linear-gradient(110deg,rgba(15,23,42,0.92)_0%,rgba(15,23,42,0.72)_42%,rgba(15,23,42,0.46)_100%)]" />
         <div className="relative mx-auto max-w-7xl px-6 py-24 lg:px-8">
           <span className="inline-flex rounded-full border border-yellow-300/40 bg-yellow-300/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.32em] text-yellow-200">Contacto directo</span>
@@ -248,7 +298,7 @@ export default function ContactoPage() {
                 <label className="mb-2 block text-sm font-semibold text-slate-700">Motivo de contacto *</label>
                 <select name="asunto" value={formData.asunto} onChange={handleChange} className={selectClass(errors.asunto)}>
                   <option value="">Selecciona un motivo</option>
-                  {SUBJECTS.map((key) => <option key={key} value={key}>{SUBJECT_META[key].label}</option>)}
+                  {SUBJECTS.map((key) => <option key={key} value={key}>{subjectMeta[key].label}</option>)}
                 </select>
                 <p className="mt-2 text-sm text-slate-500">{selectedSubject?.description ?? 'Asignamos tu consulta al equipo correcto segun el motivo.'}</p>
                 {errors.asunto ? <ErrorText text={errors.asunto} /> : null}
@@ -308,7 +358,7 @@ export default function ContactoPage() {
                 <button type="submit" disabled={loading} className="inline-flex h-14 flex-1 items-center justify-center gap-3 rounded-2xl bg-slate-950 px-6 text-sm font-semibold text-white transition hover:bg-amber-500 hover:text-slate-950 disabled:cursor-not-allowed disabled:bg-slate-400">
                   {loading ? <><div className="h-5 w-5 animate-spin rounded-full border-2 border-white/40 border-t-white" />Preparando canal...</> : <><Send className="h-5 w-5" />{selectedPreference.submit}<ArrowRight className="h-4 w-4" /></>}
                 </button>
-                <a href={`tel:${onlyDigits(PHONE)}`} className="inline-flex h-14 items-center justify-center gap-2 rounded-2xl border border-slate-300 px-6 text-sm font-semibold text-slate-700 transition hover:border-slate-900 hover:text-slate-900"><Phone className="h-4 w-4" />Llamar ahora</a>
+                <a href={`tel:${onlyDigits(mainPhone)}`} className="inline-flex h-14 items-center justify-center gap-2 rounded-2xl border border-slate-300 px-6 text-sm font-semibold text-slate-700 transition hover:border-slate-900 hover:text-slate-900"><Phone className="h-4 w-4" />Llamar ahora</a>
               </div>
 
               <p className="text-sm leading-6 text-slate-500">Email y telefono abren tu cliente de correo con el mensaje listo. WhatsApp abre la conversacion con el texto prellenado.</p>
@@ -320,15 +370,15 @@ export default function ContactoPage() {
               <span className="inline-flex rounded-full bg-slate-100 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.3em] text-slate-700">Canales directos</span>
               <h2 className="mt-4 text-3xl font-semibold text-slate-900">Datos del hotel</h2>
               <div className="mt-8 grid gap-4 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-1">
-                <InfoCard icon={MapPin} title="Direccion">Jr. Amalia Puga 635<br />Cajamarca, Peru<br />Codigo postal 06001</InfoCard>
-                <InfoCard icon={Phone} title="Telefonos">{PHONE}<br />{ALT_PHONE}<br />WhatsApp: {PHONE}</InfoCard>
-                <InfoCard icon={Mail} title="Correos">{EMAILS.general}<br />{EMAILS.reservas}<br />{EMAILS.ventas}</InfoCard>
-                <InfoCard icon={Clock3} title="Horario">Lunes a viernes: 8:00 AM - 8:00 PM<br />Sabados: 9:00 AM - 6:00 PM<br />Domingos: 10:00 AM - 4:00 PM<br /><span className="font-semibold text-amber-600">Recepcion 24/7</span></InfoCard>
+                <InfoCard icon={MapPin} title="Direccion">{hotelAddress}</InfoCard>
+                <InfoCard icon={Phone} title="Telefonos">{mainPhone}<br />{secondaryPhone}<br />WhatsApp: {mainPhone}</InfoCard>
+                <InfoCard icon={Mail} title="Correos">{generalEmail}<br />{reservationsEmail}{siteConfig.sitio_web ? <><br />{siteConfig.sitio_web}</> : null}</InfoCard>
+                <InfoCard icon={Clock3} title="Horario">{contactPolicy}<br /><span className="font-semibold text-amber-600">Recepcion 24/7</span></InfoCard>
               </div>
             </div>
 
             <div className="overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-[0_22px_60px_-34px_rgba(15,23,42,0.28)] md:min-h-full">
-              <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3951.7234567890123!2d-78.5167!3d-7.1611!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zN8KwMDknNDAuMCJTIDc4wrAzMScwMC4xIlc!5e0!3m2!1ses!2spe!4v1234567890123!5m2!1ses!2spe" width="100%" height="380" style={{ border: 0 }} allowFullScreen loading="lazy" title="Ubicacion de Adventur Hotels en Cajamarca" />
+              <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3951.7234567890123!2d-78.5167!3d-7.1611!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zN8KwMDknNDAuMCJTIDc4wrAzMScwMC4xIlc!5e0!3m2!1ses!2spe!4v1234567890123!5m2!1ses!2spe" width="100%" height="380" style={{ border: 0 }} allowFullScreen loading="lazy" title={`Ubicacion de ${hotelName}`} />
             </div>
           </div>
         </div>

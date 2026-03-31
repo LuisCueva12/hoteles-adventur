@@ -2,52 +2,13 @@
 
 import { useEffect, useState } from 'react'
 import { ChevronLeft, ChevronRight, MapPin, Quote, ShieldCheck, Star } from 'lucide-react'
+import { createClient } from '@/utils/supabase/client'
 
-const TESTIMONIALS = [
-    {
-        name: 'Maria Gonzalez',
-        location: 'Lima, Peru',
-        rating: 5,
-        comment:
-            'Todo se sintio cuidado de principio a fin. La habitacion estaba impecable, el personal respondio rapido y la experiencia se sintio realmente premium.',
-        trip: 'Escapada de fin de semana',
-        highlight: 'Servicio impecable',
-        resume: 'Atencion veloz, habitacion cuidada y experiencia premium.',
-        initials: 'MG',
-    },
-    {
-        name: 'Carlos Rodriguez',
-        location: 'Buenos Aires, Argentina',
-        rating: 5,
-        comment:
-            'La reserva fue simple, el check-in muy ordenado y el hotel supero lo que veiamos en las fotos. Excelente opcion para viajar con tranquilidad.',
-        trip: 'Viaje en pareja',
-        highlight: 'Reserva sin fricciones',
-        resume: 'Proceso claro, llegada fluida y mejor experiencia que en fotos.',
-        initials: 'CR',
-    },
-    {
-        name: 'Ana Martinez',
-        location: 'Madrid, Espana',
-        rating: 5,
-        comment:
-            'Nos encanto el ambiente, las vistas y la sensacion de descanso real. Es de esos lugares que uno recuerda y recomienda sin pensarlo mucho.',
-        trip: 'Aniversario',
-        highlight: 'Ambiente inolvidable',
-        resume: 'Vistas, calma y una estancia que se recuerda de verdad.',
-        initials: 'AM',
-    },
-    {
-        name: 'Jorge Silva',
-        location: 'Santiago, Chile',
-        rating: 4,
-        comment:
-            'Muy buena ubicacion, buen nivel de atencion y una oferta gastronomica que suma bastante valor a toda la estadia.',
-        trip: 'Viaje gastronomico',
-        highlight: 'Ubicacion y comida',
-        resume: 'Buen servicio, gran ubicacion y una cocina que destaca.',
-        initials: 'JS',
-    },
+const TESTIMONIALS_FALLBACK = [
+    { name: 'Maria Gonzalez', location: 'Lima, Peru', rating: 5, comment: 'Todo se sintio cuidado de principio a fin. La habitacion estaba impecable, el personal respondio rapido y la experiencia se sintio realmente premium.', trip: 'Escapada de fin de semana', highlight: 'Servicio impecable', resume: 'Atencion veloz, habitacion cuidada y experiencia premium.', initials: 'MG' },
+    { name: 'Carlos Rodriguez', location: 'Buenos Aires, Argentina', rating: 5, comment: 'La reserva fue simple, el check-in muy ordenado y el hotel supero lo que veiamos en las fotos. Excelente opcion para viajar con tranquilidad.', trip: 'Viaje en pareja', highlight: 'Reserva sin fricciones', resume: 'Proceso claro, llegada fluida y mejor experiencia que en fotos.', initials: 'CR' },
+    { name: 'Ana Martinez', location: 'Madrid, Espana', rating: 5, comment: 'Nos encanto el ambiente, las vistas y la sensacion de descanso real. Es de esos lugares que uno recuerda y recomienda sin pensarlo mucho.', trip: 'Aniversario', highlight: 'Ambiente inolvidable', resume: 'Vistas, calma y una estancia que se recuerda de verdad.', initials: 'AM' },
+    { name: 'Jorge Silva', location: 'Santiago, Chile', rating: 4, comment: 'Muy buena ubicacion, buen nivel de atencion y una oferta gastronomica que suma bastante valor a toda la estadia.', trip: 'Viaje gastronomico', highlight: 'Ubicacion y comida', resume: 'Buen servicio, gran ubicacion y una cocina que destaca.', initials: 'JS' },
 ]
 
 const KPI_ITEMS = [
@@ -59,16 +20,45 @@ const KPI_ITEMS = [
 
 export function TestimoniosSeccion() {
     const [currentIndex, setCurrentIndex] = useState(0)
+    const [TESTIMONIALS, setTestimonials] = useState(TESTIMONIALS_FALLBACK)
+    const supabase = createClient()
+
+    useEffect(() => {
+        // Cargar reseñas reales de Supabase
+        supabase
+            .from('resenas')
+            .select('*, usuarios:usuario_id(nombre, apellido, pais), alojamientos:alojamiento_id(nombre)')
+            .eq('visible', true)
+            .order('created_at', { ascending: false })
+            .limit(4)
+            .then(({ data }) => {
+                if (data && data.length >= 2) {
+                    const mapped = data.map((r: any) => {
+                        const usuario = r.usuarios
+                        const nombre = usuario ? `${usuario.nombre} ${usuario.apellido}`.trim() : 'Huésped'
+                        const initials = nombre.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
+                        return {
+                            name: nombre,
+                            location: usuario?.pais || 'Perú',
+                            rating: r.calificacion,
+                            comment: r.comentario,
+                            trip: r.alojamientos?.nombre || 'Estadía',
+                            highlight: r.titulo || 'Excelente experiencia',
+                            resume: r.comentario.slice(0, 80) + (r.comentario.length > 80 ? '...' : ''),
+                            initials,
+                        }
+                    })
+                    setTestimonials(mapped)
+                }
+            })
+    }, [])
 
     useEffect(() => {
         const timer = setInterval(() => {
             setCurrentIndex((prev) => (prev + 1) % TESTIMONIALS.length)
         }, 6500)
-
         return () => clearInterval(timer)
-    }, [])
-
-    const current = TESTIMONIALS[currentIndex]
+    }, [TESTIMONIALS.length])
 
     const next = () => setCurrentIndex((prev) => (prev + 1) % TESTIMONIALS.length)
     const prev = () => setCurrentIndex((prev) => (prev - 1 + TESTIMONIALS.length) % TESTIMONIALS.length)
@@ -99,7 +89,7 @@ export function TestimoniosSeccion() {
                     <div className="flex flex-col gap-5 border-b border-slate-200 px-6 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8">
                         <div>
                             <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Carrusel de testimonios</p>
-                            <h3 className="mt-2 text-2xl font-bold text-slate-900">Historia destacada: {current.highlight}</h3>
+                            <h3 className="mt-2 text-2xl font-bold text-slate-900">Historia destacada: {TESTIMONIALS[currentIndex]?.highlight}</h3>
                         </div>
 
                         <div className="flex items-center gap-3">

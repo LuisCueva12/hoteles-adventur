@@ -184,12 +184,16 @@ export class AdminService {
       .select(`
         *,
         usuarios(nombre, apellido),
-        fotos_alojamiento(url, es_principal)
+        fotos_alojamiento(url, es_principal, orden)
       `)
       .order('fecha_creacion', { ascending: false })
 
     if (error) throw error
-    return data
+    return data?.map(a => ({
+      ...a,
+      foto_principal: a.foto_principal || a.fotos_alojamiento?.find((f: any) => f.es_principal)?.url || a.fotos_alojamiento?.[0]?.url || null,
+      slug: a.slug || a.id,
+    }))
   }
 
   async createAlojamiento(alojamiento: any) {
@@ -295,6 +299,43 @@ export class AdminService {
       .eq('id', id)
 
     if (error) throw error
+  }
+
+  async getStatsComparison(): Promise<{ usuarios: number; reservas: number; ingresos: number; alojamientos: number }> {
+    try {
+      const now = new Date()
+      const primerDiaMesActual = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+      const primerDiaMesPasado = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString()
+      const ultimoDiaMesPasado = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59).toISOString()
+
+      const [usuariosActual, usuariosPasado, reservasActual, reservasPasado, pagosActual, pagosPasado, alojActual, alojPasado] = await Promise.all([
+        this.supabase.from('usuarios').select('*', { count: 'exact', head: true }).gte('fecha_registro', primerDiaMesActual),
+        this.supabase.from('usuarios').select('*', { count: 'exact', head: true }).gte('fecha_registro', primerDiaMesPasado).lte('fecha_registro', ultimoDiaMesPasado),
+        this.supabase.from('reservas').select('*', { count: 'exact', head: true }).gte('fecha_creacion', primerDiaMesActual),
+        this.supabase.from('reservas').select('*', { count: 'exact', head: true }).gte('fecha_creacion', primerDiaMesPasado).lte('fecha_creacion', ultimoDiaMesPasado),
+        this.supabase.from('pagos').select('monto').eq('estado', 'aprobado').gte('fecha_pago', primerDiaMesActual),
+        this.supabase.from('pagos').select('monto').eq('estado', 'aprobado').gte('fecha_pago', primerDiaMesPasado).lte('fecha_pago', ultimoDiaMesPasado),
+        this.supabase.from('alojamientos').select('*', { count: 'exact', head: true }).gte('fecha_creacion', primerDiaMesActual),
+        this.supabase.from('alojamientos').select('*', { count: 'exact', head: true }).gte('fecha_creacion', primerDiaMesPasado).lte('fecha_creacion', ultimoDiaMesPasado),
+      ])
+
+      const calcPct = (actual: number, pasado: number) => {
+        if (pasado === 0) return actual > 0 ? 100 : 0
+        return Math.round(((actual - pasado) / pasado) * 100)
+      }
+
+      const ingActual = pagosActual.data?.reduce((s, p) => s + Number(p.monto), 0) || 0
+      const ingPasado = pagosPasado.data?.reduce((s, p) => s + Number(p.monto), 0) || 0
+
+      return {
+        usuarios: calcPct(usuariosActual.count || 0, usuariosPasado.count || 0),
+        reservas: calcPct(reservasActual.count || 0, reservasPasado.count || 0),
+        ingresos: calcPct(ingActual, ingPasado),
+        alojamientos: calcPct(alojActual.count || 0, alojPasado.count || 0),
+      }
+    } catch {
+      return { usuarios: 0, reservas: 0, ingresos: 0, alojamientos: 0 }
+    }
   }
 
   async getMonthlyRevenue(): Promise<{ month: string; value: number; raw: number }[]> {

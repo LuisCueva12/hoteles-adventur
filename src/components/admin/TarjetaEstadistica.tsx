@@ -1,5 +1,5 @@
 import { LucideIcon } from 'lucide-react'
-import { ReactNode } from 'react'
+import { ReactNode, isValidElement } from 'react'
 
 interface StatCardProps {
     title: string
@@ -21,7 +21,8 @@ const colorClasses = {
 }
 
 export function StatCard({ title, value, icon, trend, color = 'blue' }: StatCardProps) {
-    const Icon = typeof icon === 'function' ? icon : null
+    const Icon = typeof icon === 'string' || isValidElement(icon) ? null : (icon as LucideIcon)
+    const iconContent: ReactNode = Icon ? <Icon size={28} /> : (typeof icon === 'string' || isValidElement(icon) ? icon : null)
 
     return (
         <div className="bg-white border-2 border-gray-200 rounded-2xl p-6 hover:shadow-xl transition-all hover:scale-105 duration-200 group relative overflow-hidden">
@@ -30,7 +31,7 @@ export function StatCard({ title, value, icon, trend, color = 'blue' }: StatCard
             <div className="relative z-10">
                 <div className="flex items-start justify-between mb-4">
                     <div className={`w-14 h-14 rounded-xl ${colorClasses[color]} flex items-center justify-center text-2xl shadow-md group-hover:scale-110 transition-transform`}>
-                        {Icon ? <Icon size={28} /> : <>{icon}</>}
+                        {iconContent}
                     </div>
                     {trend && (
                         <div className="flex flex-col items-end gap-1">

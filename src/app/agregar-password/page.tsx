@@ -89,7 +89,7 @@ export default function AgregarPasswordPage() {
       success('¡Contraseña agregada exitosamente! Ahora puedes iniciar sesión con email y contraseña.')
       
       setTimeout(() => {
-        router.push('/perfil')
+        router.push('/reservas')
       }, 2000)
     } catch (err: any) {
       console.error('Error adding password:', err)
@@ -138,10 +138,10 @@ export default function AgregarPasswordPage() {
               Tu cuenta ya tiene una contraseña configurada. Si deseas cambiarla, ve a tu perfil.
             </p>
             <button
-              onClick={() => router.push('/perfil')}
+              onClick={() => router.push('/reservas')}
               className="w-full py-2.5 px-5 bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-400 hover:to-red-800 text-white font-semibold rounded-lg transition-all text-sm"
             >
-              Ir a mi perfil
+              Ver mis reservas
             </button>
           </div>
         </div>
@@ -305,7 +305,7 @@ export default function AgregarPasswordPage() {
 
           <div className="mt-6 text-center">
             <button
-              onClick={() => router.push('/perfil')}
+              onClick={() => router.push('/')}
               className="text-sm text-gray-600 hover:text-yellow-400 font-medium hover:underline"
             >
               Omitir por ahora

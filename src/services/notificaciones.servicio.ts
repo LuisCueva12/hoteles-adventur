@@ -62,24 +62,17 @@ export class NotificationsService {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          tipo,
-          titulo,
-          mensaje,
-          url,
-          metadata,
-        }),
+        body: JSON.stringify({ tipo, titulo, mensaje, url, metadata }),
       })
 
       if (!response.ok) {
-        const data = await response.json().catch(() => null)
-        console.error('Error notificando a administradores:', data?.error || response.statusText)
+        // Fallo silencioso — las notificaciones no deben bloquear el flujo principal
         return false
       }
 
       return true
-    } catch (error) {
-      console.error('Error notificando a administradores:', error)
+    } catch {
+      // Fallo silencioso
       return false
     }
   }

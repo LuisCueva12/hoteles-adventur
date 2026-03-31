@@ -21,6 +21,7 @@ export default function AdminPage() {
     const [recentActivity, setRecentActivity] = useState<any[]>([])
     const [isRefreshing, setIsRefreshing] = useState(false)
     const [monthlyData, setMonthlyData] = useState<{ month: string; value: number; raw: number }[]>([])
+    const [comparacion, setComparacion] = useState({ usuarios: 0, reservas: 0, ingresos: 0, alojamientos: 0 })
 
     useEffect(() => {
         loadDashboardData()
@@ -29,14 +30,16 @@ export default function AdminPage() {
     const loadDashboardData = async () => {
         try {
             setLoading(true)
-            const [dashboardStats, activities, monthly] = await Promise.all([
+            const [dashboardStats, activities, monthly, comp] = await Promise.all([
                 adminService.getDashboardStats(),
                 adminService.getRecentActivity(8),
-                adminService.getMonthlyRevenue()
+                adminService.getMonthlyRevenue(),
+                adminService.getStatsComparison(),
             ])
             setStats(dashboardStats)
             setRecentActivity(activities)
             setMonthlyData(monthly)
+            setComparacion(comp)
         } catch (error) {
             console.error('Error loading dashboard:', error)
         } finally {
@@ -49,8 +52,6 @@ export default function AdminPage() {
         await loadDashboardData()
         setIsRefreshing(false)
     }
-
-    const maxValue = Math.max(...monthlyData.map(d => d.value), 1)
 
     if (loading) {
         return (
@@ -93,8 +94,8 @@ export default function AdminPage() {
                         <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
                             <Users className="text-white" size={24} />
                         </div>
-                        <span className="text-xs font-semibold text-yellow-400 bg-yellow-50 px-2 py-1 rounded-full">
-                            +11.01%
+                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${comparacion.usuarios >= 0 ? 'text-green-600 bg-green-50' : 'text-red-500 bg-red-50'}`}>
+                            {comparacion.usuarios >= 0 ? '+' : ''}{comparacion.usuarios}%
                         </span>
                     </div>
                     <p className="text-gray-600 text-sm mb-1 font-medium">Usuarios</p>
@@ -106,8 +107,8 @@ export default function AdminPage() {
                         <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center">
                             <Calendar className="text-white" size={24} />
                         </div>
-                        <span className="text-xs font-semibold text-yellow-400 bg-yellow-50 px-2 py-1 rounded-full">
-                            -9.05%
+                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${comparacion.reservas >= 0 ? 'text-green-600 bg-green-50' : 'text-red-500 bg-red-50'}`}>
+                            {comparacion.reservas >= 0 ? '+' : ''}{comparacion.reservas}%
                         </span>
                     </div>
                     <p className="text-gray-600 text-sm mb-1 font-medium">Reservas</p>
@@ -119,8 +120,8 @@ export default function AdminPage() {
                         <div className="w-12 h-12 bg-yellow-400 rounded-xl flex items-center justify-center">
                             <DollarSign className="text-white" size={24} />
                         </div>
-                        <span className="text-xs font-semibold text-yellow-400 bg-yellow-50 px-2 py-1 rounded-full">
-                            +15.3%
+                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${comparacion.ingresos >= 0 ? 'text-green-600 bg-green-50' : 'text-red-500 bg-red-50'}`}>
+                            {comparacion.ingresos >= 0 ? '+' : ''}{comparacion.ingresos}%
                         </span>
                     </div>
                     <p className="text-gray-600 text-sm mb-1 font-medium">Ingresos del Mes</p>
@@ -132,8 +133,8 @@ export default function AdminPage() {
                         <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center">
                             <Hotel className="text-white" size={24} />
                         </div>
-                        <span className="text-xs font-semibold text-yellow-400 bg-yellow-50 px-2 py-1 rounded-full">
-                            +8.2%
+                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${comparacion.alojamientos >= 0 ? 'text-green-600 bg-green-50' : 'text-red-500 bg-red-50'}`}>
+                            {comparacion.alojamientos >= 0 ? '+' : ''}{comparacion.alojamientos}%
                         </span>
                     </div>
                     <p className="text-gray-600 text-sm mb-1 font-medium">Alojamientos</p>
@@ -203,7 +204,7 @@ export default function AdminPage() {
                             </svg>
                             <div className="absolute inset-0 flex flex-col items-center justify-center">
                                 <span className="text-4xl font-bold text-gray-900">{stats.ocupacionActual}%</span>
-                                <span className="text-sm text-yellow-400 font-semibold">+10%</span>
+                                <span className="text-sm text-gray-500 font-medium">ocupación</span>
                             </div>
                         </div>
                     </div>

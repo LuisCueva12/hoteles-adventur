@@ -15,7 +15,7 @@ const PUBLIC_ROUTES = [
   '/terminos',
 ]
 
-const USER_ROUTES = ['/perfil', '/reservas', '/pagos']
+const USER_ROUTES = ['/reservas', '/pagos']
 const ADMIN_ROUTES = ['/admin']
 const API_PROTECTED_ROUTES = ['/api/nubefact', '/api/admin']
 
@@ -31,7 +31,6 @@ function setSecurityHeaders(response: NextResponse) {
   Object.entries(SECURITY_HEADERS).forEach(([key, value]) => {
     response.headers.set(key, value)
   })
-
   return response
 }
 
@@ -39,7 +38,7 @@ function isRouteMatch(pathname: string, routes: string[]) {
   return routes.some((route) => pathname === route || pathname.startsWith(`${route}/`))
 }
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   try {
@@ -84,14 +83,14 @@ export async function proxy(request: NextRequest) {
         .eq('id', user.id)
         .maybeSingle()
 
-      const redirectUrl = userData?.rol === 'admin_adventur' ? '/admin' : '/perfil'
+      const redirectUrl = userData?.rol === 'admin_adventur' ? '/admin' : '/'
       return NextResponse.redirect(new URL(redirectUrl, request.url))
     }
 
     return supabaseResponse
   } catch (error) {
-    console.error('Proxy error:', error)
-    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
+    console.error('Middleware error:', error)
+    return NextResponse.next()
   }
 }
 

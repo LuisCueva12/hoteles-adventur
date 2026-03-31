@@ -44,7 +44,7 @@ export default function ActualizarPasswordPage() {
   useEffect(() => {
     let active = true
     let unsubscribe: (() => void) | undefined
-    let timeoutId: ReturnType<typeof window.setTimeout> | undefined
+    let timeoutId: number | undefined
 
     async function prepareRecoverySession() {
       try {

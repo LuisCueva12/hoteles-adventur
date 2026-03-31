@@ -40,6 +40,7 @@ export function OptimizedImage({
         )
     }
 
+
     return (
         <div className={`relative ${className}`}>
             {fill ? (
@@ -81,3 +82,4 @@ export function OptimizedImage({
         </div>
     )
 }
+

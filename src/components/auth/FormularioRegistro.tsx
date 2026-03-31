@@ -64,7 +64,7 @@ export function RegisterForm({ onSubmit, loading }: RegisterFormProps) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/perfil`,
+          redirectTo: `${window.location.origin}/reservas`,
         },
       })
       if (error) {

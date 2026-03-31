@@ -172,6 +172,8 @@ export default function HabitacionDetailPage() {
         fechaFin: '',
         huespedes: 1,
     })
+    const [reservando, setReservando] = useState(false)
+    const [errorReserva, setErrorReserva] = useState('')
     const isClient = useSyncExternalStore(
         () => () => undefined,
         () => true,
@@ -382,35 +384,90 @@ export default function HabitacionDetailPage() {
         return Math.max(0, Math.ceil(diff / 86400000))
     }
 
-    const handleEnviarWhatsApp = (e: React.FormEvent) => {
+    const handleReservar = async (e: React.FormEvent) => {
         e.preventDefault()
-        const noches = calcularNoches()
-        const total = noches * room.price * formData.huespedes
-        const fechaFmt = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+        setErrorReserva('')
 
-        const msg = [
-            `*SOLICITUD DE RESERVA - Adventur Hotels*`,
-            ``,
-            `*Nombre:* ${formData.nombre}`,
-            ``,
-            `*Habitacion:* ${room.name}`,
-            `*Precio por noche:* S/. ${room.price} por persona`,
-            ``,
-            `*Fechas de estadia*`,
-            `- Check-in: ${fechaFmt(formData.fechaInicio)}`,
-            `- Check-out: ${fechaFmt(formData.fechaFin)}`,
-            `- Noches: ${noches}`,
-            `- Huespedes: ${formData.huespedes}`,
-            ``,
-            `*Total estimado: S/. ${total.toLocaleString('es-PE')}*`,
-            `(S/. ${room.price} x ${noches} noche${noches > 1 ? 's' : ''} x ${formData.huespedes} huesped${formData.huespedes > 1 ? 'es' : ''})`,
-            ``,
-            `Por favor confirmar disponibilidad. Gracias!`,
-        ].join('\n')
+        // Validaciones
+        if (!formData.fechaInicio || !formData.fechaFin) {
+            setErrorReserva('Selecciona las fechas de estadía')
+            return
+        }
+        if (new Date(formData.fechaFin) <= new Date(formData.fechaInicio)) {
+            setErrorReserva('La fecha de salida debe ser posterior a la de entrada')
+            return
+        }
+        if (formData.huespedes < 1 || formData.huespedes > room.capacity) {
+            setErrorReserva(`El número de huéspedes debe ser entre 1 y ${room.capacity}`)
+            return
+        }
 
-        window.open(`https://wa.me/51918146783?text=${encodeURIComponent(msg)}`, '_blank')
-        setShowReservaModal(false)
-        setFormData({ nombre: '', fechaInicio: '', fechaFin: '', huespedes: 1 })
+        setReservando(true)
+        try {
+            const { data: { user } } = await supabase.auth.getUser()
+            if (!user) {
+                window.location.href = `/login?redirect=/hoteles/${slug}`
+                return
+            }
+
+            // Verificar disponibilidad
+            const { data: conflictos } = await supabase
+                .from('reservas')
+                .select('id')
+                .eq('alojamiento_id', room.id)
+                .eq('estado', 'confirmada')
+                .lt('fecha_inicio', formData.fechaFin)
+                .gt('fecha_fin', formData.fechaInicio)
+
+            if (conflictos && conflictos.length > 0) {
+                setErrorReserva('Lo sentimos, este alojamiento no está disponible en las fechas seleccionadas')
+                setReservando(false)
+                return
+            }
+
+            const noches = calcularNoches()
+            const total = room.price * noches
+            const adelanto = Math.round(total * 0.3)
+            const codigoReserva = `RES-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`
+
+            const { error } = await supabase
+                .from('reservas')
+                .insert({
+                    usuario_id: user.id,
+                    alojamiento_id: room.id,
+                    codigo_reserva: codigoReserva,
+                    fecha_inicio: formData.fechaInicio,
+                    fecha_fin: formData.fechaFin,
+                    personas: formData.huespedes,
+                    total,
+                    adelanto,
+                    estado: 'pendiente',
+                })
+
+            if (error) throw error
+
+            setShowReservaModal(false)
+            setFormData({ nombre: '', fechaInicio: '', fechaFin: '', huespedes: 1 })
+
+            await Swal.fire({
+                icon: 'success',
+                title: '¡Reserva creada!',
+                html: `
+                    <p class="text-gray-700 mb-2">Tu reserva <strong>${codigoReserva}</strong> fue registrada.</p>
+                    <p class="text-sm text-gray-500">Revisa el estado en tu panel de reservas.</p>
+                `,
+                confirmButtonText: 'Ver mis reservas',
+                confirmButtonColor: '#facc15',
+                showCancelButton: true,
+                cancelButtonText: 'Cerrar',
+            }).then(result => {
+                if (result.isConfirmed) window.location.href = '/reservas'
+            })
+        } catch (err: any) {
+            setErrorReserva(err.message || 'Error al crear la reserva. Intenta nuevamente.')
+        } finally {
+            setReservando(false)
+        }
     }
 
     return (
@@ -754,20 +811,14 @@ export default function HabitacionDetailPage() {
                         </div>
 
                         {/* Formulario */}
-                        <form onSubmit={handleEnviarWhatsApp} className="overflow-y-auto flex-1 px-6 py-5 space-y-5">
+                        <form onSubmit={handleReservar} className="overflow-y-auto flex-1 px-6 py-5 space-y-5">
 
-                            {/* Nombre */}
-                            <div>
-                                <label className="block text-sm font-bold text-gray-800 mb-2">Nombre completo</label>
-                                <input
-                                    type="text"
-                                    value={formData.nombre}
-                                    onChange={e => setFormData({ ...formData, nombre: e.target.value })}
-                                    placeholder="¿Cómo te llamas?"
-                                    required
-                                    className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-yellow-400 focus:outline-none text-gray-900 text-sm transition-colors placeholder-gray-400"
-                                />
-                            </div>
+                            {/* Error */}
+                            {errorReserva && (
+                                <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl">
+                                    {errorReserva}
+                                </div>
+                            )}
 
                             {/* Fechas */}
                             <div>
@@ -849,10 +900,19 @@ export default function HabitacionDetailPage() {
                                     Cancelar
                                 </button>
                                 <button type="submit"
-                                    disabled={!formData.nombre || !formData.fechaInicio || !formData.fechaFin}
-                                    className="flex-1 py-3.5 bg-[#25D366] hover:bg-[#20c05c] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-2xl transition-all hover:shadow-lg flex items-center justify-center gap-2 text-sm">
-                                    <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current flex-shrink-0"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                                    Enviar por WhatsApp
+                                    disabled={!formData.fechaInicio || !formData.fechaFin || reservando}
+                                    className="flex-1 py-3.5 bg-yellow-400 hover:bg-yellow-500 disabled:bg-gray-300 disabled:cursor-not-allowed text-gray-900 font-bold rounded-2xl transition-all hover:shadow-lg flex items-center justify-center gap-2 text-sm">
+                                    {reservando ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                            Reservando...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Calendar className="w-4 h-4" />
+                                            Confirmar Reserva
+                                        </>
+                                    )}
                                 </button>
                             </div>
                         </form>
