@@ -27,25 +27,32 @@ export function EventosSeccion() {
         <section className="py-20 bg-gray-50">
             <div className="max-w-7xl mx-auto px-6">
                 <div className="text-center mb-14">
-                    <p className="text-red-600 text-xs font-semibold tracking-[0.3em] uppercase mb-2">Proximos</p>
-                    <h2 className="text-3xl font-bold text-gray-900" style={{ fontFamily: 'Georgia, serif' }}>
-                        Eventos
-                    </h2>
-                    <div className="flex items-center justify-center gap-2 mt-4">
-                        <div className="h-px w-16 bg-red-600" />
-                        <div className="w-2 h-2 rounded-full bg-red-600" />
-                        <div className="h-px w-16 bg-red-600" />
+                    <div className="inline-block mb-4">
+                        <span className="px-4 py-1.5 bg-yellow-50 text-yellow-400 text-xs font-semibold tracking-[0.3em] uppercase rounded-full">
+                            Próximos Eventos
+                        </span>
                     </div>
+                    <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 font-serif">
+                        Eventos <span className="text-yellow-400">Especiales</span>
+                    </h2>
+                    <div className="flex items-center justify-center gap-3 mb-6">
+                        <div className="h-px w-20 bg-gradient-to-r from-transparent to-yellow-400" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-yellow-400 animate-pulse" />
+                        <div className="h-px w-20 bg-gradient-to-l from-transparent to-yellow-400" />
+                    </div>
+                    <p className="text-gray-600 max-w-2xl mx-auto text-base leading-relaxed">
+                        Vive experiencias únicas en nuestros eventos exclusivos diseñados para cada ocasión
+                    </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {EVENTS.map((event, index) => (
-                        <div key={event.title} className="group bg-white shadow-sm hover:shadow-lg transition-all duration-500 overflow-hidden rounded-sm hover:-translate-y-2 animate-fadeInUp">
+                        <div key={event.title} className="group bg-white shadow-sm hover:shadow-lg transition-all duration-500 overflow-hidden rounded-2xl hover:-translate-y-2 animate-fadeInUp">
                             <div className="relative h-48 overflow-hidden">
                                 <img src={event.img} alt={event.title}
                                     loading="lazy"
                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                                <div className="absolute bottom-0 left-0 bg-red-600 text-white px-4 py-2 text-center min-w-[60px]">
+                                <div className="absolute bottom-0 left-0 bg-yellow-400 text-gray-900 px-4 py-2 text-center min-w-[60px]">
                                     <p className="text-2xl font-bold leading-none">{event.day}</p>
                                     <p className="text-xs tracking-widest">{event.month}</p>
                                 </div>

@@ -11,37 +11,40 @@ export default function ServiciosPage() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/70" />
                 
-                {/* Partículas flotantes */}
+                {/* Partículas flotantes con valores fijos para evitar hydration mismatch */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                    {[...Array(20)].map((_, i) => (
-                        <div
-                            key={i}
-                            className="absolute w-1 h-1 bg-white/20 rounded-full animate-float"
-                            style={{
-                                left: `${Math.random() * 100}%`,
-                                top: `${Math.random() * 100}%`,
-                                animationDelay: `${Math.random() * 5}s`,
-                                animationDuration: `${8 + Math.random() * 12}s`
-                            }}
-                        />
+                    {[
+                        { l: 12, t: 8,  d: 0,   dur: 10 }, { l: 28, t: 22, d: 1.2, dur: 14 },
+                        { l: 45, t: 5,  d: 0.5, dur: 9  }, { l: 67, t: 35, d: 2.1, dur: 12 },
+                        { l: 83, t: 15, d: 0.8, dur: 16 }, { l: 7,  t: 55, d: 3.0, dur: 11 },
+                        { l: 35, t: 70, d: 1.7, dur: 13 }, { l: 55, t: 48, d: 0.3, dur: 8  },
+                        { l: 72, t: 62, d: 2.5, dur: 15 }, { l: 90, t: 40, d: 1.0, dur: 10 },
+                        { l: 20, t: 85, d: 4.0, dur: 12 }, { l: 48, t: 90, d: 0.6, dur: 9  },
+                        { l: 63, t: 78, d: 3.3, dur: 14 }, { l: 78, t: 88, d: 1.5, dur: 11 },
+                        { l: 95, t: 72, d: 2.8, dur: 16 }, { l: 15, t: 30, d: 0.4, dur: 10 },
+                        { l: 33, t: 45, d: 1.9, dur: 13 }, { l: 58, t: 18, d: 3.5, dur: 9  },
+                        { l: 75, t: 55, d: 0.7, dur: 14 }, { l: 88, t: 25, d: 2.2, dur: 11 },
+                    ].map((p, i) => (
+                        <div key={i} className="absolute w-1 h-1 bg-white/20 rounded-full animate-float"
+                            style={{ left: `${p.l}%`, top: `${p.t}%`, animationDelay: `${p.d}s`, animationDuration: `${p.dur}s` }} />
                     ))}
                 </div>
                 
                 <div className="relative z-10 text-center text-white px-6 max-w-4xl">
                     <div className="mb-6 animate-fadeInDown">
-                        <span className="inline-block px-4 py-1.5 bg-red-600/20 backdrop-blur-sm border border-red-500/30 rounded-full text-red-400 text-xs font-semibold tracking-[0.3em] uppercase">
+                        <span className="inline-block px-4 py-1.5 bg-yellow-400/20 backdrop-blur-sm border border-yellow-400/30 rounded-full text-yellow-400 text-xs font-semibold tracking-[0.3em] uppercase">
                             Experiencias Premium
                         </span>
                     </div>
                     
-                    <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-fadeInUp animation-delay-100 drop-shadow-2xl" style={{ fontFamily: 'Georgia, serif' }}>
-                        Nuestros <span className="text-red-500">Servicios</span>
+                    <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-fadeInUp animation-delay-100 drop-shadow-2xl font-serif">
+                        Nuestros <span className="text-yellow-400">Servicios</span>
                     </h1>
                     
                     <div className="flex items-center justify-center gap-3 mb-6 animate-fadeInUp animation-delay-150">
-                        <div className="h-px w-16 bg-gradient-to-r from-transparent to-red-500" />
-                        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                        <div className="h-px w-16 bg-gradient-to-l from-transparent to-red-500" />
+                        <div className="h-px w-16 bg-gradient-to-r from-transparent to-yellow-300" />
+                        <div className="w-2 h-2 bg-yellow-300 rounded-full animate-pulse" />
+                        <div className="h-px w-16 bg-gradient-to-l from-transparent to-yellow-300" />
                     </div>
                     
                     <p className="text-xl text-gray-200 tracking-wide animate-fadeInUp animation-delay-200 max-w-2xl mx-auto">
@@ -53,19 +56,19 @@ export default function ServiciosPage() {
             <section className="max-w-7xl mx-auto px-6 py-24">
                 <div className="text-center mb-16 animate-fadeInUp">
                     <div className="mb-6">
-                        <span className="inline-block px-4 py-1.5 bg-red-50 text-red-600 text-xs font-semibold tracking-[0.3em] uppercase rounded-full">
+                        <span className="inline-block px-4 py-1.5 bg-yellow-50 text-yellow-400 text-xs font-semibold tracking-[0.3em] uppercase rounded-full">
                             Lo que ofrecemos
                         </span>
                     </div>
                     
-                    <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4" style={{ fontFamily: 'Georgia, serif' }}>
-                        Servicios <span className="text-red-600">Premium</span>
+                    <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 font-serif">
+                        Servicios <span className="text-yellow-400">Premium</span>
                     </h2>
                     
                     <div className="flex items-center justify-center gap-3 mb-6">
-                        <div className="h-px w-20 bg-gradient-to-r from-transparent via-red-600 to-red-600" />
-                        <div className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse" />
-                        <div className="h-px w-20 bg-gradient-to-l from-transparent via-red-600 to-red-600" />
+                        <div className="h-px w-20 bg-gradient-to-r from-transparent via-yellow-300 to-yellow-400" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-yellow-400 animate-pulse" />
+                        <div className="h-px w-20 bg-gradient-to-l from-transparent via-yellow-300 to-yellow-400" />
                     </div>
                     
                     <p className="text-gray-600 max-w-2xl mx-auto text-lg">
@@ -81,7 +84,7 @@ export default function ServiciosPage() {
                             desc: 'Cocina internacional y local preparada por chefs de renombre. Desayuno buffet, almuerzo y cena a la carta.',
                             features: ['Desayuno buffet', 'Menú a la carta', 'Bar de vinos', 'Servicio 24/7'],
                             icon: Utensils,
-                            color: 'from-orange-500 to-red-500'
+                            color: 'from-orange-500 to-yellow-300'
                         },
                         {
                             img: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=600&q=80',
@@ -105,7 +108,7 @@ export default function ServiciosPage() {
                             desc: 'Espacios versátiles para conferencias, bodas y eventos corporativos con capacidad hasta 500 personas.',
                             features: ['Salones privados', 'Equipamiento AV', 'Catering', 'Planificación'],
                             icon: Calendar,
-                            color: 'from-yellow-500 to-orange-500'
+                            color: 'from-yellow-400 to-orange-500'
                         },
                         {
                             img: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&q=80',
@@ -126,7 +129,7 @@ export default function ServiciosPage() {
                     ].map((service, index) => {
                         const IconComponent = service.icon
                         return (
-                            <div key={service.title} className="group bg-white border-2 border-gray-100 rounded-2xl overflow-hidden hover:shadow-2xl hover:border-red-600 transition-all duration-500 animate-fadeInUp hover:-translate-y-3" style={{ animationDelay: `${index * 0.1}s` }}>
+                            <div key={service.title} className="group bg-white border-2 border-gray-100 rounded-2xl overflow-hidden hover:shadow-2xl hover:border-yellow-400 transition-all duration-500 animate-fadeInUp hover:-translate-y-3" style={{ animationDelay: `${index * 0.1}s` }}>
                                 <div className="relative h-56 overflow-hidden">
                                     <img
                                         src={service.img}
@@ -143,14 +146,14 @@ export default function ServiciosPage() {
                                 </div>
                                 
                                 <div className="p-6">
-                                    <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-red-600 transition-colors duration-300">{service.title}</h3>
+                                    <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-yellow-400 transition-colors duration-300">{service.title}</h3>
                                     <p className="text-gray-600 text-sm mb-6 leading-relaxed">{service.desc}</p>
                                     
                                     <div className="space-y-3">
                                         {service.features.map((feature) => (
-                                            <div key={feature} className="flex items-center text-sm text-gray-700 group/item hover:text-red-600 transition-colors">
-                                                <div className="w-5 h-5 bg-red-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0 group-hover/item:bg-red-600 transition-colors">
-                                                    <Check className="w-3 h-3 text-red-600 group-hover/item:text-white transition-colors" />
+                                            <div key={feature} className="flex items-center text-sm text-gray-700 group/item hover:text-yellow-400 transition-colors">
+                                                <div className="w-5 h-5 bg-yellow-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0 group-hover/item:bg-yellow-400 transition-colors">
+                                                    <Check className="w-3 h-3 text-yellow-400 group-hover/item:text-white transition-colors" />
                                                 </div>
                                                 <span className="font-medium">{feature}</span>
                                             </div>
@@ -170,13 +173,13 @@ export default function ServiciosPage() {
                     <div className="relative z-10">
                         <div className="text-center mb-12">
                             <div className="mb-4">
-                                <span className="inline-block px-4 py-1.5 bg-red-600/20 border border-red-600/30 text-red-400 text-xs font-semibold tracking-[0.3em] uppercase rounded-full">
+                                <span className="inline-block px-4 py-1.5 bg-yellow-400/20 border border-yellow-400/30 text-yellow-400 text-xs font-semibold tracking-[0.3em] uppercase rounded-full">
                                     Incluido en tu estadía
                                 </span>
                             </div>
                             
-                            <h3 className="text-3xl md:text-4xl font-bold mb-4" style={{ fontFamily: 'Georgia, serif' }}>
-                                Servicios <span className="text-red-500">Adicionales</span>
+                            <h3 className="text-3xl md:text-4xl font-bold mb-4 font-serif">
+                                Servicios <span className="text-yellow-400">Adicionales</span>
                             </h3>
                             
                             <p className="text-gray-400 max-w-2xl mx-auto">
@@ -188,10 +191,10 @@ export default function ServiciosPage() {
                             {[
                                 { Icon: Car, label: 'Estacionamiento gratuito', color: 'from-blue-500 to-blue-600' },
                                 { Icon: Wifi, label: 'WiFi de alta velocidad', color: 'from-purple-500 to-purple-600' },
-                                { Icon: Briefcase, label: 'Servicio de equipaje', color: 'from-yellow-500 to-yellow-600' },
+                                { Icon: Briefcase, label: 'Servicio de equipaje', color: 'from-yellow-400 to-yellow-500' },
                                 { Icon: Bell, label: 'Room service 24/7', color: 'from-green-500 to-green-600' },
                                 { Icon: Sparkles, label: 'Limpieza diaria', color: 'from-pink-500 to-pink-600' },
-                                { Icon: Lock, label: 'Caja de seguridad', color: 'from-red-500 to-red-600' },
+                                { Icon: Lock, label: 'Caja de seguridad', color: 'from-yellow-300 to-yellow-400' },
                                 { Icon: Dog, label: 'Pet friendly', color: 'from-orange-500 to-orange-600' },
                                 { Icon: Accessibility, label: 'Accesibilidad total', color: 'from-cyan-500 to-cyan-600' },
                             ].map((item, index) => {

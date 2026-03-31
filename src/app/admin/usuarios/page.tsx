@@ -1,10 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { adminService } from '@/services/admin.service'
-import { notificationsService } from '@/services/notifications.service'
+import { adminService } from '@/services/admin.servicio'
+import { notificationsService } from '@/services/notificaciones.servicio'
 import { RefreshCw, Loader2, Download, Eye, Edit, Trash2, UserPlus } from 'lucide-react'
 import { Modal } from '@/components/admin/Modal'
+import { createClient } from '@/utils/supabase/client'
+import { uploadProfilePhoto, validateProfilePhotoFile } from '@/utils/supabase/profilePhotos'
 import Swal from 'sweetalert2'
 
 interface Usuario {
@@ -114,42 +116,18 @@ export default function UsuariosAdminPage() {
 
         setCreatingUser(true)
         try {
-            const { createClient } = await import('@/utils/supabase/client')
-            const supabase = createClient()
-
-            // Crear usuario en auth.users
-            const { data: authData, error: authError } = await supabase.auth.signUp({
-                email: createForm.email,
-                password: createForm.password,
-                options: {
-                    data: {
-                        nombre: createForm.nombre,
-                        apellido: createForm.apellido
-                    }
-                }
+            const response = await fetch('/api/admin/usuarios/crear', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(createForm)
             })
 
-            if (authError) throw authError
+            const result = await response.json()
 
-            if (!authData.user) {
-                throw new Error('No se pudo crear el usuario')
-            }
-
-            // Actualizar datos adicionales en la tabla usuarios
-            const { error: updateError } = await supabase
-                .from('usuarios')
-                .update({
-                    telefono: createForm.telefono || null,
-                    documento_identidad: createForm.documento_identidad || null,
-                    tipo_documento: createForm.tipo_documento || null,
-                    pais: createForm.pais || null,
-                    rol: createForm.rol,
-                    verificado: true // Los usuarios creados por admin están verificados
-                })
-                .eq('id', authData.user.id)
-
-            if (updateError) {
-                console.error('Error updating user data:', updateError)
+            if (!response.ok) {
+                throw new Error(result.error || 'No se pudo crear el usuario')
             }
 
             await loadUsuarios()
@@ -204,6 +182,18 @@ export default function UsuariosAdminPage() {
         const file = e.target.files?.[0]
         if (!file) return
 
+        const fileError = validateProfilePhotoFile(file)
+        if (fileError) {
+            await Swal.fire({
+                icon: 'error',
+                title: 'Archivo invalido',
+                text: fileError,
+                confirmButtonColor: '#3B82F6'
+            })
+            e.target.value = ''
+            return
+        }
+
         // Validar tipo de archivo
         if (!file.type.startsWith('image/')) {
             await Swal.fire({
@@ -236,24 +226,19 @@ export default function UsuariosAdminPage() {
         // Subir a Supabase Storage
         setUploadingPhoto(true)
         try {
-            const { createClient } = await import('@/utils/supabase/client')
             const supabase = createClient()
+            const { data: { user } } = await supabase.auth.getUser()
 
-            const fileExt = file.name.split('.').pop()
-            const fileName = `${selectedUsuario?.id}/${Date.now()}.${fileExt}`
-
-            const { error: uploadError } = await supabase.storage
-                .from('profile-photos')
-                .upload(fileName, file, { upsert: true })
-
-            if (uploadError) {
-                console.error('Upload error:', uploadError)
-                throw new Error(uploadError.message)
+            if (!user || !selectedUsuario?.id) {
+                throw new Error('No se pudo identificar al usuario que realiza la subida.')
             }
 
-            const { data: { publicUrl } } = supabase.storage
-                .from('profile-photos')
-                .getPublicUrl(fileName)
+            const { publicUrl } = await uploadProfilePhoto({
+                supabase,
+                file,
+                ownerUserId: user.id,
+                targetUserId: selectedUsuario.id,
+            })
 
             // Actualizar en la base de datos
             const { error: updateError } = await supabase
@@ -293,11 +278,11 @@ export default function UsuariosAdminPage() {
                 html: `
                     <div class="text-left text-sm">
                         <p class="mb-2">${error.message || 'No se pudo subir la foto'}</p>
-                        <p class="text-xs text-gray-600">Verifica que:</p>
+                        <p class="text-xs text-gray-600">Verifica la configuracion de Storage y los permisos del proyecto.</p>
                         <ul class="list-disc ml-5 text-xs text-gray-600">
-                            <li>El bucket "profile-photos" existe en Storage</li>
+                            <li>Existe el bucket "profile-photos" o el bucket "public"</li>
                             <li>El bucket está marcado como público</li>
-                            <li>Tienes permisos para subir archivos</li>
+                            <li>La tabla usuarios permite guardar la URL en foto_perfil</li>
                         </ul>
                     </div>
                 `,
@@ -305,6 +290,7 @@ export default function UsuariosAdminPage() {
             })
         } finally {
             setUploadingPhoto(false)
+            e.target.value = ''
         }
     }
 
@@ -358,8 +344,17 @@ export default function UsuariosAdminPage() {
 
         if (result.isConfirmed) {
             try {
-                // Implementar eliminación si es necesario
+                await adminService.deleteUsuario(usuario.id)
                 await loadUsuarios()
+                
+                await notificationsService.notifyAdmins(
+                    'warning',
+                    '🗑️ Usuario eliminado',
+                    `El usuario ${usuario.nombre} ${usuario.apellido} ha sido eliminado del sistema`,
+                    '/admin/usuarios',
+                    { usuarioId: usuario.id, email: usuario.email }
+                )
+                
                 await Swal.fire({
                     icon: 'success',
                     title: '¡Eliminado!',
@@ -394,9 +389,9 @@ export default function UsuariosAdminPage() {
             case 'admin_adventur':
                 return 'bg-purple-100 text-purple-700 border-purple-200'
             case 'propietario':
-                return 'bg-yellow-100 text-yellow-700 border-yellow-200'
+                return 'bg-yellow-100 text-yellow-400 border-yellow-200'
             default:
-                return 'bg-green-100 text-green-700 border-green-200'
+                return 'bg-yellow-100 text-yellow-400 border-yellow-200'
         }
     }
 
@@ -453,8 +448,8 @@ export default function UsuariosAdminPage() {
                     <p className="text-blue-200 text-sm mb-2">Total Usuarios</p>
                     <p className="text-4xl font-bold">{usuarios.length}</p>
                 </div>
-                <div className="bg-gradient-to-br from-green-900 to-green-950 rounded-2xl p-6 text-white shadow-lg">
-                    <p className="text-green-200 text-sm mb-2">Clientes</p>
+                <div className="bg-gradient-to-br from-yellow-400 to-green-950 rounded-2xl p-6 text-white shadow-lg">
+                    <p className="text-yellow-200 text-sm mb-2">Clientes</p>
                     <p className="text-4xl font-bold">{usuarios.filter(u => u.rol === 'turista').length}</p>
                 </div>
                 <div className="bg-gradient-to-br from-yellow-900 to-yellow-950 rounded-2xl p-6 text-white shadow-lg">
@@ -478,7 +473,7 @@ export default function UsuariosAdminPage() {
                                     onClick={() => setFilterRol(rol)}
                                     className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
                                         filterRol === rol
-                                            ? 'bg-red-600 text-white shadow-md'
+                                            ? 'bg-yellow-400 text-gray-900 shadow-md'
                                             : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                     }`}
                                 >
@@ -561,8 +556,8 @@ export default function UsuariosAdminPage() {
                                     <td className="px-6 py-4 text-center">
                                         <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold border ${
                                             usuario.verificado 
-                                                ? 'bg-green-100 text-green-700 border-green-200' 
-                                                : 'bg-yellow-100 text-yellow-700 border-yellow-200'
+                                                ? 'bg-yellow-100 text-yellow-400 border-yellow-200' 
+                                                : 'bg-yellow-100 text-yellow-400 border-yellow-200'
                                         }`}>
                                             {usuario.verificado ? 'Verificado' : 'Pendiente'}
                                         </span>
@@ -578,14 +573,14 @@ export default function UsuariosAdminPage() {
                                             </button>
                                             <button
                                                 onClick={() => handleEdit(usuario)}
-                                                className="p-2 text-yellow-600 hover:bg-yellow-50 rounded-lg transition-all"
+                                                className="p-2 text-yellow-400 hover:bg-yellow-50 rounded-lg transition-all"
                                                 title="Editar"
                                             >
                                                 <Edit size={16} />
                                             </button>
                                             <button
                                                 onClick={() => handleDelete(usuario)}
-                                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                                className="p-2 text-yellow-400 hover:bg-yellow-50 rounded-lg transition-all"
                                                 title="Eliminar"
                                             >
                                                 <Trash2 size={16} />
@@ -641,8 +636,8 @@ export default function UsuariosAdminPage() {
                                 <p className="text-xs text-gray-500 mb-1">Estado</p>
                                 <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold border ${
                                     selectedUsuario.verificado 
-                                        ? 'bg-green-100 text-green-700 border-green-200' 
-                                        : 'bg-yellow-100 text-yellow-700 border-yellow-200'
+                                        ? 'bg-yellow-100 text-yellow-400 border-yellow-200' 
+                                        : 'bg-yellow-100 text-yellow-400 border-yellow-200'
                                 }`}>
                                     {selectedUsuario.verificado ? 'Verificado' : 'Pendiente'}
                                 </span>

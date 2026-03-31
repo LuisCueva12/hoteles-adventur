@@ -1,572 +1,458 @@
 'use client'
 
-import { useState } from 'react'
-import { Mail, Phone, MessageCircle, Send, CheckCircle, AlertCircle, User, MessageSquare, MapPin, Clock, Facebook, Instagram, Music } from 'lucide-react'
+import { useState, type ChangeEvent, type FormEvent } from 'react'
+import { z } from 'zod'
+import {
+  AlertCircle,
+  ArrowRight,
+  CheckCircle2,
+  Clock3,
+  Mail,
+  MapPin,
+  MessageCircle,
+  MessageSquare,
+  Phone,
+  RotateCcw,
+  Send,
+  User,
+} from 'lucide-react'
+import { useSiteConfig } from '@/components/providers/ProveedorConfiguracionSitio'
+import { useToast } from '@/hooks/useNotificacion'
+import { defaultSiteConfig, getFullAddress, getWhatsappPhone } from '@/lib/site-config'
+
+const SUBJECTS = ['reserva', 'cotizacion', 'evento', 'servicio', 'reclamo', 'otro'] as const
+const PREFERENCES = ['email', 'telefono', 'whatsapp'] as const
+
+type SubjectKey = (typeof SUBJECTS)[number]
+type ContactPreference = (typeof PREFERENCES)[number]
+
+type FormState = {
+  nombre: string
+  email: string
+  telefono: string
+  asunto: SubjectKey | ''
+  preferencia: ContactPreference
+  mensaje: string
+}
+
+type FieldErrors = Partial<Record<keyof FormState, string>>
+type Feedback = { type: 'success' | 'info' | 'error'; title: string; text: string } | null
+
+const PREFERENCE_META: Record<ContactPreference, { label: string; helper: string; submit: string }> = {
+  email: { label: 'Email', helper: 'Preparamos un correo al area correcta.', submit: 'Abrir correo' },
+  telefono: { label: 'Telefono', helper: 'Dejamos lista una solicitud de llamada.', submit: 'Solicitar llamada' },
+  whatsapp: { label: 'WhatsApp', helper: 'Abrimos una conversacion directa.', submit: 'Abrir WhatsApp' },
+}
+
+function buildSubjectMeta({
+  generalEmail,
+  reservationsEmail,
+}: {
+  generalEmail: string
+  reservationsEmail: string
+}) {
+  return {
+    reserva: {
+      label: 'Consulta de reserva',
+      description: 'Disponibilidad, fechas y tarifas.',
+      email: reservationsEmail,
+      eta: '10 a 20 min',
+    },
+    cotizacion: {
+      label: 'Solicitar cotizacion',
+      description: 'Grupos, empresas y estancias largas.',
+      email: reservationsEmail,
+      eta: 'Menos de 1 hora',
+    },
+    evento: {
+      label: 'Eventos y conferencias',
+      description: 'Salones, coordinacion y bloques.',
+      email: reservationsEmail,
+      eta: 'Hasta 2 horas',
+    },
+    servicio: {
+      label: 'Servicios del hotel',
+      description: 'Check-in, amenities y traslados.',
+      email: generalEmail,
+      eta: '15 a 30 min',
+    },
+    reclamo: {
+      label: 'Reclamo o sugerencia',
+      description: 'Seguimiento prioritario.',
+      email: generalEmail,
+      eta: 'Mismo dia',
+    },
+    otro: {
+      label: 'Otro motivo',
+      description: 'Consultas generales.',
+      email: generalEmail,
+      eta: 'Hasta 1 hora',
+    },
+  } satisfies Record<SubjectKey, { label: string; description: string; email: string; eta: string }>
+}
+
+const INITIAL_STATE: FormState = {
+  nombre: '',
+  email: '',
+  telefono: '',
+  asunto: '',
+  preferencia: 'email',
+  mensaje: '',
+}
+
+const formSchema = z.object({
+  nombre: z.string().trim().min(3, 'Escribe un nombre valido').max(100, 'Nombre demasiado largo'),
+  email: z.string().trim().email('Ingresa un email valido'),
+  telefono: z.string().trim(),
+  asunto: z.enum(SUBJECTS, { message: 'Selecciona un motivo' }),
+  preferencia: z.enum(PREFERENCES),
+  mensaje: z.string().trim().min(20, 'Explica un poco mas tu consulta').max(800, 'Maximo 800 caracteres'),
+}).superRefine((data, ctx) => {
+  const digits = onlyDigits(data.telefono)
+  if (data.telefono && digits.length < 9) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['telefono'], message: 'Ingresa un telefono valido' })
+  }
+  if ((data.preferencia === 'telefono' || data.preferencia === 'whatsapp') && digits.length < 9) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['telefono'], message: 'Este canal necesita un telefono valido' })
+  }
+})
+
+function onlyDigits(value: string) {
+  return value.replace(/\D/g, '')
+}
+
+function getErrors(error: z.ZodError<z.infer<typeof formSchema>>): FieldErrors {
+  const fields = error.flatten().fieldErrors as Partial<Record<keyof FormState, string[]>>
+  return {
+    nombre: fields.nombre?.[0],
+    email: fields.email?.[0],
+    telefono: fields.telefono?.[0],
+    asunto: fields.asunto?.[0],
+    mensaje: fields.mensaje?.[0],
+  }
+}
 
 export default function ContactoPage() {
-    const [formData, setFormData] = useState({
-        nombre: '',
-        email: '',
-        telefono: '',
-        asunto: '',
-        mensaje: '',
-        preferencia: 'email' // email, telefono, whatsapp
+  const { config: siteConfig } = useSiteConfig()
+  const [formData, setFormData] = useState<FormState>(INITIAL_STATE)
+  const [errors, setErrors] = useState<FieldErrors>({})
+  const [loading, setLoading] = useState(false)
+  const [feedback, setFeedback] = useState<Feedback>(null)
+  const { success, error, info } = useToast()
+
+  const hotelName = siteConfig.nombre_hotel || defaultSiteConfig.nombre_hotel
+  const generalEmail = siteConfig.email || defaultSiteConfig.email
+  const reservationsEmail = siteConfig.email_reservas || generalEmail
+  const mainPhone = siteConfig.telefono || defaultSiteConfig.telefono
+  const secondaryPhone = siteConfig.telefono_secundario || defaultSiteConfig.telefono_secundario
+  const whatsappPhone = getWhatsappPhone({
+    telefono: siteConfig.telefono || process.env.NEXT_PUBLIC_WHATSAPP_PHONE || defaultSiteConfig.telefono,
+  })
+  const subjectMeta = buildSubjectMeta({
+    generalEmail,
+    reservationsEmail,
+  })
+  const hotelAddress = getFullAddress({
+    direccion: siteConfig.direccion || defaultSiteConfig.direccion,
+    ciudad: siteConfig.ciudad || defaultSiteConfig.ciudad,
+    pais: siteConfig.pais || defaultSiteConfig.pais,
+  })
+  const contactPolicy = siteConfig.politica_checkin || defaultSiteConfig.politica_checkin
+
+  const selectedSubject = formData.asunto ? subjectMeta[formData.asunto] : null
+  const selectedPreference = PREFERENCE_META[formData.preferencia]
+  const requiresPhone = formData.preferencia === 'telefono' || formData.preferencia === 'whatsapp'
+  const destination = formData.preferencia === 'whatsapp' ? `WhatsApp ${mainPhone}` : (selectedSubject?.email ?? generalEmail)
+
+  const handleChange = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = event.target
+    const key = name as keyof FormState
+
+    setFormData((prev) => ({ ...prev, [key]: value }))
+    setErrors((prev) => {
+      const next = { ...prev }
+      delete next[key]
+      if (key === 'preferencia') delete next.telefono
+      return next
     })
-    const [loading, setLoading] = useState(false)
-    const [message, setMessage] = useState({ type: '', text: '' })
-    const [errors, setErrors] = useState<Record<string, string>>({})
+    if (feedback) setFeedback(null)
+  }
 
-    const validateForm = () => {
-        const newErrors: Record<string, string> = {}
+  const handleReset = () => {
+    setFormData(INITIAL_STATE)
+    setErrors({})
+    setFeedback(null)
+    info('Formulario reiniciado')
+  }
 
-        if (formData.nombre.trim().length < 3) {
-            newErrors.nombre = 'El nombre debe tener al menos 3 caracteres'
-        }
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    const validation = formSchema.safeParse(formData)
 
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-        if (!emailRegex.test(formData.email)) {
-            newErrors.email = 'Email inválido'
-        }
-
-        if (formData.telefono && formData.telefono.length < 9) {
-            newErrors.telefono = 'Teléfono inválido'
-        }
-
-        if (!formData.asunto) {
-            newErrors.asunto = 'Selecciona un asunto'
-        }
-
-        if (formData.mensaje.trim().length < 10) {
-            newErrors.mensaje = 'El mensaje debe tener al menos 10 caracteres'
-        }
-
-        setErrors(newErrors)
-        return Object.keys(newErrors).length === 0
+    if (!validation.success) {
+      setErrors(getErrors(validation.error))
+      setFeedback({ type: 'error', title: 'Revisa el formulario', text: 'Hay campos pendientes o inconsistentes.' })
+      error('Corrige los campos marcados antes de continuar')
+      return
     }
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        const { name, value } = e.target
-        setFormData({ ...formData, [name]: value })
-        
-        // Limpiar error del campo
-        if (errors[name]) {
-            setErrors({ ...errors, [name]: '' })
-        }
+    const data = validation.data
+    const subject = subjectMeta[data.asunto]
+    const preference = PREFERENCE_META[data.preferencia]
+    setLoading(true)
+    setFeedback(null)
+
+    try {
+      if (data.preferencia === 'whatsapp') {
+        const text = [
+          `Hola, quiero ayuda de ${hotelName}.`,
+          `Motivo: ${subject.label}`,
+          `Nombre: ${data.nombre}`,
+          `Email: ${data.email}`,
+          `Telefono: ${data.telefono || 'No consignado'}`,
+          'Mensaje:',
+          data.mensaje,
+        ].join('\n')
+        const url = `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(text)}`
+        const popup = window.open(url, '_blank', 'noopener,noreferrer')
+        if (!popup) window.location.href = url
+        setFeedback({ type: 'success', title: 'WhatsApp listo', text: 'Abrimos la conversacion con tu mensaje prellenado.' })
+        success('Se abrio WhatsApp con tu mensaje listo')
+      } else {
+        const body = [
+          `Nuevo mensaje desde el formulario web de ${hotelName}`,
+          '',
+          `Motivo: ${subject.label}`,
+          `Respuesta estimada: ${subject.eta}`,
+          `Canal preferido: ${preference.label}`,
+          '',
+          `Nombre: ${data.nombre}`,
+          `Email: ${data.email}`,
+          `Telefono: ${data.telefono || 'No consignado'}`,
+          '',
+          'Mensaje:',
+          data.mensaje,
+          '',
+          data.preferencia === 'telefono' ? 'Nota: el cliente pide devolucion de llamada.' : 'Nota: responder por email.',
+        ].join('\n')
+        const url = `mailto:${subject.email}?subject=${encodeURIComponent(`[Web] ${subject.label} - ${data.nombre}`)}&body=${encodeURIComponent(body)}`
+        window.location.href = url
+        setFeedback({ type: 'info', title: 'Correo preparado', text: 'Abrimos tu cliente de correo con el mensaje listo.' })
+        success(`Correo preparado para ${subject.email}`)
+      }
+    } catch {
+      setFeedback({ type: 'error', title: 'No pudimos abrir el canal', text: 'Usa los datos directos del hotel e intenta nuevamente.' })
+      error('No fue posible abrir el canal de contacto')
+    } finally {
+      setLoading(false)
     }
+  }
 
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault()
-        
-        if (!validateForm()) {
-            return
-        }
-
-        setLoading(true)
-        setMessage({ type: '', text: '' })
-
-        try {
-            // Aquí se conectaría con un servicio de email o guardar en BD
-            console.log('Mensaje de contacto:', formData)
-            
-            // Simular envío
-            await new Promise(resolve => setTimeout(resolve, 1500))
-            
-            setMessage({
-                type: 'success',
-                text: '¡Mensaje enviado con éxito! Nos pondremos en contacto contigo en las próximas 24 horas.'
-            })
-            
-            // Limpiar formulario
-            setFormData({
-                nombre: '',
-                email: '',
-                telefono: '',
-                asunto: '',
-                mensaje: '',
-                preferencia: 'email'
-            })
-        } catch (error) {
-            setMessage({
-                type: 'error',
-                text: 'Hubo un error al enviar el mensaje. Por favor intenta nuevamente o contáctanos por WhatsApp.'
-            })
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    const handleWhatsAppContact = () => {
-        const mensaje = `Hola, me gustaría obtener información sobre ${formData.asunto || 'sus servicios'}`
-        const url = `https://wa.me/51976123456?text=${encodeURIComponent(mensaje)}`
-        window.open(url, '_blank')
-    }
-
-    return (
-        <div className="bg-white">
-            <section className="relative h-[60vh] flex items-center justify-center overflow-hidden">
-                <img
-                    src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1920&q=80"
-                    alt="Contacto"
-                    className="absolute inset-0 w-full h-full object-cover scale-105 animate-slow-zoom"
-                />
-                <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/70" />
-                
-                {/* Partículas flotantes */}
-                <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                    {[...Array(20)].map((_, i) => (
-                        <div
-                            key={i}
-                            className="absolute w-1 h-1 bg-white/20 rounded-full animate-float"
-                            style={{
-                                left: `${Math.random() * 100}%`,
-                                top: `${Math.random() * 100}%`,
-                                animationDelay: `${Math.random() * 5}s`,
-                                animationDuration: `${8 + Math.random() * 12}s`
-                            }}
-                        />
-                    ))}
-                </div>
-                
-                <div className="relative z-10 text-center text-white px-6 max-w-4xl">
-                    <div className="mb-6 animate-fadeInDown">
-                        <span className="inline-block px-4 py-1.5 bg-red-600/20 backdrop-blur-sm border border-red-500/30 rounded-full text-red-400 text-xs font-semibold tracking-[0.3em] uppercase">
-                            Estamos aquí para ti
-                        </span>
-                    </div>
-                    
-                    <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-fadeInUp animation-delay-100 drop-shadow-2xl" style={{ fontFamily: 'Georgia, serif' }}>
-                        <span className="text-red-500">Contáctanos</span>
-                    </h1>
-                    
-                    <div className="flex items-center justify-center gap-3 mb-6 animate-fadeInUp animation-delay-150">
-                        <div className="h-px w-16 bg-gradient-to-r from-transparent to-red-500" />
-                        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                        <div className="h-px w-16 bg-gradient-to-l from-transparent to-red-500" />
-                    </div>
-                    
-                    <p className="text-xl text-gray-200 tracking-wide animate-fadeInUp animation-delay-200 max-w-2xl mx-auto">
-                        Estamos disponibles 24/7 para responder todas tus consultas
-                    </p>
-                    
-                    {/* Estadísticas rápidas */}
-                    <div className="grid grid-cols-3 gap-6 mt-12 animate-fadeInUp animation-delay-300">
-                        <div className="text-center">
-                            <div className="text-3xl font-bold text-white mb-1">24/7</div>
-                            <div className="text-xs text-gray-300 uppercase tracking-wider">Atención</div>
-                        </div>
-                        <div className="text-center border-x border-white/20">
-                            <div className="text-3xl font-bold text-white mb-1">&lt;1h</div>
-                            <div className="text-xs text-gray-300 uppercase tracking-wider">Respuesta</div>
-                        </div>
-                        <div className="text-center">
-                            <div className="text-3xl font-bold text-white mb-1">100%</div>
-                            <div className="text-xs text-gray-300 uppercase tracking-wider">Satisfacción</div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section className="max-w-7xl mx-auto px-6 py-24">
-                <div className="grid md:grid-cols-2 gap-16">
-                    <div className="animate-fadeInLeft">
-                        <div className="mb-8">
-                            <span className="inline-block px-4 py-1.5 bg-red-50 text-red-600 text-xs font-semibold tracking-[0.3em] uppercase rounded-full mb-4">
-                                Formulario de contacto
-                            </span>
-                            <h2 className="text-4xl font-bold text-gray-900 mb-4" style={{ fontFamily: 'Georgia, serif' }}>
-                                Envíanos un <span className="text-red-600">mensaje</span>
-                            </h2>
-                            <p className="text-gray-600 text-lg">
-                                Completa el formulario y nos pondremos en contacto contigo lo antes posible.
-                            </p>
-                        </div>
-
-                        {/* Botón de WhatsApp destacado */}
-                        <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl p-6 mb-8 hover:shadow-2xl transition-all duration-300 hover:border-green-400 animate-fadeInUp relative overflow-hidden group">
-                            {/* Efecto de brillo */}
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                            
-                            <div className="relative z-10">
-                                <div className="flex items-center gap-4 mb-4">
-                                    <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg animate-pulse-slow">
-                                        <MessageCircle className="w-7 h-7 text-white" />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-lg font-bold text-gray-900">¿Necesitas ayuda inmediata?</h3>
-                                        <p className="text-sm text-gray-600">Respuesta en menos de 5 minutos</p>
-                                    </div>
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={handleWhatsAppContact}
-                                    className="w-full px-6 py-4 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold rounded-xl transition-all duration-300 flex items-center justify-center gap-3 hover:shadow-2xl transform hover:-translate-y-1 hover:scale-105"
-                                >
-                                    <MessageCircle className="w-6 h-6" />
-                                    <span>Abrir WhatsApp</span>
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-
-                        <form onSubmit={handleSubmit} className="space-y-5">
-                            <div className="grid md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        Nombre completo *
-                                    </label>
-                                    <div className="relative">
-                                        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                                        <input
-                                            type="text"
-                                            name="nombre"
-                                            value={formData.nombre}
-                                            onChange={handleChange}
-                                            required
-                                            className={`w-full pl-11 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all bg-white placeholder:text-gray-500 ${
-                                                errors.nombre 
-                                                    ? 'border-red-500 focus:ring-red-200' 
-                                                    : 'border-gray-300 focus:ring-red-200 focus:border-red-600'
-                                            }`}
-                                            placeholder="Juan Pérez"
-                                        />
-                                    </div>
-                                    {errors.nombre && (
-                                        <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
-                                            <AlertCircle className="w-3 h-3" />
-                                            {errors.nombre}
-                                        </p>
-                                    )}
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        Teléfono
-                                    </label>
-                                    <div className="relative">
-                                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                                        <input
-                                            type="tel"
-                                            name="telefono"
-                                            value={formData.telefono}
-                                            onChange={handleChange}
-                                            className={`w-full pl-11 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all bg-white placeholder:text-gray-500 ${
-                                                errors.telefono 
-                                                    ? 'border-red-500 focus:ring-red-200' 
-                                                    : 'border-gray-300 focus:ring-red-200 focus:border-red-600'
-                                            }`}
-                                            placeholder="+51 999 999 999"
-                                        />
-                                    </div>
-                                    {errors.telefono && (
-                                        <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
-                                            <AlertCircle className="w-3 h-3" />
-                                            {errors.telefono}
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Email *
-                                </label>
-                                <div className="relative">
-                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                                    <input
-                                        type="email"
-                                        name="email"
-                                        value={formData.email}
-                                        onChange={handleChange}
-                                        required
-                                        className={`w-full pl-11 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all bg-white placeholder:text-gray-500 ${
-                                            errors.email 
-                                                ? 'border-red-500 focus:ring-red-200' 
-                                                : 'border-gray-300 focus:ring-red-200 focus:border-red-600'
-                                        }`}
-                                        placeholder="tu@email.com"
-                                    />
-                                </div>
-                                {errors.email && (
-                                    <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
-                                        <AlertCircle className="w-3 h-3" />
-                                        {errors.email}
-                                    </p>
-                                )}
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Asunto *
-                                </label>
-                                <select
-                                    name="asunto"
-                                    value={formData.asunto}
-                                    onChange={handleChange}
-                                    required
-                                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all bg-white text-gray-900 ${
-                                        errors.asunto 
-                                            ? 'border-red-500 focus:ring-red-200' 
-                                            : 'border-gray-300 focus:ring-red-200 focus:border-red-600'
-                                    }`}
-                                >
-                                    <option value="" className="text-gray-500">Selecciona un asunto</option>
-                                    <option value="reserva">Consulta de reserva</option>
-                                    <option value="cotizacion">Solicitar cotización</option>
-                                    <option value="evento">Eventos y conferencias</option>
-                                    <option value="servicio">Servicios del hotel</option>
-                                    <option value="reclamo">Reclamo o sugerencia</option>
-                                    <option value="otro">Otro</option>
-                                </select>
-                                {errors.asunto && (
-                                    <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
-                                        <AlertCircle className="w-3 h-3" />
-                                        {errors.asunto}
-                                    </p>
-                                )}
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    ¿Cómo prefieres que te contactemos? *
-                                </label>
-                                <div className="grid grid-cols-3 gap-3">
-                                    {[
-                                        { value: 'email', label: 'Email', icon: Mail },
-                                        { value: 'telefono', label: 'Teléfono', icon: Phone },
-                                        { value: 'whatsapp', label: 'WhatsApp', icon: MessageCircle }
-                                    ].map((option) => {
-                                        const Icon = option.icon
-                                        return (
-                                            <label
-                                                key={option.value}
-                                                className={`flex flex-col items-center justify-center gap-2 px-4 py-3 border-2 rounded-lg cursor-pointer transition-all ${
-                                                    formData.preferencia === option.value
-                                                        ? 'border-red-600 bg-red-50 text-red-600'
-                                                        : 'border-gray-300 hover:border-gray-400 bg-white'
-                                                }`}
-                                            >
-                                                <input
-                                                    type="radio"
-                                                    name="preferencia"
-                                                    value={option.value}
-                                                    checked={formData.preferencia === option.value}
-                                                    onChange={handleChange}
-                                                    className="sr-only"
-                                                />
-                                                <Icon className="w-5 h-5" />
-                                                <span className="text-sm font-medium">{option.label}</span>
-                                            </label>
-                                        )
-                                    })}
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Mensaje *
-                                </label>
-                                <div className="relative">
-                                    <MessageSquare className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                                    <textarea
-                                        name="mensaje"
-                                        value={formData.mensaje}
-                                        onChange={handleChange}
-                                        required
-                                        rows={5}
-                                        maxLength={500}
-                                        className={`w-full pl-11 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all resize-none bg-white placeholder:text-gray-500 ${
-                                            errors.mensaje 
-                                                ? 'border-red-500 focus:ring-red-200' 
-                                                : 'border-gray-300 focus:ring-red-200 focus:border-red-600'
-                                        }`}
-                                        placeholder="Escribe tu mensaje aquí..."
-                                    />
-                                </div>
-                                {errors.mensaje && (
-                                    <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
-                                        <AlertCircle className="w-3 h-3" />
-                                        {errors.mensaje}
-                                    </p>
-                                )}
-                                <p className="text-xs text-gray-500 mt-1">
-                                    {formData.mensaje.length} / 500 caracteres
-                                </p>
-                            </div>
-
-                            {message.text && (
-                                <div className={`p-4 rounded-lg border-2 ${
-                                    message.type === 'success' 
-                                        ? 'bg-green-50 text-green-800 border-green-200' 
-                                        : 'bg-red-50 text-red-800 border-red-200'
-                                }`}>
-                                    <div className="flex items-start gap-3">
-                                        {message.type === 'success' ? (
-                                            <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                                        ) : (
-                                            <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                                        )}
-                                        <p className="text-sm">{message.text}</p>
-                                    </div>
-                                </div>
-                            )}
-
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full px-8 py-4 bg-red-600 hover:bg-red-700 text-white font-semibold uppercase tracking-wider transition-all duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed rounded-lg shadow-lg hover:shadow-2xl flex items-center justify-center gap-2 transform hover:-translate-y-1 disabled:transform-none"
-                            >
-                                {loading ? (
-                                    <>
-                                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                                        <span>Enviando...</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Send className="w-5 h-5" />
-                                        <span>Enviar mensaje</span>
-                                    </>
-                                )}
-                            </button>
-
-                            <p className="text-xs text-gray-500 text-center">
-                                Al enviar este formulario, aceptas nuestra{' '}
-                                <a href="/privacidad" className="text-red-600 hover:underline">
-                                    Política de Privacidad
-                                </a>
-                            </p>
-                        </form>
-                    </div>
-
-                    <div className="animate-fadeInRight">
-                        <div className="mb-8">
-                            <span className="inline-block px-4 py-1.5 bg-red-50 text-red-600 text-xs font-semibold tracking-[0.3em] uppercase rounded-full mb-4">
-                                Datos de contacto
-                            </span>
-                            <h2 className="text-4xl font-bold text-gray-900 mb-4" style={{ fontFamily: 'Georgia, serif' }}>
-                                Información de <span className="text-red-600">contacto</span>
-                            </h2>
-                        </div>
-
-                        <div className="space-y-6 mb-10">
-                            <div className="flex items-start gap-4 p-5 bg-gradient-to-br from-white to-gray-50 rounded-2xl border-2 border-gray-100 animate-fadeInUp animation-delay-100 hover:border-red-600 hover:shadow-xl transition-all duration-300 group">
-                                <div className="w-14 h-14 bg-gradient-to-br from-red-600 to-red-700 rounded-2xl flex items-center justify-center text-white flex-shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
-                                    <MapPin className="w-7 h-7" />
-                                </div>
-                                <div>
-                                    <h3 className="text-lg font-bold text-gray-900 mb-2">Dirección</h3>
-                                    <p className="text-gray-600 leading-relaxed">
-                                        Jr. Amalia Puga 635<br />
-                                        Cajamarca, Perú<br />
-                                        Código Postal: 06001
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="flex items-start gap-4 p-5 bg-gradient-to-br from-white to-gray-50 rounded-2xl border-2 border-gray-100 animate-fadeInUp animation-delay-200 hover:border-red-600 hover:shadow-xl transition-all duration-300 group">
-                                <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center text-white flex-shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
-                                    <Phone className="w-7 h-7" />
-                                </div>
-                                <div>
-                                    <h3 className="text-lg font-bold text-gray-900 mb-2">Teléfono</h3>
-                                    <p className="text-gray-600 leading-relaxed">
-                                        +51 976 123 456<br />
-                                        +51 976 654 321<br />
-                                        WhatsApp: +51 976 123 456
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="flex items-start gap-4 p-5 bg-gradient-to-br from-white to-gray-50 rounded-2xl border-2 border-gray-100 animate-fadeInUp animation-delay-300 hover:border-red-600 hover:shadow-xl transition-all duration-300 group">
-                                <div className="w-14 h-14 bg-gradient-to-br from-purple-600 to-purple-700 rounded-2xl flex items-center justify-center text-white flex-shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
-                                    <Mail className="w-7 h-7" />
-                                </div>
-                                <div>
-                                    <h3 className="text-lg font-bold text-gray-900 mb-2">Email</h3>
-                                    <p className="text-gray-600 leading-relaxed">
-                                        info@adventurhotels.com<br />
-                                        reservas@adventurhotels.com<br />
-                                        ventas@adventurhotels.com
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="flex items-start gap-4 p-5 bg-gradient-to-br from-white to-gray-50 rounded-2xl border-2 border-gray-100 animate-fadeInUp animation-delay-400 hover:border-red-600 hover:shadow-xl transition-all duration-300 group">
-                                <div className="w-14 h-14 bg-gradient-to-br from-green-600 to-green-700 rounded-2xl flex items-center justify-center text-white flex-shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
-                                    <Clock className="w-7 h-7" />
-                                </div>
-                                <div>
-                                    <h3 className="text-lg font-bold text-gray-900 mb-2">Horario de Atención</h3>
-                                    <p className="text-gray-600 leading-relaxed">
-                                        Lunes a Viernes: 8:00 AM - 8:00 PM<br />
-                                        Sábados: 9:00 AM - 6:00 PM<br />
-                                        Domingos: 10:00 AM - 4:00 PM<br />
-                                        <span className="font-semibold text-red-600">Recepción 24/7</span>
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="bg-gradient-to-br from-gray-50 to-white p-8 rounded-2xl border-2 border-gray-100 hover:border-red-600 transition-all duration-300 hover:shadow-xl">
-                            <h3 className="text-xl font-bold text-gray-900 mb-6">Síguenos en redes sociales</h3>
-                            <div className="flex gap-4 mb-6">
-                                <a
-                                    href="https://facebook.com/adventurhotels"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="w-14 h-14 bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 hover:rotate-6 shadow-lg"
-                                    title="Facebook"
-                                >
-                                    <Facebook className="w-6 h-6" />
-                                </a>
-                                <a
-                                    href="https://instagram.com/adventurhotels"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="w-14 h-14 bg-gradient-to-br from-pink-600 to-purple-700 hover:from-pink-700 hover:to-purple-800 text-white rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 hover:rotate-6 shadow-lg"
-                                    title="Instagram"
-                                >
-                                    <Instagram className="w-6 h-6" />
-                                </a>
-                                <a
-                                    href="https://tiktok.com/@adventurhotels"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="w-14 h-14 bg-gradient-to-br from-gray-900 to-gray-800 hover:from-gray-800 hover:to-gray-700 text-white rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 hover:rotate-6 shadow-lg"
-                                    title="TikTok"
-                                >
-                                    <Music className="w-6 h-6" />
-                                </a>
-                                <a
-                                    href="https://wa.me/51976123456"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="w-14 h-14 bg-gradient-to-br from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 hover:rotate-6 shadow-lg"
-                                    title="WhatsApp"
-                                >
-                                    <MessageCircle className="w-6 h-6" />
-                                </a>
-                            </div>
-                            <p className="text-sm text-gray-600 leading-relaxed">
-                                Síguenos para ofertas exclusivas, promociones especiales y las últimas novedades de Adventur Hotels
-                            </p>
-                        </div>
-
-                        <div className="mt-8 h-80 bg-gray-200 rounded-2xl overflow-hidden shadow-2xl border-2 border-gray-100 hover:border-red-600 transition-all duration-300">
-                            <iframe
-                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3951.7234567890123!2d-78.5167!3d-7.1611!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zN8KwMDknNDAuMCJTIDc4wrAzMScwMC4xIlc!5e0!3m2!1ses!2spe!4v1234567890123!5m2!1ses!2spe"
-                                width="100%"
-                                height="100%"
-                                style={{ border: 0 }}
-                                allowFullScreen
-                                loading="lazy"
-                                title="Ubicación de Adventur Hotels en Cajamarca"
-                            />
-                        </div>
-                    </div>
-                </div>
-            </section>
+  return (
+    <div className="bg-[linear-gradient(180deg,#fffaf0_0%,#ffffff_35%,#f8fafc_100%)]">
+      <section className="relative isolate overflow-hidden">
+        <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1920&q=80" alt={`Contacto ${hotelName}`} className="absolute inset-0 h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-[linear-gradient(110deg,rgba(15,23,42,0.92)_0%,rgba(15,23,42,0.72)_42%,rgba(15,23,42,0.46)_100%)]" />
+        <div className="relative mx-auto max-w-7xl px-6 py-24 lg:px-8">
+          <span className="inline-flex rounded-full border border-yellow-300/40 bg-yellow-300/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.32em] text-yellow-200">Contacto directo</span>
+          <h1 className="mt-6 max-w-4xl text-5xl font-semibold tracking-tight text-white sm:text-6xl">Tu consulta ahora si sigue una ruta clara.</h1>
+          <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-200">Elegimos el area correcta, te mostramos el canal final y dejamos listo el mensaje para que no parezca un formulario vacio.</p>
+          <div className="mt-10 grid max-w-3xl gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="rounded-3xl border border-white/10 bg-white/10 p-5 text-white backdrop-blur sm:col-span-2 xl:col-span-1"><div className="text-3xl font-semibold">&lt; 20 min</div><p className="mt-2 text-sm text-slate-200">Consultas de reserva.</p></div>
+            <div className="rounded-3xl border border-white/10 bg-white/10 p-5 text-white backdrop-blur"><div className="text-3xl font-semibold">3 canales</div><p className="mt-2 text-sm text-slate-200">Email, llamada y WhatsApp.</p></div>
+            <div className="rounded-3xl border border-white/10 bg-white/10 p-5 text-white backdrop-blur"><div className="text-3xl font-semibold">24/7</div><p className="mt-2 text-sm text-slate-200">Recepcion y soporte.</p></div>
+          </div>
         </div>
-    )
+      </section>
+
+      <section className="mx-auto max-w-7xl px-6 py-20 lg:px-8">
+        <div className="grid gap-10 xl:grid-cols-[1.08fr_0.92fr]">
+          <div className="rounded-[32px] border border-slate-200 bg-white p-7 shadow-[0_24px_70px_-36px_rgba(15,23,42,0.35)] sm:p-9">
+            <div className="flex flex-col gap-4 border-b border-slate-200 pb-8 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <span className="inline-flex rounded-full bg-yellow-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.3em] text-amber-700">Formulario con logica</span>
+                <h2 className="mt-4 text-3xl font-semibold text-slate-900 sm:text-4xl">Prepara el contacto antes de enviarlo</h2>
+                <p className="mt-3 max-w-2xl text-base leading-7 text-slate-600">Segun el canal elegido, abrimos WhatsApp o tu correo con el mensaje dirigido al equipo correcto.</p>
+              </div>
+              <button type="button" onClick={handleReset} className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-900 hover:text-slate-900">
+                <RotateCcw className="h-4 w-4" />
+                Limpiar
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+              <div className="grid gap-5 lg:grid-cols-2">
+                <Field label="Nombre completo *" icon={User} error={errors.nombre}>
+                  <input type="text" name="nombre" value={formData.nombre} onChange={handleChange} className={inputClass(errors.nombre)} placeholder="Juan Perez" />
+                </Field>
+                <Field label={`Telefono ${requiresPhone ? '*' : '(opcional)'}`} icon={Phone} error={errors.telefono} help={requiresPhone ? 'Necesario para llamada o WhatsApp.' : 'Ayuda a responder mas rapido.'}>
+                  <input type="tel" name="telefono" value={formData.telefono} onChange={handleChange} className={inputClass(errors.telefono)} placeholder="+51 999 999 999" />
+                </Field>
+              </div>
+
+              <Field label="Email *" icon={Mail} error={errors.email}>
+                <input type="email" name="email" value={formData.email} onChange={handleChange} className={inputClass(errors.email)} placeholder="tu@email.com" />
+              </Field>
+
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-slate-700">Motivo de contacto *</label>
+                <select name="asunto" value={formData.asunto} onChange={handleChange} className={selectClass(errors.asunto)}>
+                  <option value="">Selecciona un motivo</option>
+                  {SUBJECTS.map((key) => <option key={key} value={key}>{subjectMeta[key].label}</option>)}
+                </select>
+                <p className="mt-2 text-sm text-slate-500">{selectedSubject?.description ?? 'Asignamos tu consulta al equipo correcto segun el motivo.'}</p>
+                {errors.asunto ? <ErrorText text={errors.asunto} /> : null}
+              </div>
+
+              <div>
+                <label className="mb-3 block text-sm font-semibold text-slate-700">Como prefieres la respuesta *</label>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {PREFERENCES.map((key) => {
+                    const active = formData.preferencia === key
+                    const Icon = key === 'email' ? Mail : key === 'telefono' ? Phone : MessageCircle
+                    return (
+                      <label key={key} className={`cursor-pointer rounded-3xl border p-4 transition ${key === 'whatsapp' ? 'sm:col-span-2 lg:col-span-1' : ''} ${active ? 'border-amber-400 bg-amber-50' : 'border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-white'}`}>
+                        <input type="radio" name="preferencia" value={key} checked={active} onChange={handleChange} className="sr-only" />
+                        <div className="flex items-start gap-3">
+                          <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${active ? 'bg-amber-400 text-slate-900' : 'bg-white text-slate-600'}`}><Icon className="h-5 w-5" /></div>
+                          <div><div className="font-semibold text-slate-900">{PREFERENCE_META[key].label}</div><p className="mt-1 text-sm leading-6 text-slate-500">{PREFERENCE_META[key].helper}</p></div>
+                        </div>
+                      </label>
+                    )
+                  })}
+                </div>
+              </div>
+
+              <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-6">
+                <div className="flex items-start gap-3">
+                  <Clock3 className="mt-0.5 h-5 w-5 text-amber-500" />
+                  <div className="grid flex-1 gap-4 lg:grid-cols-2">
+                    <SummaryCard label="Area" value={selectedSubject?.label ?? 'Pendiente'} helper={selectedSubject?.description ?? 'Selecciona un motivo.'} />
+                    <SummaryCard label="Canal" value={selectedPreference.label} helper={selectedPreference.helper} />
+                    <SummaryCard label="Destino" value={destination} helper="Aqui se dirigira la consulta." />
+                    <SummaryCard label="Tiempo estimado" value={selectedSubject?.eta ?? 'Pendiente'} helper="Se actualiza segun el motivo." />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-slate-700">Mensaje *</label>
+                <div className="relative">
+                  <MessageSquare className="pointer-events-none absolute left-4 top-4 h-5 w-5 text-slate-400" />
+                  <textarea name="mensaje" value={formData.mensaje} onChange={handleChange} rows={6} maxLength={800} className={`w-full rounded-[28px] border bg-white pb-4 pl-12 pr-4 pt-4 text-slate-900 outline-none transition placeholder:text-slate-400 ${errors.mensaje ? 'border-red-300 ring-4 ring-red-100' : 'border-slate-300 focus:border-amber-400 focus:ring-4 focus:ring-amber-100'}`} placeholder="Cuentanos fechas, cantidad de personas, evento o el detalle que necesitas resolver." />
+                </div>
+                <div className="mt-2 flex items-center justify-between gap-4"><p className="text-sm text-slate-500">Mientras mas claro seas, mas rapido podremos responder.</p><p className="text-sm font-medium text-slate-500">{formData.mensaje.length} / 800</p></div>
+                {errors.mensaje ? <ErrorText text={errors.mensaje} /> : null}
+              </div>
+
+              {feedback ? (
+                <div className={`rounded-[24px] border p-5 ${feedback.type === 'success' ? 'border-emerald-200 bg-emerald-50' : feedback.type === 'info' ? 'border-blue-200 bg-blue-50' : 'border-red-200 bg-red-50'}`}>
+                  <div className="flex items-start gap-3">
+                    {feedback.type === 'error' ? <AlertCircle className="mt-0.5 h-5 w-5 text-red-600" /> : <CheckCircle2 className={`mt-0.5 h-5 w-5 ${feedback.type === 'success' ? 'text-emerald-600' : 'text-blue-600'}`} />}
+                    <div><p className="font-semibold text-slate-900">{feedback.title}</p><p className="mt-1 text-sm leading-6 text-slate-600">{feedback.text}</p></div>
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="flex flex-col gap-4 sm:flex-row">
+                <button type="submit" disabled={loading} className="inline-flex h-14 flex-1 items-center justify-center gap-3 rounded-2xl bg-slate-950 px-6 text-sm font-semibold text-white transition hover:bg-amber-500 hover:text-slate-950 disabled:cursor-not-allowed disabled:bg-slate-400">
+                  {loading ? <><div className="h-5 w-5 animate-spin rounded-full border-2 border-white/40 border-t-white" />Preparando canal...</> : <><Send className="h-5 w-5" />{selectedPreference.submit}<ArrowRight className="h-4 w-4" /></>}
+                </button>
+                <a href={`tel:${onlyDigits(mainPhone)}`} className="inline-flex h-14 items-center justify-center gap-2 rounded-2xl border border-slate-300 px-6 text-sm font-semibold text-slate-700 transition hover:border-slate-900 hover:text-slate-900"><Phone className="h-4 w-4" />Llamar ahora</a>
+              </div>
+
+              <p className="text-sm leading-6 text-slate-500">Email y telefono abren tu cliente de correo con el mensaje listo. WhatsApp abre la conversacion con el texto prellenado.</p>
+            </form>
+          </div>
+
+          <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-1">
+            <div className="rounded-[32px] border border-slate-200 bg-white p-7 shadow-[0_22px_60px_-34px_rgba(15,23,42,0.28)]">
+              <span className="inline-flex rounded-full bg-slate-100 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.3em] text-slate-700">Canales directos</span>
+              <h2 className="mt-4 text-3xl font-semibold text-slate-900">Datos del hotel</h2>
+              <div className="mt-8 grid gap-4 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-1">
+                <InfoCard icon={MapPin} title="Direccion">{hotelAddress}</InfoCard>
+                <InfoCard icon={Phone} title="Telefonos">{mainPhone}<br />{secondaryPhone}<br />WhatsApp: {mainPhone}</InfoCard>
+                <InfoCard icon={Mail} title="Correos">{generalEmail}<br />{reservationsEmail}{siteConfig.sitio_web ? <><br />{siteConfig.sitio_web}</> : null}</InfoCard>
+                <InfoCard icon={Clock3} title="Horario">{contactPolicy}<br /><span className="font-semibold text-amber-600">Recepcion 24/7</span></InfoCard>
+              </div>
+            </div>
+
+            <div className="overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-[0_22px_60px_-34px_rgba(15,23,42,0.28)] md:min-h-full">
+              <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3951.7234567890123!2d-78.5167!3d-7.1611!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zN8KwMDknNDAuMCJTIDc4wrAzMScwMC4xIlc!5e0!3m2!1ses!2spe!4v1234567890123!5m2!1ses!2spe" width="100%" height="380" style={{ border: 0 }} allowFullScreen loading="lazy" title={`Ubicacion de ${hotelName}`} />
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  )
+}
+
+function Field({
+  label,
+  icon: Icon,
+  error,
+  help,
+  children,
+}: {
+  label: string
+  icon: typeof User
+  error?: string
+  help?: string
+  children: React.ReactNode
+}) {
+  return (
+    <div>
+      <label className="mb-2 block text-sm font-semibold text-slate-700">{label}</label>
+      <div className="relative">
+        <Icon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+        {children}
+      </div>
+      {help ? <p className="mt-2 text-xs text-slate-500">{help}</p> : null}
+      {error ? <ErrorText text={error} /> : null}
+    </div>
+  )
+}
+
+function ErrorText({ text }: { text: string }) {
+  return <p className="mt-2 flex items-center gap-2 text-sm text-red-600"><AlertCircle className="h-4 w-4" />{text}</p>
+}
+
+function SummaryCard({ label, value, helper }: { label: string; value: string; helper: string }) {
+  return (
+    <div className="rounded-2xl border border-white bg-white p-4">
+      <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">{label}</p>
+      <p className="mt-2 text-base font-semibold text-slate-900">{value}</p>
+      <p className="mt-1 text-sm text-slate-500">{helper}</p>
+    </div>
+  )
+}
+
+function InfoCard({
+  icon: Icon,
+  title,
+  children,
+}: {
+  icon: typeof MapPin
+  title: string
+  children: React.ReactNode
+}) {
+  return (
+    <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5">
+      <div className="flex items-start gap-4">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-amber-700"><Icon className="h-6 w-6" /></div>
+        <div>
+          <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
+          <p className="mt-2 leading-7 text-slate-600">{children}</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function inputClass(hasError?: string) {
+  return `h-14 w-full rounded-2xl border bg-white pl-12 pr-4 text-slate-900 outline-none transition placeholder:text-slate-400 ${hasError ? 'border-red-300 ring-4 ring-red-100' : 'border-slate-300 focus:border-amber-400 focus:ring-4 focus:ring-amber-100'}`
+}
+
+function selectClass(hasError?: string) {
+  return `h-14 w-full rounded-2xl border bg-white px-4 text-slate-900 outline-none transition ${hasError ? 'border-red-300 ring-4 ring-red-100' : 'border-slate-300 focus:border-amber-400 focus:ring-4 focus:ring-amber-100'}`
 }

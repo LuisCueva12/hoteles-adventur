@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { adminService } from '@/services/admin.service'
-import { Hotel, Calendar, Users, DollarSign, TrendingUp, Clock, CheckCircle, AlertCircle, ArrowRight, Activity, BarChart3, PieChart, RefreshCw, Loader2, Target } from 'lucide-react'
+import { adminService } from '@/services/admin.servicio'
+import { Hotel, Calendar, Users, DollarSign, TrendingUp, Clock, CheckCircle, AlertCircle, ArrowRight, Activity, BarChart3, RefreshCw, Loader2 } from 'lucide-react'
 
 export default function AdminPage() {
     const [loading, setLoading] = useState(true)
@@ -20,6 +20,8 @@ export default function AdminPage() {
 
     const [recentActivity, setRecentActivity] = useState<any[]>([])
     const [isRefreshing, setIsRefreshing] = useState(false)
+    const [monthlyData, setMonthlyData] = useState<{ month: string; value: number; raw: number }[]>([])
+    const [comparacion, setComparacion] = useState({ usuarios: 0, reservas: 0, ingresos: 0, alojamientos: 0 })
 
     useEffect(() => {
         loadDashboardData()
@@ -28,12 +30,16 @@ export default function AdminPage() {
     const loadDashboardData = async () => {
         try {
             setLoading(true)
-            const [dashboardStats, activities] = await Promise.all([
+            const [dashboardStats, activities, monthly, comp] = await Promise.all([
                 adminService.getDashboardStats(),
-                adminService.getRecentActivity(8)
+                adminService.getRecentActivity(8),
+                adminService.getMonthlyRevenue(),
+                adminService.getStatsComparison(),
             ])
             setStats(dashboardStats)
             setRecentActivity(activities)
+            setMonthlyData(monthly)
+            setComparacion(comp)
         } catch (error) {
             console.error('Error loading dashboard:', error)
         } finally {
@@ -46,23 +52,6 @@ export default function AdminPage() {
         await loadDashboardData()
         setIsRefreshing(false)
     }
-
-    const monthlyData = [
-        { month: 'Ene', value: 65 },
-        { month: 'Feb', value: 85 },
-        { month: 'Mar', value: 75 },
-        { month: 'Abr', value: 90 },
-        { month: 'May', value: 70 },
-        { month: 'Jun', value: 95 },
-        { month: 'Jul', value: 88 },
-        { month: 'Ago', value: 78 },
-        { month: 'Sep', value: 92 },
-        { month: 'Oct', value: 85 },
-        { month: 'Nov', value: 80 },
-        { month: 'Dic', value: 75 },
-    ]
-
-    const maxValue = Math.max(...monthlyData.map(d => d.value))
 
     if (loading) {
         return (
@@ -83,7 +72,7 @@ export default function AdminPage() {
                         Dashboard
                     </h1>
                     <p className="text-gray-600 flex items-center gap-2">
-                        <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                        <span className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></span>
                         Bienvenido al panel de administración
                     </p>
                 </div>
@@ -105,8 +94,8 @@ export default function AdminPage() {
                         <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
                             <Users className="text-white" size={24} />
                         </div>
-                        <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                            +11.01%
+                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${comparacion.usuarios >= 0 ? 'text-green-600 bg-green-50' : 'text-red-500 bg-red-50'}`}>
+                            {comparacion.usuarios >= 0 ? '+' : ''}{comparacion.usuarios}%
                         </span>
                     </div>
                     <p className="text-gray-600 text-sm mb-1 font-medium">Usuarios</p>
@@ -118,8 +107,8 @@ export default function AdminPage() {
                         <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center">
                             <Calendar className="text-white" size={24} />
                         </div>
-                        <span className="text-xs font-semibold text-red-600 bg-red-50 px-2 py-1 rounded-full">
-                            -9.05%
+                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${comparacion.reservas >= 0 ? 'text-green-600 bg-green-50' : 'text-red-500 bg-red-50'}`}>
+                            {comparacion.reservas >= 0 ? '+' : ''}{comparacion.reservas}%
                         </span>
                     </div>
                     <p className="text-gray-600 text-sm mb-1 font-medium">Reservas</p>
@@ -128,11 +117,11 @@ export default function AdminPage() {
 
                 <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all border border-gray-100">
                     <div className="flex items-center justify-between mb-4">
-                        <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center">
+                        <div className="w-12 h-12 bg-yellow-400 rounded-xl flex items-center justify-center">
                             <DollarSign className="text-white" size={24} />
                         </div>
-                        <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                            +15.3%
+                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${comparacion.ingresos >= 0 ? 'text-green-600 bg-green-50' : 'text-red-500 bg-red-50'}`}>
+                            {comparacion.ingresos >= 0 ? '+' : ''}{comparacion.ingresos}%
                         </span>
                     </div>
                     <p className="text-gray-600 text-sm mb-1 font-medium">Ingresos del Mes</p>
@@ -144,8 +133,8 @@ export default function AdminPage() {
                         <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center">
                             <Hotel className="text-white" size={24} />
                         </div>
-                        <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                            +8.2%
+                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${comparacion.alojamientos >= 0 ? 'text-green-600 bg-green-50' : 'text-red-500 bg-red-50'}`}>
+                            {comparacion.alojamientos >= 0 ? '+' : ''}{comparacion.alojamientos}%
                         </span>
                     </div>
                     <p className="text-gray-600 text-sm mb-1 font-medium">Alojamientos</p>
@@ -162,10 +151,13 @@ export default function AdminPage() {
                         </div>
                     </div>
                     <div className="flex items-end justify-between h-64 gap-3">
-                        {monthlyData.map((data, idx) => (
-                            <div key={data.month} className="flex-1 flex flex-col items-center gap-2">
-                                <div className="w-full bg-gray-100 rounded-t-xl relative overflow-hidden group cursor-pointer hover:bg-gray-200 transition-all"
-                                     style={{ height: `${(data.value / maxValue) * 100}%` }}>
+                        {monthlyData.map((data) => (
+                            <div key={data.month} className="flex-1 flex flex-col items-center gap-2 group relative">
+                                <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                                    S/. {data.raw.toLocaleString()}
+                                </div>
+                                <div className="w-full bg-gray-100 rounded-t-xl relative overflow-hidden cursor-pointer hover:bg-gray-200 transition-all"
+                                     style={{ height: `${Math.max(data.value, 4)}%` }}>
                                     <div className="absolute inset-0 bg-gradient-to-t from-blue-600 to-blue-400 group-hover:from-blue-700 group-hover:to-blue-500 transition-all"
                                          style={{ height: '100%' }}></div>
                                 </div>
@@ -212,7 +204,7 @@ export default function AdminPage() {
                             </svg>
                             <div className="absolute inset-0 flex flex-col items-center justify-center">
                                 <span className="text-4xl font-bold text-gray-900">{stats.ocupacionActual}%</span>
-                                <span className="text-sm text-green-600 font-semibold">+10%</span>
+                                <span className="text-sm text-gray-500 font-medium">ocupación</span>
                             </div>
                         </div>
                     </div>
@@ -225,17 +217,17 @@ export default function AdminPage() {
                         <div className="text-center">
                             <p className="text-xs text-gray-600 mb-1 font-medium">Meta</p>
                             <p className="text-lg font-bold text-gray-900">S/. 20K</p>
-                            <p className="text-xs text-red-600">↓</p>
+                            <p className="text-xs text-yellow-400">↓</p>
                         </div>
                         <div className="text-center">
                             <p className="text-xs text-gray-600 mb-1 font-medium">Ingresos</p>
                             <p className="text-lg font-bold text-gray-900">S/. {(stats.ingresosMes / 1000).toFixed(0)}K</p>
-                            <p className="text-xs text-green-600">↑</p>
+                            <p className="text-xs text-yellow-400">↑</p>
                         </div>
                         <div className="text-center">
                             <p className="text-xs text-gray-600 mb-1 font-medium">Hoy</p>
                             <p className="text-lg font-bold text-gray-900">S/. 20K</p>
-                            <p className="text-xs text-green-600">↑</p>
+                            <p className="text-xs text-yellow-400">↑</p>
                         </div>
                     </div>
                 </div>
@@ -260,8 +252,8 @@ export default function AdminPage() {
                         {recentActivity.map((activity, idx) => (
                             <div key={idx} className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all group border border-gray-100">
                                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                                    activity.status === 'success' ? 'bg-green-100 text-green-600' :
-                                    activity.status === 'warning' ? 'bg-yellow-100 text-yellow-600' :
+                                    activity.status === 'success' ? 'bg-yellow-100 text-yellow-400' :
+                                    activity.status === 'warning' ? 'bg-yellow-100 text-yellow-400' :
                                     'bg-blue-100 text-blue-600'
                                 }`}>
                                     {activity.type === 'reserva' ? <Calendar size={18} /> :
@@ -282,14 +274,14 @@ export default function AdminPage() {
                     <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
                         <h2 className="text-xl font-bold text-gray-900 mb-4">Estadísticas Rápidas</h2>
                         <div className="space-y-3">
-                            <div className="flex items-center justify-between p-3 bg-green-50 rounded-xl border border-green-100">
+                            <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-xl border border-yellow-100">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center">
+                                    <div className="w-10 h-10 bg-yellow-400 rounded-xl flex items-center justify-center">
                                         <TrendingUp size={18} className="text-white" />
                                     </div>
                                     <span className="text-sm font-semibold text-gray-900">Ocupación</span>
                                 </div>
-                                <span className="text-xl font-bold text-green-600">{stats.ocupacionActual}%</span>
+                                <span className="text-xl font-bold text-yellow-400">{stats.ocupacionActual}%</span>
                             </div>
                             <div className="flex items-center justify-between p-3 bg-blue-50 rounded-xl border border-blue-100">
                                 <div className="flex items-center gap-3">
@@ -302,21 +294,21 @@ export default function AdminPage() {
                             </div>
                             <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-xl border border-yellow-100">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-yellow-500 rounded-xl flex items-center justify-center">
+                                    <div className="w-10 h-10 bg-yellow-400 rounded-xl flex items-center justify-center">
                                         <Clock size={18} className="text-white" />
                                     </div>
                                     <span className="text-sm font-semibold text-gray-900">Check-outs Hoy</span>
                                 </div>
-                                <span className="text-xl font-bold text-yellow-600">{stats.checkoutsHoy}</span>
+                                <span className="text-xl font-bold text-yellow-400">{stats.checkoutsHoy}</span>
                             </div>
-                            <div className="flex items-center justify-between p-3 bg-red-50 rounded-xl border border-red-100">
+                            <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-xl border border-yellow-100">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-red-500 rounded-xl flex items-center justify-center">
+                                    <div className="w-10 h-10 bg-yellow-300 rounded-xl flex items-center justify-center">
                                         <AlertCircle size={18} className="text-white" />
                                     </div>
                                     <span className="text-sm font-semibold text-gray-900">Pendientes</span>
                                 </div>
-                                <span className="text-xl font-bold text-red-600">{stats.pendientes}</span>
+                                <span className="text-xl font-bold text-yellow-400">{stats.pendientes}</span>
                             </div>
                         </div>
                     </div>
@@ -340,7 +332,7 @@ export default function AdminPage() {
                                         <div className="flex items-center gap-3">
                                             <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
                                                 item.color === 'blue' ? 'bg-blue-500' :
-                                                item.color === 'green' ? 'bg-green-500' :
+                                                item.color === 'green' ? 'bg-yellow-400' :
                                                 item.color === 'purple' ? 'bg-purple-500' :
                                                 'bg-orange-500'
                                             }`}>

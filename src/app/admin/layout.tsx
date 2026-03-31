@@ -3,12 +3,15 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { LayoutDashboard, Hotel, Calendar, Users, TrendingUp, Settings, Home, LogOut, Menu, X, User, Camera } from 'lucide-react'
+import { LayoutDashboard, Hotel, Calendar, Users, TrendingUp, Settings, Home, LogOut, Menu, X, Camera } from 'lucide-react'
 import { Modal } from '@/components/admin/Modal'
 import { Logo } from '@/components/web/Logo'
 import Image from 'next/image'
 import { createClient } from '@/utils/supabase/client'
+import { uploadProfilePhoto, validateProfilePhotoFile } from '@/utils/supabase/profilePhotos'
 import Swal from 'sweetalert2'
+
+export const dynamic = 'force-dynamic'
 
 const NAV_ITEMS = [
     { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, badge: null },
@@ -50,150 +53,117 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
     const checkAdminAccess = async () => {
         try {
             setLoading(true)
-            const { data: { user }, error: authError } = await supabase.auth.getUser()
-            
-            if (authError || !user) {
-                console.error('Error de autenticación:', authError)
-                setAccessDenied(true)
-                setLoading(false)
+
+            // Intentar obtener sesión primero, luego el usuario
+            const { data: { session } } = await supabase.auth.getSession()
+
+            if (!session) {
+                // No hay sesión — redirigir al login, no mostrar acceso denegado
+                router.replace('/login?redirect=/admin')
                 return
             }
 
-            // Verificar que el usuario es admin
+            const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+            if (authError || !user) {
+                router.replace('/login?redirect=/admin')
+                return
+            }
+
+            // Verificar rol en la tabla usuarios
             const { data: userData, error: dbError } = await supabase
                 .from('usuarios')
-                .select('rol')
+                .select('rol, nombre, apellido, email, telefono, foto_perfil')
                 .eq('id', user.id)
                 .maybeSingle()
 
-            // Si hay error de base de datos (tabla no existe), permitir acceso temporal
             if (dbError) {
-                console.error('Error de base de datos:', dbError)
-                console.warn('Permitiendo acceso temporal - la tabla usuarios no existe o hay un error de conexión')
-                // Cargar perfil básico sin verificar rol
+                // Error de BD — permitir acceso si hay sesión válida
+                console.warn('DB error, allowing access with session:', dbError.message)
                 setUserId(user.id)
-                setProfileData({
-                    nombre: user.email?.split('@')[0] || 'Admin',
-                    apellido: '',
-                    email: user.email || '',
-                    telefono: '',
-                    rol: 'Admin',
-                    foto: null
-                })
-                setEditForm({
-                    nombre: user.email?.split('@')[0] || 'Admin',
-                    apellido: '',
-                    email: user.email || '',
-                    telefono: '',
-                    rol: 'Admin',
-                    foto: null
-                })
+                const nombre = user.email?.split('@')[0] || 'Admin'
+                setProfileData({ nombre, apellido: '', email: user.email || '', telefono: '', rol: 'Admin', foto: null })
+                setEditForm({ nombre, apellido: '', email: user.email || '', telefono: '', rol: 'Admin', foto: null })
                 setLoading(false)
                 return
             }
 
             if (!userData) {
-                console.warn('Usuario no encontrado en la base de datos:', user.id)
+                // Usuario en auth pero no en tabla — insertarlo y dar acceso
+                await supabase.from('usuarios').upsert({
+                    id: user.id,
+                    email: user.email,
+                    nombre: user.email?.split('@')[0] || 'Admin',
+                    apellido: '',
+                    rol: 'turista'
+                })
                 setAccessDenied(true)
                 setLoading(false)
                 return
             }
 
             if (userData.rol !== 'admin_adventur') {
-                console.warn('Usuario sin permisos de admin:', user.id, userData.rol)
                 setAccessDenied(true)
                 setLoading(false)
                 return
             }
 
-            // Si todo está bien, cargar el perfil
-            await loadUserProfile()
+            // Acceso concedido — cargar perfil
+            setUserId(user.id)
+            const profile = {
+                nombre: userData.nombre || user.email?.split('@')[0] || '',
+                apellido: userData.apellido || '',
+                email: userData.email || user.email || '',
+                telefono: userData.telefono || '',
+                rol: 'Admin',
+                foto: userData.foto_perfil || null
+            }
+            setProfileData(profile)
+            setEditForm(profile)
+            setLoading(false)
         } catch (error) {
             console.error('Error en checkAdminAccess:', error)
-            setAccessDenied(true)
-            setLoading(false)
+            router.replace('/login?redirect=/admin')
         }
     }
 
-    const loadUserProfile = async () => {
-        try {
-            const { data: { user } } = await supabase.auth.getUser()
-            
-            if (!user) {
-                return
-            }
-
-            setUserId(user.id)
-
-            // Obtener datos del usuario desde la tabla usuarios
-            const { data: userData, error } = await supabase
-                .from('usuarios')
-                .select('*')
-                .eq('id', user.id)
-                .single()
-
-            if (error) {
-                console.error('Error loading user:', error)
-                return
-            }
-
-            if (userData) {
-                const profile = {
-                    nombre: userData.nombre || '',
-                    apellido: userData.apellido || '',
-                    email: userData.email || user.email || '',
-                    telefono: userData.telefono || '',
-                    rol: userData.rol === 'admin_adventur' ? 'Admin' : userData.rol === 'propietario' ? 'Propietario' : 'Usuario',
-                    foto: userData.foto_perfil || null
-                }
-                setProfileData(profile)
-                setEditForm(profile)
-            }
-        } catch (error) {
-            console.error('Error:', error)
-        } finally {
-            setLoading(false)
-        }
-    }
 
     const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (!file || !userId) return
 
+        const fileError = validateProfilePhotoFile(file)
+        if (fileError) {
+            await Swal.fire({
+                icon: 'error',
+                title: 'Archivo invalido',
+                text: fileError,
+                confirmButtonColor: '#3B82F6'
+            })
+            e.target.value = ''
+            return
+        }
+
         try {
-            // Subir imagen a Supabase Storage
-            const fileExt = file.name.split('.').pop()
-            const fileName = `${userId}/${Date.now()}.${fileExt}`
+            const { publicUrl } = await uploadProfilePhoto({
+                supabase,
+                file,
+                ownerUserId: userId,
+            })
 
-            const { error: uploadError } = await supabase.storage
-                .from('profile-photos')
-                .upload(fileName, file, { upsert: true })
-
-            if (uploadError) {
-                console.error('Error uploading file:', uploadError)
-                await Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Error al subir la imagen',
-                    confirmButtonColor: '#3B82F6'
-                })
-                return
-            }
 
             // Obtener URL pública
-            const { data: { publicUrl } } = supabase.storage
-                .from('profile-photos')
-                .getPublicUrl(fileName)
-
-            setEditForm({ ...editForm, foto: publicUrl })
+            setEditForm(prev => ({ ...prev, foto: publicUrl }))
         } catch (error) {
             console.error('Error:', error)
             await Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: 'Error al procesar la imagen',
+                text: error instanceof Error ? `No se pudo subir la imagen. ${error.message}` : 'Error al procesar la imagen',
                 confirmButtonColor: '#3B82F6'
             })
+        } finally {
+            e.target.value = ''
         }
     }
 
@@ -274,8 +244,8 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
             <div className="min-h-screen flex items-center justify-center bg-gray-50 px-6">
                 <div className="text-center max-w-md">
                     <div className="mb-8">
-                        <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <svg className="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg className="w-10 h-10 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                             </svg>
                         </div>
@@ -289,13 +259,13 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
                         <div className="flex flex-col sm:flex-row gap-3 justify-center">
                             <Link
                                 href="/"
-                                className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors inline-block"
+                                className="px-6 py-3 bg-yellow-400 hover:bg-yellow-400 text-gray-900 font-semibold rounded-lg transition-colors inline-block"
                             >
                                 Ir al inicio
                             </Link>
                             <Link
                                 href="/login"
-                                className="px-6 py-3 border-2 border-red-600 text-red-600 hover:bg-red-600 hover:text-white font-semibold rounded-lg transition-colors inline-block"
+                                className="px-6 py-3 border-2 border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-gray-900 font-semibold rounded-lg transition-colors inline-block"
                             >
                                 Cambiar de cuenta
                             </Link>
@@ -386,12 +356,12 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
                                     <span className="flex-1">{item.label}</span>
                                 )}
                                 {isSidebarOpen && item.badge && (
-                                    <span className="px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded-full animate-pulse">
+                                    <span className="px-2 py-0.5 bg-yellow-300 text-white text-xs font-bold rounded-full animate-pulse">
                                         {item.badge}
                                     </span>
                                 )}
                                 {!isSidebarOpen && item.badge && (
-                                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-300 rounded-full animate-pulse" />
                                 )}
                             </Link>
                         )
@@ -410,7 +380,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
                     </Link>
                     <button
                         onClick={handleLogout}
-                        className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-gray-600 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 hover:text-red-700 transition-all duration-200 group w-full ${!isSidebarOpen && 'justify-center'}`}
+                        className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-gray-600 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 hover:text-yellow-400 transition-all duration-200 group w-full ${!isSidebarOpen && 'justify-center'}`}
                         title={!isSidebarOpen ? 'Cerrar sesión' : undefined}
                     >
                         <LogOut size={20} className="group-hover:scale-110 transition-transform duration-200 flex-shrink-0" />
@@ -650,7 +620,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
                                     onClick={() => setIsEditing(true)}
                                     className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all font-semibold flex items-center gap-2"
                                 >
-                                    <User size={18} />
+                                    <Users size={18} />
                                     Editar Perfil
                                 </button>
                             </div>

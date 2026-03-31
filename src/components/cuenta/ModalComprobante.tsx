@@ -58,7 +58,7 @@ export default function ModalComprobante({ isOpen, onClose, reserva, onSuccess }
           <p class="mb-4">El ${tipoComprobante} ha sido generado exitosamente.</p>
           ${data.nubefact.enlace_del_pdf ? `
             <a href="${data.nubefact.enlace_del_pdf}" target="_blank" 
-               class="inline-flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all">
+               class="inline-flex items-center gap-2 px-6 py-3 bg-yellow-400 text-gray-900 rounded-lg hover:bg-yellow-400 transition-all">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
@@ -88,7 +88,7 @@ export default function ModalComprobante({ isOpen, onClose, reserva, onSuccess }
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn">
       <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-fadeInUp">
         {/* Header */}
-        <div className="bg-gradient-to-r from-red-600 to-red-700 text-white p-6 rounded-t-2xl relative overflow-hidden">
+        <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-white p-6 rounded-t-2xl relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
           <div className="relative z-10 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -97,7 +97,7 @@ export default function ModalComprobante({ isOpen, onClose, reserva, onSuccess }
               </div>
               <div>
                 <h2 className="text-2xl font-bold">Generar Comprobante</h2>
-                <p className="text-sm text-red-100">Factura o Boleta Electrónica</p>
+                <p className="text-sm text-yellow-100">Factura o Boleta Electrónica</p>
               </div>
             </div>
             <button
@@ -137,13 +137,13 @@ export default function ModalComprobante({ isOpen, onClose, reserva, onSuccess }
                 onClick={() => setTipoComprobante('boleta')}
                 className={`p-4 rounded-xl border-2 transition-all ${
                   tipoComprobante === 'boleta'
-                    ? 'border-red-600 bg-red-50'
+                    ? 'border-yellow-400 bg-yellow-50'
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
               >
                 <div className="text-center">
                   <FileText className={`w-8 h-8 mx-auto mb-2 ${
-                    tipoComprobante === 'boleta' ? 'text-red-600' : 'text-gray-400'
+                    tipoComprobante === 'boleta' ? 'text-yellow-400' : 'text-gray-400'
                   }`} />
                   <p className="font-bold text-gray-900">Boleta</p>
                   <p className="text-xs text-gray-600">Para personas naturales</p>
@@ -157,13 +157,13 @@ export default function ModalComprobante({ isOpen, onClose, reserva, onSuccess }
                 }}
                 className={`p-4 rounded-xl border-2 transition-all ${
                   tipoComprobante === 'factura'
-                    ? 'border-red-600 bg-red-50'
+                    ? 'border-yellow-400 bg-yellow-50'
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
               >
                 <div className="text-center">
                   <FileText className={`w-8 h-8 mx-auto mb-2 ${
-                    tipoComprobante === 'factura' ? 'text-red-600' : 'text-gray-400'
+                    tipoComprobante === 'factura' ? 'text-yellow-400' : 'text-gray-400'
                   }`} />
                   <p className="font-bold text-gray-900">Factura</p>
                   <p className="text-xs text-gray-600">Para empresas</p>
@@ -181,7 +181,7 @@ export default function ModalComprobante({ isOpen, onClose, reserva, onSuccess }
               <select
                 value={formData.tipo_documento}
                 onChange={(e) => setFormData({ ...formData, tipo_documento: e.target.value })}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-red-600 focus:ring-2 focus:ring-red-600/20 outline-none transition-all text-gray-900"
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 outline-none transition-all text-gray-900"
                 required
               >
                 <option value="1">DNI</option>
@@ -201,7 +201,7 @@ export default function ModalComprobante({ isOpen, onClose, reserva, onSuccess }
               onChange={(e) => setFormData({ ...formData, numero_documento: e.target.value })}
               placeholder={tipoComprobante === 'factura' ? '20123456789' : formData.tipo_documento === '6' ? '20123456789' : '12345678'}
               maxLength={tipoComprobante === 'factura' || formData.tipo_documento === '6' ? 11 : 8}
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-red-600 focus:ring-2 focus:ring-red-600/20 outline-none transition-all text-gray-900 placeholder:text-gray-400"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 outline-none transition-all text-gray-900 placeholder:text-gray-400"
               required
             />
           </div>
@@ -216,7 +216,7 @@ export default function ModalComprobante({ isOpen, onClose, reserva, onSuccess }
               value={formData.denominacion}
               onChange={(e) => setFormData({ ...formData, denominacion: e.target.value })}
               placeholder={tipoComprobante === 'factura' ? 'EMPRESA SAC' : 'Juan Pérez García'}
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-red-600 focus:ring-2 focus:ring-red-600/20 outline-none transition-all text-gray-900 placeholder:text-gray-400"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 outline-none transition-all text-gray-900 placeholder:text-gray-400"
               required
             />
           </div>
@@ -231,7 +231,7 @@ export default function ModalComprobante({ isOpen, onClose, reserva, onSuccess }
               value={formData.direccion}
               onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
               placeholder="Av. Principal 123, Lima"
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-red-600 focus:ring-2 focus:ring-red-600/20 outline-none transition-all text-gray-900 placeholder:text-gray-400"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 outline-none transition-all text-gray-900 placeholder:text-gray-400"
               required
             />
           </div>
@@ -246,7 +246,7 @@ export default function ModalComprobante({ isOpen, onClose, reserva, onSuccess }
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               placeholder="correo@ejemplo.com"
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-red-600 focus:ring-2 focus:ring-red-600/20 outline-none transition-all text-gray-900 placeholder:text-gray-400"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 outline-none transition-all text-gray-900 placeholder:text-gray-400"
             />
             <p className="text-xs text-gray-600 mt-1">
               El comprobante se enviará automáticamente a este correo
@@ -266,7 +266,7 @@ export default function ModalComprobante({ isOpen, onClose, reserva, onSuccess }
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 px-6 py-3 bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-400 hover:to-red-800 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>

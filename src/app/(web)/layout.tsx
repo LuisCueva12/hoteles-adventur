@@ -1,18 +1,16 @@
-import { Navbar } from '@/components/web/Navbar'
-import { Footer } from '@/components/web/Footer'
-import { ScrollToTop } from '@/components/web/ScrollToTop'
-import { Breadcrumbs } from '@/components/web/Breadcrumbs'
-import { WhatsAppButton } from '@/components/web/WhatsAppButton'
+import { Navbar } from '@/components/web/BarraNavegacion'
+import { Footer } from '@/components/web/PiePagina'
+import { VolverArriba } from '@/components/web/VolverArriba'
+import { MigasPan } from '@/components/web/MigasPan'
 
 export default function WebLayout({ children }: { children: React.ReactNode }) {
     return (
         <div className="min-h-screen flex flex-col">
             <Navbar />
-            <Breadcrumbs />
+            <MigasPan />
             <main className="flex-1">{children}</main>
             <Footer />
-            <WhatsAppButton />
-            <ScrollToTop />
+            <VolverArriba />
         </div>
     )
 }

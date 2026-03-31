@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { DataTable } from '@/components/admin/DataTable'
+import { DataTable } from '@/components/admin/TablasDatos'
 import { Modal } from '@/components/admin/Modal'
-import { adminService } from '@/services/admin.service'
-import { notificationsService } from '@/services/notifications.service'
+import { adminService } from '@/services/admin.servicio'
+import { notificationsService } from '@/services/notificaciones.servicio'
 import { RefreshCw, Loader2, Calendar, User, Home, CreditCard, Eye, Trash2 } from 'lucide-react'
 import Swal from 'sweetalert2'
 
@@ -145,7 +145,7 @@ export default function ReservasAdminPage() {
 
         if (result.isConfirmed) {
             try {
-                // Implementar eliminación si es necesario
+                await adminService.deleteReserva(reserva.id)
                 await loadReservas()
                 await Swal.fire({
                     icon: 'success',
@@ -219,15 +219,15 @@ export default function ReservasAdminPage() {
                 </div>
                 <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-1 cursor-pointer">
                     <div className="flex items-center justify-between mb-3">
-                        <p className="text-green-100 text-sm font-semibold uppercase tracking-wide">Confirmadas</p>
+                        <p className="text-yellow-100 text-sm font-semibold uppercase tracking-wide">Confirmadas</p>
                         <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
                             <Calendar className="w-6 h-6 text-white" />
                         </div>
                     </div>
                     <p className="text-5xl font-bold mb-1">{reservas.filter(r => r.estado === 'confirmada').length}</p>
-                    <p className="text-green-100 text-xs">Reservas activas confirmadas</p>
+                    <p className="text-yellow-100 text-xs">Reservas activas confirmadas</p>
                 </div>
-                <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-1 cursor-pointer">
+                <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-2xl p-6 text-white shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-1 cursor-pointer">
                     <div className="flex items-center justify-between mb-3">
                         <p className="text-yellow-100 text-sm font-semibold uppercase tracking-wide">Pendientes</p>
                         <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
@@ -237,15 +237,15 @@ export default function ReservasAdminPage() {
                     <p className="text-5xl font-bold mb-1">{reservas.filter(r => r.estado === 'pendiente').length}</p>
                     <p className="text-yellow-100 text-xs">Esperando confirmación</p>
                 </div>
-                <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-1 cursor-pointer">
+                <div className="bg-gradient-to-br from-yellow-300 to-yellow-400 rounded-2xl p-6 text-white shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-1 cursor-pointer">
                     <div className="flex items-center justify-between mb-3">
-                        <p className="text-red-100 text-sm font-semibold uppercase tracking-wide">Canceladas</p>
+                        <p className="text-yellow-100 text-sm font-semibold uppercase tracking-wide">Canceladas</p>
                         <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
                             <Calendar className="w-6 h-6 text-white" />
                         </div>
                     </div>
                     <p className="text-5xl font-bold mb-1">{reservas.filter(r => r.estado === 'cancelada').length}</p>
-                    <p className="text-red-100 text-xs">Reservas canceladas</p>
+                    <p className="text-yellow-100 text-xs">Reservas canceladas</p>
                 </div>
             </div>
 
@@ -340,7 +340,7 @@ export default function ReservasAdminPage() {
                                         <span className="text-sm font-semibold text-gray-900">{reserva.personas}</span>
                                     </td>
                                     <td className="px-6 py-4 text-right">
-                                        <span className="text-sm font-bold text-green-600">S/. {reserva.total.toLocaleString()}</span>
+                                        <span className="text-sm font-bold text-yellow-400">S/. {reserva.total.toLocaleString()}</span>
                                     </td>
                                     <td className="px-6 py-4 text-center">
                                         <select
@@ -383,9 +383,9 @@ export default function ReservasAdminPage() {
                                                 }
                                             }}
                                             className={`px-3 py-1.5 rounded-full text-xs font-semibold border cursor-pointer transition-all hover:shadow-md ${
-                                                reserva.estado === 'confirmada' ? 'bg-green-100 text-green-700 border-green-300 hover:bg-green-200' :
-                                                reserva.estado === 'pendiente' ? 'bg-yellow-100 text-yellow-700 border-yellow-300 hover:bg-yellow-200' :
-                                                'bg-red-100 text-red-700 border-red-300 hover:bg-red-200'
+                                                reserva.estado === 'confirmada' ? 'bg-yellow-100 text-yellow-400 border-yellow-300 hover:bg-yellow-100' :
+                                                reserva.estado === 'pendiente' ? 'bg-yellow-100 text-yellow-400 border-yellow-300 hover:bg-yellow-100' :
+                                                'bg-yellow-100 text-yellow-400 border-yellow-300 hover:bg-yellow-100'
                                             }`}
                                         >
                                             <option value="pendiente">⏱ Pendiente</option>
@@ -404,7 +404,7 @@ export default function ReservasAdminPage() {
                                             </button>
                                             <button
                                                 onClick={() => handleDelete(reserva)}
-                                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                                className="p-2 text-yellow-400 hover:bg-yellow-50 rounded-lg transition-all"
                                                 title="Eliminar"
                                             >
                                                 <Trash2 size={16} />
@@ -436,9 +436,9 @@ export default function ReservasAdminPage() {
                                 <div className="text-right">
                                     <p className="text-sm opacity-90 mb-1">Estado</p>
                                     <span className={`inline-flex px-4 py-2 rounded-full text-sm font-bold ${
-                                        selectedReserva.estado === 'confirmada' ? 'bg-green-500' :
-                                        selectedReserva.estado === 'pendiente' ? 'bg-yellow-500' :
-                                        'bg-red-500'
+                                        selectedReserva.estado === 'confirmada' ? 'bg-yellow-400' :
+                                        selectedReserva.estado === 'pendiente' ? 'bg-yellow-400' :
+                                        'bg-yellow-300'
                                     }`}>
                                         {selectedReserva.estado.charAt(0).toUpperCase() + selectedReserva.estado.slice(1)}
                                     </span>
@@ -470,18 +470,18 @@ export default function ReservasAdminPage() {
                             </div>
 
                             {/* Alojamiento */}
-                            <div className="bg-gradient-to-br from-green-50 to-green-100 p-5 rounded-xl border-2 border-green-200 shadow-sm">
+                            <div className="bg-gradient-to-br from-green-50 to-green-100 p-5 rounded-xl border-2 border-yellow-200 shadow-sm">
                                 <div className="flex items-start gap-4">
-                                    <div className="w-14 h-14 bg-green-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
+                                    <div className="w-14 h-14 bg-yellow-400 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
                                         <Home className="w-7 h-7 text-white" />
                                     </div>
                                     <div className="flex-1">
-                                        <p className="text-xs text-green-700 font-semibold uppercase tracking-wide mb-1">Alojamiento</p>
+                                        <p className="text-xs text-yellow-400 font-semibold uppercase tracking-wide mb-1">Alojamiento</p>
                                         <p className="text-gray-900 font-bold text-lg mb-1">
                                             {selectedReserva.alojamientos?.nombre || 'Sin información'}
                                         </p>
                                         <p className="text-sm text-gray-600 flex items-center gap-1">
-                                            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                                            <span className="w-2 h-2 bg-yellow-400 rounded-full"></span>
                                             {selectedReserva.alojamientos?.tipo || 'Sin tipo'}
                                         </p>
                                     </div>
@@ -548,13 +548,13 @@ export default function ReservasAdminPage() {
                         {/* Información de pagos */}
                         <div className="bg-gradient-to-br from-yellow-50 to-orange-50 p-6 rounded-xl border-2 border-yellow-200 shadow-sm">
                             <div className="flex items-center gap-3 mb-4">
-                                <CreditCard className="w-6 h-6 text-yellow-700" />
+                                <CreditCard className="w-6 h-6 text-yellow-400" />
                                 <h3 className="text-lg font-bold text-gray-900">Información de Pago</h3>
                             </div>
                             <div className="space-y-3">
                                 <div className="flex justify-between items-center bg-white/70 backdrop-blur-sm p-4 rounded-lg">
                                     <span className="text-gray-700 font-medium">Adelanto pagado</span>
-                                    <span className="text-xl font-bold text-yellow-700">S/. {selectedReserva.adelanto?.toLocaleString() || '0'}</span>
+                                    <span className="text-xl font-bold text-yellow-400">S/. {selectedReserva.adelanto?.toLocaleString() || '0'}</span>
                                 </div>
                                 <div className="flex justify-between items-center bg-white/70 backdrop-blur-sm p-4 rounded-lg">
                                     <span className="text-gray-700 font-medium">Saldo pendiente</span>
@@ -570,7 +570,7 @@ export default function ReservasAdminPage() {
                                                 <div key={idx} className="flex justify-between text-sm">
                                                     <span className="text-gray-600">{pago.metodo}</span>
                                                     <span className={`font-semibold ${
-                                                        pago.estado === 'aprobado' ? 'text-green-600' : 'text-gray-600'
+                                                        pago.estado === 'aprobado' ? 'text-yellow-400' : 'text-gray-600'
                                                     }`}>
                                                         S/. {pago.monto.toLocaleString()}
                                                     </span>
@@ -608,19 +608,19 @@ export default function ReservasAdminPage() {
                             <div className="grid grid-cols-3 gap-3">
                                 <button
                                     onClick={() => handleChangeStatus('confirmada')}
-                                    className="px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl transition-all font-bold shadow-md hover:shadow-lg transform hover:scale-105"
+                                    className="px-4 py-3 bg-yellow-400 hover:bg-green-600 text-gray-900 rounded-xl transition-all font-bold shadow-md hover:shadow-lg transform hover:scale-105"
                                 >
                                     ✓ Confirmar
                                 </button>
                                 <button
                                     onClick={() => handleChangeStatus('pendiente')}
-                                    className="px-4 py-3 bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl transition-all font-bold shadow-md hover:shadow-lg transform hover:scale-105"
+                                    className="px-4 py-3 bg-yellow-400 hover:bg-yellow-400 text-gray-900 rounded-xl transition-all font-bold shadow-md hover:shadow-lg transform hover:scale-105"
                                 >
                                     ⏱ Pendiente
                                 </button>
                                 <button
                                     onClick={() => handleChangeStatus('cancelada')}
-                                    className="px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl transition-all font-bold shadow-md hover:shadow-lg transform hover:scale-105"
+                                    className="px-4 py-3 bg-yellow-300 hover:bg-yellow-400 text-gray-900 rounded-xl transition-all font-bold shadow-md hover:shadow-lg transform hover:scale-105"
                                 >
                                     ✕ Cancelar
                                 </button>

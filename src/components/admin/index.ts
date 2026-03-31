@@ -1,3 +1,3 @@
-export { StatCard } from './StatCard'
-export { DataTable } from './DataTable'
+export { StatCard } from './TarjetaEstadistica'
+export { DataTable } from './TablasDatos'
 export { Modal } from './Modal'

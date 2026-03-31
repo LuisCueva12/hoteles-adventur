@@ -1,264 +1,352 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { NextRequest, NextResponse } from 'next/server'
 
-export async function POST(request: NextRequest) {
-    try {
-        const { message, history } = await request.json()
+import { createClient } from '@/utils/supabase/server'
 
-        // Verificar que la API key existe
-        if (!process.env.GEMINI_API_KEY) {
-            console.error('GEMINI_API_KEY no está configurada')
-            return NextResponse.json(
-                { error: 'API key no configurada. Por favor configura GEMINI_API_KEY en el archivo .env' },
-                { status: 500 }
-            )
-        }
+type ChatIntent =
+  | 'booking'
+  | 'pricing'
+  | 'romantic'
+  | 'family'
+  | 'location'
+  | 'services'
+  | 'nature'
+  | 'general'
 
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
-        
-        // Usar el modelo gemini-2.5-flash que está disponible
-        const model = genAI.getGenerativeModel({ 
-            model: 'gemini-2.5-flash'
-        })
+interface HistoryMessage {
+  role: 'user' | 'assistant'
+  content: string
+}
 
-        // Construir el contexto completo con información detallada
-        let fullPrompt = `Eres un asistente virtual experto y amigable de Adventur, un exclusivo hotel de lujo 5 estrellas.
+interface RoomRecord {
+  id: string
+  nombre: string
+  descripcion: string | null
+  categoria: string
+  tipo: string
+  precio_base: number
+  capacidad_maxima: number
+  distrito: string | null
+  provincia: string | null
+  departamento: string | null
+  fotos_alojamiento?: Array<{
+    url: string
+    es_principal: boolean
+  }>
+}
 
-INFORMACIÓN DEL HOTEL:
-🏨 Adventur Hotel & Resort
-📍 Ubicación: Zona exclusiva con vistas panorámicas
-⭐ Categoría: 5 estrellas - Lujo Premium
+interface RoomRecommendation {
+  id: string
+  name: string
+  description: string
+  image: string
+  price: number
+  capacity: number
+  location: string
+  type: string
+}
 
-HABITACIONES DISPONIBLES:
-1. Suite Presidencial (S/ 800/noche)
-   - 120m², capacidad 4 personas
-   - Vista panorámica, jacuzzi privado, sala de estar
-   - Servicios: mayordomo 24/7, minibar premium, terraza privada
+interface ChatAction {
+  label: string
+  href: string
+  variant?: 'primary' | 'secondary'
+}
 
-2. Suite Ejecutiva (S/ 500/noche)
-   - 80m², capacidad 3 personas
-   - Escritorio ejecutivo, sala de reuniones privada
-   - Servicios: desayuno gourmet, late check-out
+function inferIntent(message: string): ChatIntent {
+  const normalized = message.toLowerCase()
 
-3. Habitación Deluxe (S/ 350/noche)
-   - 50m², capacidad 2 personas
-   - Balcón privado, cama king size
-   - Servicios: amenidades premium, room service
+  if (/(reserv|disponib|fecha|check|agenda|book)/.test(normalized)) return 'booking'
+  if (/(precio|costo|tarifa|econom|barat|presupuesto)/.test(normalized)) return 'pricing'
+  if (/(romant|pareja|anivers|luna de miel)/.test(normalized)) return 'romantic'
+  if (/(famil|ninos|niños|grupo|personas|huesped)/.test(normalized)) return 'family'
+  if (/(ubic|direccion|donde|como llegar|cerca)/.test(normalized)) return 'location'
+  if (/(spa|servicio|amenidad|restaurante|wifi|piscina|desayuno)/.test(normalized)) return 'services'
+  if (/(naturaleza|cabana|cabaña|ecolodge|montana|montaña|bosque)/.test(normalized)) return 'nature'
 
-4. Habitación Superior (S/ 250/noche)
-   - 40m², capacidad 2 personas
-   - Vista al jardín, baño de mármol
-   - Servicios: desayuno buffet incluido
+  return 'general'
+}
 
-SERVICIOS PREMIUM:
-✨ Spa & Wellness Center - Masajes, sauna, tratamientos faciales
-🍽️ Restaurante Gourmet - Cocina internacional y local
-🏊 Piscina Infinity - Vista panorámica, bar acuático
-💪 Gimnasio 24/7 - Equipamiento de última generación
-🚗 Transporte - Traslado aeropuerto, tours privados
-🎯 Eventos - Salones para bodas, conferencias, celebraciones
-🌟 Concierge 24/7 - Reservas, recomendaciones, asistencia
+function buildSuggestions(intent: ChatIntent) {
+  const suggestionsByIntent: Record<ChatIntent, string[]> = {
+    booking: [
+      'Que opcion me recomiendas para este fin de semana',
+      'Que necesito para reservar',
+      'Muestrame opciones para 2 personas',
+    ],
+    pricing: [
+      'Cual es la opcion mas economica',
+      'Comparame precios y capacidad',
+      'Hay promociones o descuentos',
+    ],
+    romantic: [
+      'Quiero una opcion premium para pareja',
+      'Que alojamiento tiene mejor vista',
+      'Muestrame una escapada romantica',
+    ],
+    family: [
+      'Necesito espacio para 4 personas',
+      'Que opcion conviene para familia',
+      'Muestrame alojamientos amplios',
+    ],
+    location: [
+      'Que alojamiento esta en zona tranquila',
+      'Muestrame opciones en naturaleza',
+      'Quiero ver todas las ubicaciones',
+    ],
+    services: [
+      'Que incluye la estadia',
+      'Tienen desayuno y estacionamiento',
+      'Que servicios premium ofrecen',
+    ],
+    nature: [
+      'Muestrame cabanas o ecolodges',
+      'Quiero una experiencia en naturaleza',
+      'Que opcion tiene mejor entorno',
+    ],
+    general: [
+      'Recomiendame un alojamiento',
+      'Cuales son los precios',
+      'Ayudame a elegir segun mi viaje',
+    ],
+  }
 
-POLÍTICAS:
-- Check-in: 3:00 PM | Check-out: 12:00 PM
-- Adelanto: 30% para confirmar reserva
-- Cancelación gratuita hasta 48h antes
-- Mascotas bienvenidas (cargo adicional)
-- WiFi de alta velocidad incluido
-- Estacionamiento gratuito
+  return suggestionsByIntent[intent]
+}
 
-OFERTAS ESPECIALES:
-🎁 Paquete Romántico: 2 noches + cena + spa (15% descuento)
-👨‍👩‍👧‍👦 Paquete Familiar: 3+ noches (20% descuento)
-💼 Tarifa Corporativa: Empresas (25% descuento)
-🌙 Estadía Larga: 7+ noches (30% descuento)
+function buildActions(intent: ChatIntent): ChatAction[] {
+  if (intent === 'booking') {
+    return [
+      { label: 'Explorar alojamientos', href: '/hoteles', variant: 'primary' },
+      { label: 'Ir a reservas', href: '/reservas', variant: 'secondary' },
+    ]
+  }
 
-INSTRUCCIONES DE RESPUESTA:
-- NO uses asteriscos (*) ni formato Markdown
-- Estructura tus respuestas de forma clara y organizada
-- Usa saltos de línea para separar secciones
-- Usa títulos con dos puntos (:) para secciones importantes
-- Usa listas con guiones (-) o emojis para enumerar características
-- Sé específico con precios, capacidades y servicios
-- Responde de manera cálida, profesional y MUY detallada
-- SIEMPRE incluye tarjetas [ROOM:] cuando hables de habitaciones específicas
-- Sugiere servicios adicionales relevantes según la consulta
-- Menciona ofertas especiales cuando sea apropiado
-- Invita a reservar o contactar para más información
-- Usa un tono conversacional pero elegante y sofisticado
-- Proporciona información completa y útil en cada respuesta
-- Si el usuario pregunta por precios, muestra TODAS las opciones con tarjetas
-- Si el usuario pregunta por servicios, sé descriptivo y entusiasta
-- Personaliza las recomendaciones según las necesidades del usuario
-- Usa emojis estratégicamente (máximo 5 por respuesta) para destacar puntos importantes
+  if (intent === 'location') {
+    return [
+      { label: 'Ver ubicaciones', href: '/hoteles', variant: 'primary' },
+      { label: 'Contactar', href: '/contacto', variant: 'secondary' },
+    ]
+  }
 
-ESTRUCTURA RECOMENDADA PARA RESPUESTAS LARGAS:
+  return [
+    { label: 'Ver alojamientos', href: '/hoteles', variant: 'primary' },
+    { label: 'Contactar', href: '/contacto', variant: 'secondary' },
+  ]
+}
 
-Saludo inicial breve
+function selectRooms(intent: ChatIntent, rooms: RoomRecord[], message: string): RoomRecord[] {
+  const normalized = message.toLowerCase()
+  const base = [...rooms]
 
-Sección Principal:
-- Punto 1 con detalles
-- Punto 2 con detalles
-- Punto 3 con detalles
+  if (intent === 'pricing') {
+    return base.sort((a, b) => a.precio_base - b.precio_base).slice(0, 3)
+  }
 
-[ROOM:slug] (si aplica)
-Nombre
-Precio
-Descripción
+  if (intent === 'romantic') {
+    return base
+      .filter((room) => /parejas|premium/i.test(`${room.categoria} ${room.tipo}`))
+      .sort((a, b) => b.precio_base - a.precio_base)
+      .slice(0, 3)
+  }
 
-Información Adicional:
-- Detalle relevante 1
-- Detalle relevante 2
+  if (intent === 'family') {
+    return base
+      .filter((room) => room.capacidad_maxima >= 3 || /familiar/i.test(room.categoria))
+      .sort((a, b) => b.capacidad_maxima - a.capacidad_maxima)
+      .slice(0, 3)
+  }
 
-Cierre con llamado a la acción
+  if (intent === 'nature') {
+    return base
+      .filter((room) => /naturaleza|ecolodge|caba/i.test(`${room.categoria} ${room.tipo}`))
+      .slice(0, 3)
+  }
 
-FORMATO DE RESPUESTA PARA HABITACIONES:
-Cuando el usuario pregunte sobre habitaciones específicas o pida recomendaciones, DEBES incluir tarjetas visuales usando este formato EXACTO:
+  const textMatches = base.filter((room) =>
+    `${room.nombre} ${room.descripcion ?? ''} ${room.categoria} ${room.tipo} ${room.distrito ?? ''} ${room.provincia ?? ''}`
+      .toLowerCase()
+      .includes(normalized),
+  )
 
-[ROOM:suite-presidencial]
-Suite Presidencial
-S/ 800 por noche
-120m², capacidad 4 personas, jacuzzi privado, vista panorámica
+  if (textMatches.length) return textMatches.slice(0, 3)
 
-[ROOM:suite-ejecutiva]
-Suite Ejecutiva
-S/ 500 por noche
-80m², capacidad 3 personas, escritorio ejecutivo, sala de reuniones
+  return base.sort((a, b) => a.precio_base - b.precio_base).slice(0, 3)
+}
 
-Usa estos slugs EXACTOS:
-- suite-presidencial
-- suite-ejecutiva
-- habitacion-deluxe
-- habitacion-superior
+function mapRoom(room: RoomRecord): RoomRecommendation {
+  const principal = room.fotos_alojamiento?.find((photo) => photo.es_principal)
+  const fallback = room.fotos_alojamiento?.[0]
 
-EJEMPLOS DE RESPUESTAS:
+  return {
+    id: room.id,
+    name: room.nombre,
+    description:
+      room.descripcion?.trim() ||
+      `${room.tipo} categoria ${room.categoria} con capacidad para ${room.capacidad_maxima} personas.`,
+    image:
+      principal?.url ||
+      fallback?.url ||
+      'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=1200&q=80',
+    price: Number(room.precio_base),
+    capacity: room.capacidad_maxima,
+    location: [room.distrito, room.provincia].filter(Boolean).join(', '),
+    type: room.tipo,
+  }
+}
 
-Usuario: "¿Qué habitaciones tienen?"
-Respuesta: "¡Es un placer mostrarte las magníficas opciones de alojamiento que Adventur Hotel & Resort tiene para ti! 🏨 Contamos con una selección de habitaciones y suites diseñadas para el máximo confort y lujo.
+function buildHotelContext(rooms: RoomRecord[]) {
+  const lines = rooms.map((room, index) => {
+    const location = [room.distrito, room.provincia, room.departamento].filter(Boolean).join(', ')
+    return `${index + 1}. ${room.nombre} | tipo: ${room.tipo} | categoria: ${room.categoria} | precio: S/. ${room.precio_base} | capacidad: ${room.capacidad_maxima} | ubicacion: ${location || 'No especificada'} | descripcion: ${room.descripcion || 'Sin descripcion'}`
+  })
 
-Nuestras Opciones de Alojamiento:
+  return lines.join('\n')
+}
 
-[ROOM:suite-presidencial]
-Suite Presidencial
-S/ 800 por noche
-120m², capacidad 4 personas, jacuzzi privado, vista panorámica
-
-[ROOM:suite-ejecutiva]
-Suite Ejecutiva
-S/ 500 por noche
-80m², capacidad 3 personas, escritorio ejecutivo, sala de reuniones
-
-[ROOM:habitacion-deluxe]
-Habitación Deluxe
-S/ 350 por noche
-50m², capacidad 2 personas, balcón privado, cama king size
-
-[ROOM:habitacion-superior]
-Habitación Superior
-S/ 250 por noche
-40m², capacidad 2 personas, vista al jardín, baño de mármol
-
-Todas Incluyen:
-- WiFi de alta velocidad gratuito
-- Desayuno buffet gourmet
-- Acceso completo a spa y gimnasio
-- Room service 24/7
-- Amenidades premium
-
-¿Te gustaría conocer más detalles de alguna habitación en particular? ✨"
-
-Usuario: "Busco algo romántico"
-Respuesta: "¡Perfecto para una escapada romántica inolvidable! 💕 Te recomiendo nuestra opción más exclusiva:
-
-[ROOM:suite-presidencial]
-Suite Presidencial
-S/ 800 por noche
-120m², capacidad 4 personas, jacuzzi privado, vista panorámica
-
-Por Qué Es Perfecta Para Parejas:
-- Jacuzzi privado con vista panorámica espectacular
-- Terraza exclusiva ideal para cenas románticas bajo las estrellas
-- Servicio de mayordomo 24/7 para atender cada detalle
-- Decoración especial con pétalos de rosa y velas aromáticas (sin cargo adicional)
-- Máxima privacidad y ambiente íntimo
-
-Paquete Romántico Especial:
-🎁 Incluye: 2 noches + cena gourmet para dos + masaje de pareja en el spa
-💰 Precio especial: S/ 1,360 (15% de descuento - ahorras S/ 240)
-
-Servicios Adicionales Recomendados:
-- Desayuno en la habitación con champagne
-- Sesión fotográfica profesional en el hotel
-- Tour privado a lugares románticos cercanos
-
-¿Te gustaría que te ayude con la reserva de este paquete romántico? 🌹"
-
-Usuario: "¿Qué servicios tienen?"
-Respuesta: "¡Adventur Hotel & Resort ofrece una experiencia completa de lujo y confort! 🌟 Aquí te presento todos nuestros servicios premium:
-
-Bienestar y Relajación:
-✨ Spa & Wellness Center - Masajes terapéuticos, sauna finlandesa, baño turco, tratamientos faciales y corporales con productos de lujo
-🏊 Piscina Infinity - Vista panorámica impresionante, bar acuático, área de hidromasaje, camastros premium
-💪 Gimnasio 24/7 - Equipamiento Technogym de última generación, clases de yoga y pilates, entrenador personal disponible
-
-Gastronomía:
-🍽️ Restaurante Gourmet - Cocina internacional y local de autor, chef ejecutivo premiado, carta de vinos exclusiva
-☕ Café & Lounge - Desayunos buffet, snacks gourmet, cócteles artesanales
-🍹 Bar Acuático - Bebidas tropicales, smoothies naturales, servicio junto a la piscina
-
-Servicios Ejecutivos:
-💼 Salas de Reuniones - Equipamiento audiovisual completo, servicio de catering, capacidad hasta 50 personas
-📱 Business Center - Computadoras, impresoras, internet de alta velocidad, asistente ejecutivo
-
-Servicios Adicionales:
-🚗 Transporte - Traslado aeropuerto incluido, tours privados, renta de vehículos
-🎯 Concierge 24/7 - Reservas en restaurantes, tickets para eventos, recomendaciones personalizadas
-🌺 Eventos Especiales - Bodas, aniversarios, celebraciones corporativas con planificación completa
-
-Todos los servicios están diseñados para brindarte una experiencia inolvidable. ¿Hay algún servicio en particular que te interese conocer más a fondo? 🎁"
-
-`
-
-        // Agregar historial de conversación
-        if (history && history.length > 0) {
-            history.forEach((msg: any) => {
-                if (msg.role === 'user') {
-                    fullPrompt += `Usuario: ${msg.content}\n`
-                } else {
-                    fullPrompt += `Asistente: ${msg.content}\n`
-                }
-            })
-        }
-
-        // Agregar el mensaje actual
-        fullPrompt += `Usuario: ${message}\nAsistente:`
-
-        // Generar respuesta
-        const result = await model.generateContent(fullPrompt)
-        const response = await result.response
-        const text = response.text()
-
-        return NextResponse.json({ response: text })
-    } catch (error: any) {
-        console.error('Error detallado en chat:', error)
-        
-        // Mensajes de error más específicos
-        let errorMessage = 'Error al procesar el mensaje'
-        
-        if (error.message?.includes('API key')) {
-            errorMessage = 'Error con la API key de Gemini. Verifica que esté configurada correctamente.'
-        } else if (error.message?.includes('quota')) {
-            errorMessage = 'Se ha excedido la cuota de la API. Intenta más tarde.'
-        } else if (error.message?.includes('model')) {
-            errorMessage = 'Error con el modelo de IA. Intenta de nuevo.'
-        }
-        
-        return NextResponse.json(
-            { 
-                error: errorMessage,
-                details: error.message 
-            },
-            { status: 500 }
+function fallbackResponse(intent: ChatIntent, rooms: RoomRecommendation[]) {
+  const roomLines = rooms.length
+    ? rooms
+        .map(
+          (room) =>
+            `- ${room.name}: S/. ${room.price} por noche, capacidad para ${room.capacity} personas, ${room.location || 'ubicacion Adventur'}.`,
         )
+        .join('\n')
+    : '- Ahora mismo no tengo alojamientos para sugerir, pero puedes revisar la lista completa en /hoteles.'
+
+  const openingByIntent: Record<ChatIntent, string> = {
+    booking:
+      'Puedo ayudarte a avanzar rapido con tu reserva. Estas son las opciones que mejor encajan para empezar:',
+    pricing:
+      'Estas son algunas opciones ordenadas para que compares valor, capacidad y tipo de experiencia:',
+    romantic:
+      'Si buscas una experiencia de pareja, estas opciones son las mas recomendables:',
+    family:
+      'Para viaje familiar o grupos pequenos, estas opciones suelen funcionar mejor:',
+    location:
+      'Estas son algunas opciones utiles segun ubicacion y entorno:',
+    services:
+      'Adventur combina alojamiento, atencion y experiencia. Estas opciones te sirven como referencia:',
+    nature:
+      'Si quieres una experiencia mas conectada con naturaleza, revisa estas alternativas:',
+    general:
+      'Te dejo una seleccion inicial para que elijas mejor:',
+  }
+
+  return `${openingByIntent[intent]}\n\n${roomLines}\n\nSi quieres, tambien puedo filtrar por presupuesto, cantidad de huespedes o tipo de viaje.`
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const { message, history } = (await request.json()) as {
+      message?: string
+      history?: HistoryMessage[]
     }
+
+    if (!message?.trim()) {
+      return NextResponse.json({ error: 'Mensaje vacio' }, { status: 400 })
+    }
+
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('alojamientos')
+      .select(
+        'id, nombre, descripcion, categoria, tipo, precio_base, capacidad_maxima, distrito, provincia, departamento, fotos_alojamiento(url, es_principal)',
+      )
+      .eq('activo', true)
+      .order('precio_base', { ascending: true })
+      .limit(8)
+
+    if (error) {
+      throw error
+    }
+
+    const rooms = ((data as RoomRecord[] | null) ?? []).map((room) => ({
+      ...room,
+      precio_base: Number(room.precio_base),
+    }))
+
+    const intent = inferIntent(message)
+    const selectedRooms = selectRooms(intent, rooms, message).map(mapRoom)
+    const suggestions = buildSuggestions(intent)
+    const actions = buildActions(intent)
+
+    if (!process.env.GEMINI_API_KEY) {
+      return NextResponse.json({
+        response: fallbackResponse(intent, selectedRooms),
+        suggestions,
+        actions,
+        rooms: selectedRooms,
+      })
+    }
+
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
+
+    const prompt = `
+Eres el concierge digital premium de Adventur. Responde en espanol claro, elegante y util.
+
+Objetivo:
+- Recomendar alojamientos reales de Adventur.
+- Dar respuestas concretas, breves pero valiosas.
+- No inventes habitaciones, precios ni ubicaciones fuera del contexto.
+- No uses markdown complejo ni tablas.
+- Puedes usar listas cortas con guiones.
+- Cierra con una accion util si aplica.
+
+Politicas base:
+- Check-in referencial: 3:00 PM
+- Check-out referencial: 12:00 PM
+- Adelanto referencial: 30%
+- Cancelacion referencial: gratuita hasta 48 horas antes
+- WiFi y estacionamiento sujetos a la informacion publicada del alojamiento
+
+Inventario real disponible:
+${buildHotelContext(rooms)}
+
+Habitaciones destacadas para esta consulta:
+${selectedRooms
+  .map(
+    (room) =>
+      `- ${room.name} | S/. ${room.price} | ${room.capacity} huespedes | ${room.type} | ${room.location || 'Adventur'}`,
+  )
+  .join('\n')}
+
+Historial reciente:
+${(history ?? [])
+  .slice(-6)
+  .map((item) => `${item.role === 'user' ? 'Cliente' : 'Asistente'}: ${item.content}`)
+  .join('\n')}
+
+Consulta actual del cliente:
+${message}
+`.trim()
+
+    let responseText = ''
+
+    try {
+      const result = await model.generateContent(prompt)
+      const response = await result.response
+      responseText = response.text().trim()
+    } catch (modelError) {
+      console.error('Gemini chat error:', modelError)
+      responseText = fallbackResponse(intent, selectedRooms)
+    }
+
+    return NextResponse.json({
+      response: responseText || fallbackResponse(intent, selectedRooms),
+      suggestions,
+      actions,
+      rooms: selectedRooms,
+    })
+  } catch (error: any) {
+    console.error('Chat route error:', error)
+
+    return NextResponse.json(
+      {
+        error: 'No se pudo procesar la solicitud del chat.',
+        details: error?.message,
+      },
+      { status: 500 },
+    )
+  }
 }

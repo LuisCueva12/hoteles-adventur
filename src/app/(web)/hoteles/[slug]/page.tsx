@@ -1,14 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useSyncExternalStore } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { 
     ChevronLeft, ChevronRight, Users, Maximize, Bed, Eye, Building2, 
     Check, Star, Heart, Share2, Calendar, Clock, Wifi, Tv, Wind,
-    Coffee, Bath, Shield, Phone, MapPin, Award, Sparkles, X, CreditCard, Loader2
+    Coffee, Bath, Shield, Phone, MapPin, Award, Sparkles, X, Loader2
 } from 'lucide-react'
-import { useFavorites } from '@/hooks/useFavorites'
+import { useFavorites } from '@/hooks/useFavoritos'
 import Swal from 'sweetalert2'
 import { createClient } from '@/utils/supabase/client'
 
@@ -164,15 +164,39 @@ export default function HabitacionDetailPage() {
     const [loading, setLoading] = useState(true)
     const [currentImageIndex, setCurrentImageIndex] = useState(0)
     const [showReservaModal, setShowReservaModal] = useState(false)
-    const [isSubmitting, setIsSubmitting] = useState(false)
     const { toggleFavorite, isFavorite } = useFavorites()
-    
-    // Estados del formulario
+
     const [formData, setFormData] = useState({
+        nombre: '',
         fechaInicio: '',
         fechaFin: '',
-        huespedes: 1
+        huespedes: 1,
     })
+    const [reservando, setReservando] = useState(false)
+    const [errorReserva, setErrorReserva] = useState('')
+    const isClient = useSyncExternalStore(
+        () => () => undefined,
+        () => true,
+        () => false,
+    )
+    const minDate = isClient ? new Date().toISOString().split('T')[0] : ''
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const sp = new URLSearchParams(window.location.search)
+            const checkIn = sp.get('checkIn')
+            const checkOut = sp.get('checkOut')
+            const huespedes = sp.get('huespedes')
+            if (checkIn || checkOut || huespedes) {
+                setFormData(prev => ({
+                    ...prev,
+                    fechaInicio: checkIn || prev.fechaInicio,
+                    fechaFin: checkOut || prev.fechaFin,
+                    huespedes: huespedes ? Number(huespedes) : prev.huespedes,
+                }))
+            }
+        }
+    }, [])
 
     // Cargar alojamiento desde la base de datos
     useEffect(() => {
@@ -326,7 +350,7 @@ export default function HabitacionDetailPage() {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
-                    <Loader2 className="w-12 h-12 text-red-600 animate-spin mx-auto mb-4" />
+                    <Loader2 className="w-12 h-12 text-yellow-400 animate-spin mx-auto mb-4" />
                     <p className="text-gray-600">Cargando habitación...</p>
                 </div>
             </div>
@@ -338,7 +362,7 @@ export default function HabitacionDetailPage() {
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
                     <h1 className="text-2xl font-bold text-gray-900 mb-4">Habitación no encontrada</h1>
-                    <Link href="/hoteles" className="text-red-600 hover:underline">
+                    <Link href="/hoteles" className="text-yellow-400 hover:underline">
                         Volver a habitaciones
                     </Link>
                 </div>
@@ -356,158 +380,93 @@ export default function HabitacionDetailPage() {
 
     const calcularNoches = () => {
         if (!formData.fechaInicio || !formData.fechaFin) return 0
-        const inicio = new Date(formData.fechaInicio)
-        const fin = new Date(formData.fechaFin)
-        const diff = fin.getTime() - inicio.getTime()
-        return Math.ceil(diff / (1000 * 60 * 60 * 24))
+        const diff = new Date(formData.fechaFin).getTime() - new Date(formData.fechaInicio).getTime()
+        return Math.max(0, Math.ceil(diff / 86400000))
     }
 
-    const calcularTotal = () => {
-        const noches = calcularNoches()
-        return noches * room.price
-    }
-
-    const handleSubmitReserva = async (e: React.FormEvent) => {
+    const handleReservar = async (e: React.FormEvent) => {
         e.preventDefault()
-        
+        setErrorReserva('')
+
+        // Validaciones
         if (!formData.fechaInicio || !formData.fechaFin) {
-            await Swal.fire({
-                icon: 'warning',
-                title: 'Datos incompletos',
-                text: 'Por favor selecciona las fechas de entrada y salida',
-                confirmButtonColor: '#DC2626'
-            })
+            setErrorReserva('Selecciona las fechas de estadía')
+            return
+        }
+        if (new Date(formData.fechaFin) <= new Date(formData.fechaInicio)) {
+            setErrorReserva('La fecha de salida debe ser posterior a la de entrada')
+            return
+        }
+        if (formData.huespedes < 1 || formData.huespedes > room.capacity) {
+            setErrorReserva(`El número de huéspedes debe ser entre 1 y ${room.capacity}`)
             return
         }
 
-        const noches = calcularNoches()
-        if (noches <= 0) {
-            await Swal.fire({
-                icon: 'error',
-                title: 'Fechas inválidas',
-                text: 'La fecha de salida debe ser posterior a la fecha de entrada',
-                confirmButtonColor: '#DC2626'
-            })
-            return
-        }
-
-        setIsSubmitting(true)
-
+        setReservando(true)
         try {
-            // Verificar si el usuario está autenticado
             const { data: { user } } = await supabase.auth.getUser()
-            
             if (!user) {
-                await Swal.fire({
-                    icon: 'info',
-                    title: 'Inicia sesión',
-                    text: 'Debes iniciar sesión para realizar una reserva',
-                    confirmButtonColor: '#DC2626',
-                    confirmButtonText: 'Ir a Login'
-                })
-                router.push('/login')
+                window.location.href = `/login?redirect=/hoteles/${slug}`
                 return
             }
 
-            // Buscar el alojamiento correspondiente a esta habitación
-            const { data: alojamiento, error: alojamientoError } = await supabase
-                .from('alojamientos')
-                .select('id')
-                .eq('id', room.id)
-                .eq('activo', true)
-                .maybeSingle()
-
-            let alojamientoId = alojamiento?.id || room.id
-
-            const total = calcularTotal()
-            const adelanto = total * 0.3 // 30% de adelanto
-
-            // Crear código de reserva único
-            const codigoReserva = `RES-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
-
-            // Insertar reserva
-            const { data: reserva, error } = await supabase
+            // Verificar disponibilidad
+            const { data: conflictos } = await supabase
                 .from('reservas')
-                .insert([{
+                .select('id')
+                .eq('alojamiento_id', room.id)
+                .eq('estado', 'confirmada')
+                .lt('fecha_inicio', formData.fechaFin)
+                .gt('fecha_fin', formData.fechaInicio)
+
+            if (conflictos && conflictos.length > 0) {
+                setErrorReserva('Lo sentimos, este alojamiento no está disponible en las fechas seleccionadas')
+                setReservando(false)
+                return
+            }
+
+            const noches = calcularNoches()
+            const total = room.price * noches
+            const adelanto = Math.round(total * 0.3)
+            const codigoReserva = `RES-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`
+
+            const { error } = await supabase
+                .from('reservas')
+                .insert({
                     usuario_id: user.id,
-                    alojamiento_id: alojamientoId,
+                    alojamiento_id: room.id,
+                    codigo_reserva: codigoReserva,
                     fecha_inicio: formData.fechaInicio,
                     fecha_fin: formData.fechaFin,
                     personas: formData.huespedes,
-                    total: total,
-                    adelanto: adelanto,
-                    codigo_reserva: codigoReserva,
-                    estado: 'pendiente'
-                }])
-                .select()
+                    total,
+                    adelanto,
+                    estado: 'pendiente',
+                })
 
             if (error) throw error
 
             setShowReservaModal(false)
-            
+            setFormData({ nombre: '', fechaInicio: '', fechaFin: '', huespedes: 1 })
+
             await Swal.fire({
                 icon: 'success',
-                title: '¡Reserva confirmada!',
+                title: '¡Reserva creada!',
                 html: `
-                    <div class="text-left space-y-3">
-                        <p class="text-gray-700">Tu reserva ha sido creada exitosamente.</p>
-                        <div class="bg-blue-50 p-4 rounded-lg">
-                            <p class="font-semibold text-blue-900 mb-2">Código de reserva:</p>
-                            <p class="text-2xl font-bold text-blue-600">${codigoReserva}</p>
-                        </div>
-                        <div class="bg-gray-50 p-4 rounded-lg space-y-2">
-                            <p><span class="font-semibold">Habitación:</span> ${room.name}</p>
-                            <p><span class="font-semibold">Check-in:</span> ${new Date(formData.fechaInicio).toLocaleDateString('es-PE')}</p>
-                            <p><span class="font-semibold">Check-out:</span> ${new Date(formData.fechaFin).toLocaleDateString('es-PE')}</p>
-                            <p><span class="font-semibold">Noches:</span> ${noches}</p>
-                            <p><span class="font-semibold">Huéspedes:</span> ${formData.huespedes}</p>
-                            <p class="text-xl font-bold text-green-600 pt-2 border-t">Total: S/. ${total.toLocaleString()}</p>
-                            <p class="text-sm text-gray-600">Adelanto requerido: S/. ${adelanto.toLocaleString()}</p>
-                        </div>
-                    </div>
+                    <p class="text-gray-700 mb-2">Tu reserva <strong>${codigoReserva}</strong> fue registrada.</p>
+                    <p class="text-sm text-gray-500">Revisa el estado en tu panel de reservas.</p>
                 `,
-                confirmButtonColor: '#DC2626',
                 confirmButtonText: 'Ver mis reservas',
+                confirmButtonColor: '#facc15',
                 showCancelButton: true,
                 cancelButtonText: 'Cerrar',
-                cancelButtonColor: '#6B7280'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    router.push('/reservas')
-                }
+            }).then(result => {
+                if (result.isConfirmed) window.location.href = '/reservas'
             })
-
-            // Resetear formulario
-            setFormData({
-                fechaInicio: '',
-                fechaFin: '',
-                huespedes: 1
-            })
-
-        } catch (error) {
-            console.error('Error al crear reserva:', error)
-            
-            // Mostrar error más específico
-            let errorMessage = 'Hubo un problema al crear tu reserva. Por favor intenta nuevamente.'
-            
-            if (error instanceof Error) {
-                if (error.message.includes('alojamiento')) {
-                    errorMessage = 'No se pudo encontrar o crear el alojamiento. Por favor contacta con soporte.'
-                } else if (error.message.includes('usuario')) {
-                    errorMessage = 'Sesión expirada. Por favor inicia sesión nuevamente.'
-                } else {
-                    errorMessage = error.message
-                }
-            }
-            
-            await Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: errorMessage,
-                confirmButtonColor: '#DC2626'
-            })
+        } catch (err: any) {
+            setErrorReserva(err.message || 'Error al crear la reserva. Intenta nuevamente.')
         } finally {
-            setIsSubmitting(false)
+            setReservando(false)
         }
     }
 
@@ -517,9 +476,9 @@ export default function HabitacionDetailPage() {
             <div className="bg-gray-50 border-b border-gray-200">
                 <div className="max-w-7xl mx-auto px-6 py-3">
                     <div className="flex items-center gap-2 text-sm">
-                        <Link href="/" className="text-gray-600 hover:text-red-600">Inicio</Link>
+                        <Link href="/" className="text-gray-600 hover:text-yellow-400">Inicio</Link>
                         <ChevronRight className="w-4 h-4 text-gray-400" />
-                        <Link href="/hoteles" className="text-gray-600 hover:text-red-600">Habitaciones</Link>
+                        <Link href="/hoteles" className="text-gray-600 hover:text-yellow-400">Habitaciones</Link>
                         <ChevronRight className="w-4 h-4 text-gray-400" />
                         <span className="text-gray-900 font-semibold">{room.name}</span>
                     </div>
@@ -560,13 +519,13 @@ export default function HabitacionDetailPage() {
                                 onClick={() => toggleFavorite(room.id)}
                                 className={`p-3 rounded-full border-2 transition-all duration-300 ${
                                     isFavorite(room.id)
-                                        ? 'border-red-600 bg-red-50 text-red-600'
-                                        : 'border-gray-300 text-gray-700 hover:border-red-600'
+                                        ? 'border-yellow-400 bg-yellow-50 text-yellow-400'
+                                        : 'border-gray-300 text-gray-700 hover:border-yellow-400'
                                 }`}
                             >
                                 <Heart className={`w-6 h-6 ${isFavorite(room.id) ? 'fill-current' : ''}`} />
                             </button>
-                            <button className="p-3 rounded-full border-2 border-gray-300 text-gray-700 hover:border-red-600 transition-all">
+                            <button className="p-3 rounded-full border-2 border-gray-300 text-gray-700 hover:border-yellow-400 transition-all">
                                 <Share2 className="w-6 h-6" />
                             </button>
                         </div>
@@ -593,7 +552,7 @@ export default function HabitacionDetailPage() {
                                 <ChevronRight className="w-6 h-6" />
                             </button>
                             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                                {room.images.map((_, idx) => (
+                                {room.images.map((_: string, idx: number) => (
                                     <button
                                         key={idx}
                                         onClick={() => setCurrentImageIndex(idx)}
@@ -604,7 +563,7 @@ export default function HabitacionDetailPage() {
                                 ))}
                             </div>
                         </div>
-                        {room.images.slice(1, 5).map((img, idx) => (
+                        {room.images.slice(1, 5).map((img: string, idx: number) => (
                             <div 
                                 key={idx}
                                 className="relative h-48 rounded-lg overflow-hidden cursor-pointer group"
@@ -632,22 +591,22 @@ export default function HabitacionDetailPage() {
                             <h2 className="text-2xl font-bold text-gray-900 mb-6">Características</h2>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 <div className="bg-gray-50 p-4 rounded-lg text-center">
-                                    <Users className="w-8 h-8 text-red-600 mx-auto mb-2" />
+                                    <Users className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
                                     <p className="text-sm text-gray-600 mb-1">Capacidad</p>
                                     <p className="font-semibold text-gray-900">{room.capacity} personas</p>
                                 </div>
                                 <div className="bg-gray-50 p-4 rounded-lg text-center">
-                                    <Maximize className="w-8 h-8 text-red-600 mx-auto mb-2" />
+                                    <Maximize className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
                                     <p className="text-sm text-gray-600 mb-1">Tamaño</p>
                                     <p className="font-semibold text-gray-900">{room.size}m²</p>
                                 </div>
                                 <div className="bg-gray-50 p-4 rounded-lg text-center">
-                                    <Bed className="w-8 h-8 text-red-600 mx-auto mb-2" />
+                                    <Bed className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
                                     <p className="text-sm text-gray-600 mb-1">Cama</p>
                                     <p className="font-semibold text-gray-900">{room.beds.split(' ')[2]}</p>
                                 </div>
                                 <div className="bg-gray-50 p-4 rounded-lg text-center">
-                                    <Eye className="w-8 h-8 text-red-600 mx-auto mb-2" />
+                                    <Eye className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
                                     <p className="text-sm text-gray-600 mb-1">Vista</p>
                                     <p className="font-semibold text-gray-900">{room.view.split(' ')[1]}</p>
                                 </div>
@@ -665,9 +624,9 @@ export default function HabitacionDetailPage() {
                         <div>
                             <h2 className="text-2xl font-bold text-gray-900 mb-4">Lo que hace especial esta habitación</h2>
                             <div className="grid md:grid-cols-2 gap-4">
-                                {room.highlights.map((highlight, idx) => (
-                                    <div key={idx} className="flex items-start gap-3 bg-green-50 p-4 rounded-lg">
-                                        <Award className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                                {room.highlights.map((highlight: string, idx: number) => (
+                                    <div key={idx} className="flex items-start gap-3 bg-yellow-50 p-4 rounded-lg">
+                                        <Award className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
                                         <span className="text-gray-700">{highlight}</span>
                                     </div>
                                 ))}
@@ -678,12 +637,12 @@ export default function HabitacionDetailPage() {
                         <div>
                             <h2 className="text-2xl font-bold text-gray-900 mb-6">Amenidades</h2>
                             <div className="grid md:grid-cols-2 gap-6">
-                                {room.amenities.map((amenity, idx) => {
+                                {room.amenities.map((amenity: { icon: any; name: string; description: string }, idx: number) => {
                                     const Icon = amenity.icon
                                     return (
-                                        <div key={idx} className="flex items-start gap-4 p-4 border border-gray-200 rounded-lg hover:border-red-600 hover:shadow-md transition-all">
-                                            <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                                <Icon className="w-6 h-6 text-red-600" />
+                                        <div key={idx} className="flex items-start gap-4 p-4 border border-gray-200 rounded-lg hover:border-yellow-400 hover:shadow-md transition-all">
+                                            <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                                <Icon className="w-6 h-6 text-yellow-400" />
                                             </div>
                                             <div>
                                                 <h3 className="font-semibold text-gray-900 mb-1">{amenity.name}</h3>
@@ -699,7 +658,7 @@ export default function HabitacionDetailPage() {
                         <div>
                             <h2 className="text-2xl font-bold text-gray-900 mb-6">Servicios Incluidos</h2>
                             <div className="grid md:grid-cols-2 gap-3">
-                                {room.services.map((service, idx) => (
+                                {room.services.map((service: string, idx: number) => (
                                     <div key={idx} className="flex items-center gap-3 bg-blue-50 p-3 rounded-lg">
                                         <Check className="w-5 h-5 text-blue-600 flex-shrink-0" />
                                         <span className="text-gray-700">{service}</span>
@@ -740,10 +699,10 @@ export default function HabitacionDetailPage() {
                         <div>
                             <h2 className="text-2xl font-bold text-gray-900 mb-6">Atracciones Cercanas</h2>
                             <div className="space-y-3">
-                                {room.nearbyAttractions.map((attraction, idx) => (
+                                {room.nearbyAttractions.map((attraction: { name: string; distance: string; time: string }, idx: number) => (
                                     <div key={idx} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                                         <div className="flex items-center gap-3">
-                                            <MapPin className="w-5 h-5 text-red-600" />
+                                            <MapPin className="w-5 h-5 text-yellow-400" />
                                             <span className="font-semibold text-gray-900">{attraction.name}</span>
                                         </div>
                                         <div className="text-right">
@@ -768,7 +727,7 @@ export default function HabitacionDetailPage() {
                                     <span className="text-gray-600">/ noche</span>
                                 </div>
                                 {room.originalPrice && (
-                                    <div className="mt-2 inline-block bg-red-100 text-red-600 px-3 py-1 rounded-full text-sm font-semibold">
+                                    <div className="mt-2 inline-block bg-yellow-100 text-yellow-400 px-3 py-1 rounded-full text-sm font-semibold">
                                         Ahorra {Math.round((1 - room.price / room.originalPrice) * 100)}%
                                     </div>
                                 )}
@@ -776,7 +735,7 @@ export default function HabitacionDetailPage() {
 
                             <button
                                 onClick={() => setShowReservaModal(true)}
-                                className="w-full py-4 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl mb-4"
+                                className="w-full py-4 bg-yellow-400 hover:bg-yellow-400 text-gray-900 font-semibold rounded-lg transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl mb-4"
                             >
                                 Reservar Ahora
                             </button>
@@ -787,15 +746,15 @@ export default function HabitacionDetailPage() {
 
                             <div className="space-y-3 pt-6 border-t border-gray-200">
                                 <div className="flex items-center gap-3 text-sm text-gray-700">
-                                    <Check className="w-5 h-5 text-green-600" />
+                                    <Check className="w-5 h-5 text-yellow-400" />
                                     <span>Cancelación gratuita</span>
                                 </div>
                                 <div className="flex items-center gap-3 text-sm text-gray-700">
-                                    <Check className="w-5 h-5 text-green-600" />
+                                    <Check className="w-5 h-5 text-yellow-400" />
                                     <span>Confirmación inmediata</span>
                                 </div>
                                 <div className="flex items-center gap-3 text-sm text-gray-700">
-                                    <Check className="w-5 h-5 text-green-600" />
+                                    <Check className="w-5 h-5 text-yellow-400" />
                                     <span>Mejor precio garantizado</span>
                                 </div>
                             </div>
@@ -803,7 +762,7 @@ export default function HabitacionDetailPage() {
                             <div className="mt-6 pt-6 border-t border-gray-200">
                                 <Link 
                                     href="/contacto"
-                                    className="flex items-center justify-center gap-2 text-red-600 hover:text-red-700 font-semibold"
+                                    className="flex items-center justify-center gap-2 text-yellow-400 hover:text-yellow-400 font-semibold"
                                 >
                                     <Phone className="w-5 h-5" />
                                     <span>¿Necesitas ayuda?</span>
@@ -814,188 +773,145 @@ export default function HabitacionDetailPage() {
                 </div>
             </section>
 
-            {/* Modal de Reserva Mejorado */}
+            {/* Modal de Reserva */}
             {showReservaModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-300">
-                        {/* Header del Modal */}
-                        <div className="sticky top-0 bg-gradient-to-r from-red-600 to-red-700 text-white p-6 rounded-t-2xl">
-                            <div className="flex items-center justify-between">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+                    <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full max-h-[95vh] overflow-hidden flex flex-col">
+
+                        {/* Header */}
+                        <div className="relative overflow-hidden h-40 flex-shrink-0">
+                            <img src={room.images[0]} alt={room.name} className="absolute inset-0 w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-red-700/60 to-transparent" />
+                            <div className="relative z-10 flex items-end justify-between px-6 pb-5 h-full">
                                 <div>
-                                    <h2 className="text-2xl font-bold mb-1">Reserva tu Habitación</h2>
-                                    <p className="text-red-100">{room.name}</p>
+                                    <span className="inline-block bg-yellow-400 text-gray-900 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full mb-2">Solicitar reserva</span>
+                                    <h2 className="text-xl font-bold text-white leading-tight">Reserva tu Habitación</h2>
+                                    <p className="text-white/75 text-sm mt-0.5">{room.name}</p>
                                 </div>
-                                <button
-                                    onClick={() => setShowReservaModal(false)}
-                                    className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all"
-                                >
-                                    <X className="w-6 h-6" />
+                                <button onClick={() => setShowReservaModal(false)}
+                                    className="w-10 h-10 bg-black/30 hover:bg-black/50 rounded-full flex items-center justify-center border border-white/20 transition-all flex-shrink-0">
+                                    <X className="w-5 h-5 text-white" />
                                 </button>
                             </div>
                         </div>
 
-                        {/* Contenido del Modal */}
-                        <form onSubmit={handleSubmitReserva} className="p-6 space-y-6">
-                            {/* Imagen de la habitación */}
-                            <div className="relative h-48 rounded-xl overflow-hidden">
-                                <img
-                                    src={room.images[0]}
-                                    alt={room.name}
-                                    className="w-full h-full object-cover"
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                                <div className="absolute bottom-4 left-4 right-4">
-                                    <div className="flex items-center justify-between text-white">
-                                        <div>
-                                            <p className="text-sm opacity-90">Precio por noche</p>
-                                            <p className="text-3xl font-bold">S/. {room.price}</p>
-                                        </div>
-                                        {room.originalPrice && (
-                                            <div className="bg-green-500 px-3 py-1 rounded-full text-sm font-semibold">
-                                                -{Math.round((1 - room.price / room.originalPrice) * 100)}% OFF
-                                            </div>
-                                        )}
+                        {/* Info precio */}
+                        <div className="flex items-center justify-between px-6 py-3.5 bg-gray-900 flex-shrink-0">
+                            <div className="flex items-baseline gap-1.5">
+                                <span className="text-2xl font-bold text-white">S/. {room.price}</span>
+                                <span className="text-gray-400 text-sm">/ noche</span>
+                            </div>
+                            <div className="flex items-center gap-3 text-xs text-gray-300">
+                                <span className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-yellow-400" />{room.capacity} pers.</span>
+                                <span className="w-px h-3 bg-gray-600" />
+                                <span className="flex items-center gap-1.5"><Maximize className="w-3.5 h-3.5 text-yellow-400" />{room.size}m²</span>
+                                <span className="w-px h-3 bg-gray-600" />
+                                <span className="flex items-center gap-1.5"><Bed className="w-3.5 h-3.5 text-yellow-400" />{room.beds.split(' ')[2] || '1'} cama</span>
+                            </div>
+                        </div>
+
+                        {/* Formulario */}
+                        <form onSubmit={handleReservar} className="overflow-y-auto flex-1 px-6 py-5 space-y-5">
+
+                            {/* Error */}
+                            {errorReserva && (
+                                <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl">
+                                    {errorReserva}
+                                </div>
+                            )}
+
+                            {/* Fechas */}
+                            <div>
+                                <p className="text-sm font-bold text-gray-800 mb-2">Fechas de estadía</p>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Check-in</label>
+                                        <input
+                                            type="date"
+                                            value={formData.fechaInicio}
+                                            min={minDate}
+                                            onChange={e => setFormData({ ...formData, fechaInicio: e.target.value, fechaFin: '' })}
+                                            required
+                                            suppressHydrationWarning
+                                            className="w-full px-3 py-3 border-2 border-gray-200 rounded-xl focus:border-yellow-400 focus:outline-none text-gray-900 text-sm transition-colors"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">
+                                            Check-out {calcularNoches() > 0 && <span className="text-yellow-400 normal-case font-bold">· {calcularNoches()} noche{calcularNoches() > 1 ? 's' : ''}</span>}
+                                        </label>
+                                        <input
+                                            type="date"
+                                            value={formData.fechaFin}
+                                            min={formData.fechaInicio || minDate}
+                                            onChange={e => setFormData({ ...formData, fechaFin: e.target.value })}
+                                            required
+                                            suppressHydrationWarning
+                                            className="w-full px-3 py-3 border-2 border-gray-200 rounded-xl focus:border-yellow-400 focus:outline-none text-gray-900 text-sm transition-colors"
+                                        />
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Información de la habitación */}
-                            <div className="grid grid-cols-3 gap-4">
-                                <div className="bg-blue-50 p-4 rounded-xl text-center">
-                                    <Users className="w-6 h-6 text-blue-600 mx-auto mb-2" />
-                                    <p className="text-xs text-gray-600 mb-1">Capacidad</p>
-                                    <p className="font-bold text-gray-900">{room.capacity} personas</p>
-                                </div>
-                                <div className="bg-purple-50 p-4 rounded-xl text-center">
-                                    <Maximize className="w-6 h-6 text-purple-600 mx-auto mb-2" />
-                                    <p className="text-xs text-gray-600 mb-1">Tamaño</p>
-                                    <p className="font-bold text-gray-900">{room.size}m²</p>
-                                </div>
-                                <div className="bg-green-50 p-4 rounded-xl text-center">
-                                    <Bed className="w-6 h-6 text-green-600 mx-auto mb-2" />
-                                    <p className="text-xs text-gray-600 mb-1">Cama</p>
-                                    <p className="font-bold text-gray-900">{room.beds.split(' ')[2]}</p>
-                                </div>
-                            </div>
-
-                            {/* Formulario de fechas */}
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        <Calendar className="w-4 h-4 inline mr-2" />
-                                        Fecha de entrada
-                                    </label>
-                                    <input
-                                        type="date"
-                                        value={formData.fechaInicio}
-                                        onChange={(e) => setFormData({ ...formData, fechaInicio: e.target.value })}
-                                        min={new Date().toISOString().split('T')[0]}
-                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-red-600 focus:ring-2 focus:ring-red-100 transition-all text-gray-900"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        <Calendar className="w-4 h-4 inline mr-2" />
-                                        Fecha de salida
-                                    </label>
-                                    <input
-                                        type="date"
-                                        value={formData.fechaFin}
-                                        onChange={(e) => setFormData({ ...formData, fechaFin: e.target.value })}
-                                        min={formData.fechaInicio || new Date().toISOString().split('T')[0]}
-                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-red-600 focus:ring-2 focus:ring-red-100 transition-all text-gray-900"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        <Users className="w-4 h-4 inline mr-2" />
-                                        Número de huéspedes
-                                    </label>
-                                    <input
-                                        type="number"
-                                        value={formData.huespedes}
-                                        onChange={(e) => setFormData({ ...formData, huespedes: parseInt(e.target.value) })}
-                                        min={1}
-                                        max={room.capacity}
-                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-red-600 focus:ring-2 focus:ring-red-100 transition-all text-gray-900"
-                                        required
-                                    />
-                                    <p className="text-xs text-gray-500 mt-1">Capacidad máxima: {room.capacity} personas</p>
+                            {/* Huéspedes */}
+                            <div>
+                                <label className="block text-sm font-bold text-gray-800 mb-2">Huéspedes</label>
+                                <div className="flex items-center border-2 border-gray-200 rounded-xl overflow-hidden">
+                                    <button type="button"
+                                        onClick={() => setFormData(f => ({ ...f, huespedes: Math.max(1, f.huespedes - 1) }))}
+                                        className="w-14 h-12 flex items-center justify-center text-gray-600 hover:bg-yellow-50 hover:text-yellow-400 text-xl font-bold transition-colors border-r-2 border-gray-200">
+                                        −
+                                    </button>
+                                    <div className="flex-1 text-center">
+                                        <span className="text-xl font-bold text-gray-900">{formData.huespedes}</span>
+                                        <span className="text-xs text-gray-400 ml-2">/ máx. {room.capacity}</span>
+                                    </div>
+                                    <button type="button"
+                                        onClick={() => setFormData(f => ({ ...f, huespedes: Math.min(room.capacity, f.huespedes + 1) }))}
+                                        className="w-14 h-12 flex items-center justify-center text-gray-600 hover:bg-yellow-50 hover:text-yellow-400 text-xl font-bold transition-colors border-l-2 border-gray-200">
+                                        +
+                                    </button>
                                 </div>
                             </div>
 
-                            {/* Resumen de la reserva */}
-                            {formData.fechaInicio && formData.fechaFin && calcularNoches() > 0 && (
-                                <div className="bg-gradient-to-br from-blue-50 to-purple-50 p-6 rounded-xl border-2 border-blue-100">
-                                    <h3 className="font-bold text-gray-900 mb-4 text-lg">Resumen de tu reserva</h3>
-                                    <div className="space-y-3">
-                                        <div className="flex justify-between text-gray-700">
-                                            <span>S/. {room.price} × {calcularNoches()} {calcularNoches() === 1 ? 'noche' : 'noches'}</span>
-                                            <span className="font-semibold">S/. {(room.price * calcularNoches()).toLocaleString()}</span>
-                                        </div>
-                                        <div className="flex justify-between text-gray-700">
-                                            <span>Huéspedes</span>
-                                            <span className="font-semibold">{formData.huespedes} {formData.huespedes === 1 ? 'persona' : 'personas'}</span>
-                                        </div>
-                                        <div className="border-t-2 border-blue-200 pt-3 flex justify-between items-center">
-                                            <span className="text-lg font-bold text-gray-900">Total</span>
-                                            <span className="text-3xl font-bold text-red-600">S/. {calcularTotal().toLocaleString()}</span>
-                                        </div>
-                                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-3">
-                                            <p className="text-sm text-yellow-800">
-                                                <CreditCard className="w-4 h-4 inline mr-1" />
-                                                Se requiere un adelanto del 30%: <span className="font-bold">S/. {(calcularTotal() * 0.3).toLocaleString()}</span>
-                                            </p>
-                                        </div>
+                            {/* Resumen */}
+                            {calcularNoches() > 0 && (
+                                <div className="bg-gray-900 rounded-2xl p-4 text-white">
+                                    <p className="text-xs text-gray-400 uppercase tracking-widest mb-3">Resumen</p>
+                                    <div className="flex justify-between text-sm text-gray-300 mb-1">
+                                        <span>S/. {room.price} × {calcularNoches()} {calcularNoches() === 1 ? 'noche' : 'noches'}</span>
+                                        <span>S/. {(room.price * calcularNoches()).toLocaleString()}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm text-gray-300 mb-2">
+                                        <span>{formData.huespedes} {formData.huespedes === 1 ? 'huésped' : 'huéspedes'} × S/. {room.price}</span>
+                                        <span>× {formData.huespedes}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center border-t border-gray-700 pt-3">
+                                        <span className="font-semibold text-gray-200">Total estimado</span>
+                                        <span className="text-2xl font-bold text-yellow-400">S/. {(room.price * calcularNoches() * formData.huespedes).toLocaleString()}</span>
                                     </div>
                                 </div>
                             )}
 
-                            {/* Beneficios */}
-                            <div className="bg-green-50 p-4 rounded-xl border border-green-200">
-                                <h4 className="font-semibold text-green-900 mb-3">Incluido en tu reserva:</h4>
-                                <div className="space-y-2">
-                                    <div className="flex items-center gap-2 text-sm text-green-800">
-                                        <Check className="w-4 h-4 flex-shrink-0" />
-                                        <span>Cancelación gratuita hasta 48 horas antes</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-sm text-green-800">
-                                        <Check className="w-4 h-4 flex-shrink-0" />
-                                        <span>Confirmación inmediata por email</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-sm text-green-800">
-                                        <Check className="w-4 h-4 flex-shrink-0" />
-                                        <span>Sin cargos ocultos</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Botones de acción */}
-                            <div className="flex gap-3 pt-4">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowReservaModal(false)}
-                                    className="flex-1 px-6 py-4 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
-                                    disabled={isSubmitting}
-                                >
+                            {/* Botones */}
+                            <div className="flex gap-3 pb-2">
+                                <button type="button" onClick={() => setShowReservaModal(false)}
+                                    className="flex-1 py-3.5 border-2 border-gray-200 text-gray-700 font-semibold rounded-2xl hover:bg-gray-50 transition-all text-sm">
                                     Cancelar
                                 </button>
-                                <button
-                                    type="submit"
-                                    disabled={isSubmitting || !formData.fechaInicio || !formData.fechaFin}
-                                    className="flex-1 px-6 py-4 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold rounded-xl transition-all transform hover:-translate-y-0.5 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                                >
-                                    {isSubmitting ? (
-                                        <span className="flex items-center justify-center gap-2">
-                                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                            Procesando...
-                                        </span>
+                                <button type="submit"
+                                    disabled={!formData.fechaInicio || !formData.fechaFin || reservando}
+                                    className="flex-1 py-3.5 bg-yellow-400 hover:bg-yellow-500 disabled:bg-gray-300 disabled:cursor-not-allowed text-gray-900 font-bold rounded-2xl transition-all hover:shadow-lg flex items-center justify-center gap-2 text-sm">
+                                    {reservando ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                            Reservando...
+                                        </>
                                     ) : (
-                                        'Confirmar Reserva'
+                                        <>
+                                            <Calendar className="w-4 h-4" />
+                                            Confirmar Reserva
+                                        </>
                                     )}
                                 </button>
                             </div>
