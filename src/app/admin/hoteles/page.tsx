@@ -556,80 +556,87 @@ export default function HotelesAdminPage() {
 
     return (
         <div>
-            <div className="mb-8 flex items-center justify-between">
+            {/* Header */}
+            <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold mb-2 text-gray-900">Gestión de Alojamientos</h1>
-                    <p className="text-gray-600">Administra todos los alojamientos del sistema</p>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Gestión de Alojamientos</h1>
+                    <p className="text-gray-500 text-sm mt-1">Administra todos los alojamientos del sistema</p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 flex-shrink-0">
                     <button
                         onClick={handleOpenCreateModal}
-                        className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:shadow-lg transition-all font-semibold"
+                        className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all font-semibold text-sm shadow-sm"
                     >
-                        <Plus className="w-5 h-5" />
-                        <span>Nuevo Alojamiento</span>
+                        <Plus className="w-4 h-4" />
+                        <span className="hidden sm:inline">Nuevo Alojamiento</span>
+                        <span className="sm:hidden">Nuevo</span>
                     </button>
                     <button
                         onClick={handleRefresh}
                         disabled={isRefreshing}
-                        className="flex items-center gap-2 px-4 py-3 bg-white border-2 border-gray-300 rounded-xl hover:bg-gray-50 transition-all disabled:opacity-50 shadow-sm"
+                        className="flex items-center gap-2 px-3 py-2.5 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-all disabled:opacity-50 shadow-sm text-sm"
                     >
-                        <RefreshCw className={`w-4 h-4 text-gray-700 ${isRefreshing ? 'animate-spin' : ''}`} />
-                        <span className="text-sm text-gray-900 font-medium">Actualizar</span>
+                        <RefreshCw className={`w-4 h-4 text-gray-600 ${isRefreshing ? 'animate-spin' : ''}`} />
+                        <span className="hidden sm:inline text-gray-700 font-medium">Actualizar</span>
                     </button>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            {/* Stats */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
                 {stats.map((stat) => {
                     const Icon = stat.icon
                     return (
-                        <div key={stat.label} className="bg-white border-2 border-gray-200 rounded-2xl p-6 hover:shadow-lg transition-all">
+                        <div key={stat.label} className="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-md transition-all">
                             <div className="flex items-center justify-between mb-2">
-                                <p className="text-sm text-gray-600 font-medium">{stat.label}</p>
-                                <div className={`w-10 h-10 ${stat.bgColor} rounded-lg flex items-center justify-center`}>
-                                    <Icon className={`w-5 h-5 ${stat.color}`} />
+                                <p className="text-xs text-gray-500 font-medium leading-tight">{stat.label}</p>
+                                <div className={`w-8 h-8 ${stat.bgColor} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                                    <Icon className={`w-4 h-4 ${stat.color}`} />
                                 </div>
                             </div>
-                            <p className={`text-3xl font-bold ${stat.color}`}>{stat.value}</p>
+                            <p className={`text-xl sm:text-2xl font-bold ${stat.color}`}>{stat.value}</p>
                         </div>
                     )
                 })}
             </div>
 
-            <div className="mb-6 flex flex-wrap items-center gap-4">
-                <div className="flex items-center gap-3">
-                    <span className="text-sm text-gray-700 font-semibold">Categoría:</span>
-                    {['todas', 'Económico', 'Familiar', 'Parejas', 'Premium', 'Naturaleza'].map((cat) => (
-                        <button
-                            key={cat}
-                            onClick={() => setFilterCategoria(cat)}
-                            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-                                filterCategoria === cat
-                                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg'
-                                    : 'bg-white text-gray-700 hover:bg-gray-50 border-2 border-gray-300'
-                            }`}
-                        >
-                            {cat === 'todas' ? 'Todas' : cat}
-                        </button>
-                    ))}
+            {/* Filtros */}
+            <div className="mb-5 bg-white border border-gray-200 rounded-xl p-4 space-y-3">
+                <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wide w-full sm:w-auto">Categoría:</span>
+                    <div className="flex flex-wrap gap-1.5">
+                        {['todas', 'Económico', 'Familiar', 'Parejas', 'Premium', 'Naturaleza'].map((cat) => (
+                            <button
+                                key={cat}
+                                onClick={() => setFilterCategoria(cat)}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                                    filterCategoria === cat
+                                        ? 'bg-blue-600 text-white shadow-sm'
+                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                }`}
+                            >
+                                {cat === 'todas' ? 'Todas' : cat}
+                            </button>
+                        ))}
+                    </div>
                 </div>
-                
-                <div className="flex items-center gap-3">
-                    <span className="text-sm text-gray-700 font-semibold">Tipo:</span>
-                    {['todos', 'Cabaña', 'EcoLodge', 'Hotel', 'Hostal', 'Casa'].map((tipo) => (
-                        <button
-                            key={tipo}
-                            onClick={() => setFilterTipo(tipo)}
-                            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-                                filterTipo === tipo
-                                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg'
-                                    : 'bg-white text-gray-700 hover:bg-gray-50 border-2 border-gray-300'
-                            }`}
-                        >
-                            {tipo === 'todos' ? 'Todos' : tipo}
-                        </button>
-                    ))}
+                <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wide w-full sm:w-auto">Tipo:</span>
+                    <div className="flex flex-wrap gap-1.5">
+                        {['todos', 'Cabaña', 'EcoLodge', 'Hotel', 'Hostal', 'Casa'].map((tipo) => (
+                            <button
+                                key={tipo}
+                                onClick={() => setFilterTipo(tipo)}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                                    filterTipo === tipo
+                                        ? 'bg-blue-600 text-white shadow-sm'
+                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                }`}
+                            >
+                                {tipo === 'todos' ? 'Todos' : tipo}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
 
@@ -648,299 +655,259 @@ export default function HotelesAdminPage() {
                 title={selectedAlojamiento ? '✏️ Editar Alojamiento' : '✨ Nuevo Alojamiento'}
                 size="lg"
             >
-                <div className="space-y-8">
-                    {/* Sección: Información Básica */}
-                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border-2 border-blue-200">
-                        <h3 className="text-lg font-bold text-blue-900 mb-4 flex items-center gap-2">
-                            <Home className="w-5 h-5" />
+                <div className="space-y-6">
+                    {/* Información Básica */}
+                    <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+                        <h3 className="text-sm font-bold text-blue-900 mb-3 flex items-center gap-2">
+                            <Home className="w-4 h-4" />
                             Información Básica
                         </h3>
-                        <div className="grid md:grid-cols-2 gap-4">
-                            <div className="md:col-span-2">
-                                <label className="block text-sm font-bold text-gray-900 mb-2">Nombre del Alojamiento *</label>
+                        <div className="space-y-3">
+                            <div>
+                                <label className="block text-xs font-bold text-gray-700 mb-1.5">Nombre del Alojamiento *</label>
                                 <input
                                     type="text"
                                     value={formData.nombre}
                                     onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-                                    className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                    className="w-full px-3 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     placeholder="Ej: EcoLodge Aventura Verde"
                                     required
                                 />
                             </div>
-
-                            <div>
-                                <label className="block text-sm font-bold text-gray-900 mb-2">Categoría *</label>
-                                <select
-                                    value={formData.categoria}
-                                    onChange={(e) => setFormData({ ...formData, categoria: e.target.value as any })}
-                                    className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                >
-                                    <option value="Económico">💰 Económico</option>
-                                    <option value="Familiar">👨‍👩‍👧‍👦 Familiar</option>
-                                    <option value="Parejas">💑 Parejas</option>
-                                    <option value="Premium">⭐ Premium</option>
-                                    <option value="Naturaleza">🌿 Naturaleza</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-bold text-gray-900 mb-2">Tipo *</label>
-                                <select
-                                    value={formData.tipo}
-                                    onChange={(e) => setFormData({ ...formData, tipo: e.target.value as any })}
-                                    className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                >
-                                    <option value="Cabaña">🏡 Cabaña</option>
-                                    <option value="EcoLodge">🌲 EcoLodge</option>
-                                    <option value="Hotel">🏨 Hotel</option>
-                                    <option value="Hostal">🏠 Hostal</option>
-                                    <option value="Casa">🏘️ Casa</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-bold text-gray-900 mb-2">Precio Base (S/.) *</label>
-                                <div className="relative">
-                                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                                    <input
-                                        type="number"
-                                        value={formData.precio_base}
-                                        onChange={(e) => setFormData({ ...formData, precio_base: Number(e.target.value) })}
-                                        className="w-full pl-10 pr-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                        placeholder="320"
-                                        min="0"
-                                    />
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-700 mb-1.5">Categoría *</label>
+                                    <select
+                                        value={formData.categoria}
+                                        onChange={(e) => setFormData({ ...formData, categoria: e.target.value as any })}
+                                        className="w-full px-3 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    >
+                                        <option value="Económico">💰 Económico</option>
+                                        <option value="Familiar">👨‍👩‍👧‍👦 Familiar</option>
+                                        <option value="Parejas">💑 Parejas</option>
+                                        <option value="Premium">⭐ Premium</option>
+                                        <option value="Naturaleza">🌿 Naturaleza</option>
+                                    </select>
                                 </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-bold text-gray-900 mb-2">Capacidad Máxima *</label>
-                                <div className="relative">
-                                    <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                                    <input
-                                        type="number"
-                                        value={formData.capacidad_maxima}
-                                        onChange={(e) => setFormData({ ...formData, capacidad_maxima: Number(e.target.value) })}
-                                        className="w-full pl-10 pr-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                        placeholder="4"
-                                        min="1"
-                                    />
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-700 mb-1.5">Tipo *</label>
+                                    <select
+                                        value={formData.tipo}
+                                        onChange={(e) => setFormData({ ...formData, tipo: e.target.value as any })}
+                                        className="w-full px-3 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    >
+                                        <option value="Cabaña">🏡 Cabaña</option>
+                                        <option value="EcoLodge">🌲 EcoLodge</option>
+                                        <option value="Hotel">🏨 Hotel</option>
+                                        <option value="Hostal">🏠 Hostal</option>
+                                        <option value="Casa">🏘️ Casa</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-700 mb-1.5">Precio Base (S/.) *</label>
+                                    <div className="relative">
+                                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                        <input
+                                            type="number"
+                                            value={formData.precio_base}
+                                            onChange={(e) => setFormData({ ...formData, precio_base: Number(e.target.value) })}
+                                            className="w-full pl-9 pr-3 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            placeholder="320"
+                                            min="0"
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-700 mb-1.5">Capacidad Máxima *</label>
+                                    <div className="relative">
+                                        <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                        <input
+                                            type="number"
+                                            value={formData.capacidad_maxima}
+                                            onChange={(e) => setFormData({ ...formData, capacidad_maxima: Number(e.target.value) })}
+                                            className="w-full pl-9 pr-3 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            placeholder="4"
+                                            min="1"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Sección: Ubicación */}
-                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-6 border-2 border-yellow-200">
-                        <h3 className="text-lg font-bold text-yellow-400 mb-4 flex items-center gap-2">
-                            <MapPin className="w-5 h-5" />
+                    {/* Ubicación */}
+                    <div className="bg-green-50 rounded-xl p-4 border border-green-200">
+                        <h3 className="text-sm font-bold text-green-900 mb-3 flex items-center gap-2">
+                            <MapPin className="w-4 h-4" />
                             Ubicación
                         </h3>
-                        <div className="grid md:grid-cols-3 gap-4 mb-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
                             <div>
-                                <label className="block text-sm font-bold text-gray-900 mb-2">Distrito</label>
+                                <label className="block text-xs font-bold text-gray-700 mb-1.5">Distrito</label>
                                 <input
                                     type="text"
                                     value={formData.distrito}
                                     onChange={(e) => setFormData({ ...formData, distrito: e.target.value })}
-                                    className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                                    className="w-full px-3 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500"
                                     placeholder="Llacanora"
                                 />
                             </div>
-
                             <div>
-                                <label className="block text-sm font-bold text-gray-900 mb-2">Provincia</label>
+                                <label className="block text-xs font-bold text-gray-700 mb-1.5">Provincia</label>
                                 <input
                                     type="text"
                                     value={formData.provincia}
                                     onChange={(e) => setFormData({ ...formData, provincia: e.target.value })}
-                                    className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                                    className="w-full px-3 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500"
                                     placeholder="Cajamarca"
                                 />
                             </div>
-
                             <div>
-                                <label className="block text-sm font-bold text-gray-900 mb-2">Departamento</label>
+                                <label className="block text-xs font-bold text-gray-700 mb-1.5">Departamento</label>
                                 <input
                                     type="text"
                                     value={formData.departamento}
                                     onChange={(e) => setFormData({ ...formData, departamento: e.target.value })}
-                                    className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                                    className="w-full px-3 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500"
                                     placeholder="Cajamarca"
                                 />
                             </div>
                         </div>
-
                         <div>
-                            <label className="block text-sm font-bold text-gray-900 mb-2">Dirección Completa</label>
+                            <label className="block text-xs font-bold text-gray-700 mb-1.5">Dirección Completa</label>
                             <input
                                 type="text"
                                 value={formData.direccion}
                                 onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
-                                className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                                className="w-full px-3 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500"
                                 placeholder="Calle Principal 123, Referencia: Cerca al parque"
                             />
                         </div>
                     </div>
 
-                    {/* Sección: Descripción */}
-                    <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6 border-2 border-purple-200">
-                        <h3 className="text-lg font-bold text-purple-900 mb-4 flex items-center gap-2">
-                            <Edit className="w-5 h-5" />
+                    {/* Descripción */}
+                    <div className="bg-purple-50 rounded-xl p-4 border border-purple-200">
+                        <h3 className="text-sm font-bold text-purple-900 mb-3 flex items-center gap-2">
+                            <Edit className="w-4 h-4" />
                             Descripción
                         </h3>
                         <textarea
                             value={formData.descripcion}
                             onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
-                            rows={4}
-                            className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none transition-all"
-                            placeholder="Describe el alojamiento, sus características principales y lo que lo hace especial... Incluye detalles sobre el ambiente, las vistas, la experiencia que ofrece, etc."
+                            rows={3}
+                            className="w-full px-3 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+                            placeholder="Describe el alojamiento, sus características principales y lo que lo hace especial..."
                         />
-                        <p className="text-xs text-gray-600 mt-2">💡 Tip: Una buena descripción ayuda a los huéspedes a imaginar su estadía</p>
                     </div>
 
-                    {/* Sección de Imágenes */}
-                    <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-2xl p-6 border-2 border-orange-200">
-                        <h3 className="text-lg font-bold text-orange-900 mb-2 flex items-center gap-2">
+                    {/* Imágenes */}
+                    <div className="bg-orange-50 rounded-xl p-4 border border-orange-200">
+                        <h3 className="text-sm font-bold text-orange-900 mb-1 flex items-center gap-2">
                             📸 Imágenes del Alojamiento
                         </h3>
-                        <p className="text-sm text-gray-700 mb-4">
-                            Sube hasta <span className="font-bold text-orange-600">10 imágenes</span> (máx. 5MB cada una). 
-                            La primera imagen marcada con ⭐ será la <span className="font-bold">imagen principal</span>.
-                        </p>
+                        <p className="text-xs text-gray-600 mb-3">Máx. 10 imágenes (5MB c/u). La marcada con ⭐ será la principal.</p>
                         
-                        {/* Botón de subida */}
-                        <div className="mb-6">
-                            <label className={`cursor-pointer inline-flex items-center gap-2 px-6 py-4 rounded-xl transition-all font-bold shadow-lg hover:shadow-xl transform hover:scale-105 ${
-                                imagePreviews.length >= 10 
-                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                                    : 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white'
-                            }`}>
-                                <Plus className="w-5 h-5" />
-                                <span>Seleccionar Imágenes</span>
-                                {imagePreviews.length > 0 && (
-                                    <span className="ml-2 px-2 py-1 bg-white/20 rounded-full text-xs">
-                                        {imagePreviews.length}/10
-                                    </span>
-                                )}
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    multiple
-                                    onChange={handleImageSelect}
-                                    className="hidden"
-                                    disabled={imagePreviews.length >= 10}
-                                />
-                            </label>
-                            {imagePreviews.length >= 10 && (
-                                <p className="text-sm text-yellow-400 mt-2 font-semibold">⚠️ Máximo 10 imágenes permitidas</p>
-                            )}
-                        </div>
+                        <label className={`cursor-pointer inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                            imagePreviews.length >= 10 
+                                ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
+                                : 'bg-orange-500 hover:bg-orange-600 text-white shadow-sm'
+                        }`}>
+                            <Plus className="w-4 h-4" />
+                            Seleccionar Imágenes
+                            {imagePreviews.length > 0 && <span className="ml-1 opacity-75">({imagePreviews.length}/10)</span>}
+                            <input
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                onChange={handleImageSelect}
+                                className="hidden"
+                                disabled={imagePreviews.length >= 10}
+                            />
+                        </label>
 
-                        {/* Grid de previews */}
-                        {imagePreviews.length > 0 && (
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {imagePreviews.length > 0 ? (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-4">
                                 {imagePreviews.map((preview, index) => (
                                     <div key={index} className="relative group">
-                                        <div className="relative overflow-hidden rounded-xl border-3 border-white shadow-lg">
+                                        <div className="relative overflow-hidden rounded-lg border-2 border-white shadow">
                                             <img
                                                 src={preview}
                                                 alt={`Preview ${index + 1}`}
-                                                className="w-full h-36 object-cover transition-transform duration-300 group-hover:scale-110"
+                                                className="w-full h-24 sm:h-28 object-cover"
                                             />
-                                            
-                                            {/* Badge de imagen principal */}
                                             {index === principalImageIndex && (
-                                                <div className="absolute top-2 left-2 bg-gradient-to-r from-yellow-300 to-yellow-400 text-white px-3 py-1 rounded-lg text-xs font-bold shadow-lg flex items-center gap-1 animate-pulse">
+                                                <div className="absolute top-1 left-1 bg-yellow-400 text-white px-1.5 py-0.5 rounded text-[10px] font-bold">
                                                     ⭐ Principal
                                                 </div>
                                             )}
-                                            
-                                            {/* Número de imagen */}
-                                            <div className="absolute top-2 right-2 bg-black/60 text-white px-2 py-1 rounded-lg text-xs font-bold">
-                                                {index + 1}
-                                            </div>
-                                            
-                                            {/* Botones de acción */}
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-xl flex flex-col items-center justify-center gap-2">
+                                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 p-1">
                                                 {index !== principalImageIndex && (
                                                     <button
                                                         onClick={() => setPrincipalImageIndex(index)}
-                                                        className="px-4 py-2 bg-gradient-to-r from-yellow-300 to-yellow-400 hover:from-yellow-400 hover:to-yellow-500 text-white rounded-lg text-sm font-bold shadow-lg transform hover:scale-110 transition-all flex items-center gap-1"
-                                                        title="Marcar como principal"
+                                                        className="w-full px-2 py-1 bg-yellow-400 text-white rounded text-[10px] font-bold"
                                                     >
                                                         ⭐ Principal
                                                     </button>
                                                 )}
                                                 <button
                                                     onClick={() => handleRemoveImage(index)}
-                                                    className="px-4 py-2 bg-gradient-to-r from-yellow-300 to-yellow-400 hover:from-yellow-400 hover:to-yellow-500 text-white rounded-lg text-sm font-bold shadow-lg transform hover:scale-110 transition-all flex items-center gap-1"
-                                                    title="Eliminar imagen"
+                                                    className="w-full px-2 py-1 bg-red-500 text-white rounded text-[10px] font-bold flex items-center justify-center gap-1"
                                                 >
-                                                    <X className="w-4 h-4" />
-                                                    Eliminar
+                                                    <X className="w-3 h-3" /> Eliminar
                                                 </button>
                                             </div>
                                         </div>
                                     </div>
                                 ))}
                             </div>
-                        )}
-
-                        {imagePreviews.length === 0 && (
-                            <div className="border-2 border-dashed border-orange-300 rounded-xl bg-white/50 text-center py-12 text-gray-400">
-                                <div className="w-20 h-20 mx-auto mb-4 bg-orange-100 rounded-full flex items-center justify-center">
-                                    <Home className="w-10 h-10 text-orange-400" />
-                                </div>
-                                <p className="text-sm font-semibold text-gray-600">No hay imágenes seleccionadas</p>
-                                <p className="text-xs text-gray-500 mt-1">Haz clic en "Seleccionar Imágenes" para comenzar</p>
+                        ) : (
+                            <div className="mt-3 border-2 border-dashed border-orange-300 rounded-lg bg-white/50 text-center py-8">
+                                <Home className="w-8 h-8 text-orange-300 mx-auto mb-2" />
+                                <p className="text-xs text-gray-500">Sin imágenes seleccionadas</p>
                             </div>
                         )}
                     </div>
 
-                    {/* Sección: Servicios Incluidos */}
-                    <div className="bg-gradient-to-r from-cyan-50 to-teal-50 rounded-2xl p-6 border-2 border-cyan-200">
-                        <h3 className="text-lg font-bold text-cyan-900 mb-2 flex items-center gap-2">
+                    {/* Servicios */}
+                    <div className="bg-cyan-50 rounded-xl p-4 border border-cyan-200">
+                        <h3 className="text-sm font-bold text-cyan-900 mb-1 flex items-center gap-2">
                             ✨ Servicios Incluidos
                         </h3>
-                        <p className="text-sm text-gray-700 mb-4">Selecciona todos los servicios que ofrece este alojamiento</p>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-80 overflow-y-auto p-4 bg-white/50 rounded-xl border-2 border-cyan-100">
+                        <p className="text-xs text-gray-600 mb-3">
+                            {formData.servicios_incluidos.length} seleccionado{formData.servicios_incluidos.length !== 1 ? 's' : ''}
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-1">
                             {serviciosDisponibles.map((servicio) => (
-                                <label key={servicio} className="flex items-center gap-3 cursor-pointer hover:bg-white p-3 rounded-xl transition-all border-2 border-transparent hover:border-cyan-300 hover:shadow-md group">
+                                <label key={servicio} className="flex items-center gap-2 cursor-pointer hover:bg-white p-2 rounded-lg transition-all border border-transparent hover:border-cyan-200 group">
                                     <input
                                         type="checkbox"
                                         checked={formData.servicios_incluidos.includes(servicio)}
                                         onChange={() => handleToggleServicio(servicio)}
-                                        className="w-5 h-5 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500 transition-all"
+                                        className="w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500"
                                     />
-                                    <span className="text-sm text-gray-700 font-medium group-hover:text-cyan-900">{servicio}</span>
+                                    <span className="text-xs text-gray-700 font-medium">{servicio}</span>
                                 </label>
                             ))}
                         </div>
-                        <p className="text-xs text-gray-600 mt-3">
-                            ✅ {formData.servicios_incluidos.length} servicio{formData.servicios_incluidos.length !== 1 ? 's' : ''} seleccionado{formData.servicios_incluidos.length !== 1 ? 's' : ''}
-                        </p>
                     </div>
 
-                    {/* Estado del Alojamiento */}
-                    <div className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-2xl p-6 border-2 border-gray-200">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
+                    {/* Estado */}
+                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                        <div className="flex items-center justify-between gap-4">
+                            <div className="min-w-0">
+                                <p className="text-sm font-bold text-gray-900">
                                     {formData.activo ? '✅' : '❌'} Estado del Alojamiento
                                 </p>
-                                <p className="text-sm text-gray-600">
-                                    {formData.activo 
-                                        ? 'El alojamiento está visible y disponible para reservas' 
-                                        : 'El alojamiento está oculto y no acepta reservas'}
+                                <p className="text-xs text-gray-500 mt-0.5">
+                                    {formData.activo ? 'Visible y disponible para reservas' : 'Oculto, no acepta reservas'}
                                 </p>
                             </div>
                             <button
                                 onClick={() => setFormData({ ...formData, activo: !formData.activo })}
-                                className={`px-8 py-4 rounded-xl font-bold transition-all shadow-lg hover:shadow-xl transform hover:scale-105 ${
+                                className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
                                     formData.activo
-                                        ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-yellow-300 text-white'
-                                        : 'bg-gradient-to-r from-gray-400 to-gray-500 hover:from-gray-500 hover:to-gray-600 text-white'
+                                        ? 'bg-green-500 hover:bg-green-600 text-white'
+                                        : 'bg-gray-400 hover:bg-gray-500 text-white'
                                 }`}
                             >
                                 {formData.activo ? '✓ Activo' : '✕ Inactivo'}
@@ -948,29 +915,29 @@ export default function HotelesAdminPage() {
                         </div>
                     </div>
 
-                    {/* Botones de Acción */}
-                    <div className="flex justify-end gap-4 pt-6 border-t-2 border-gray-200">
+                    {/* Botones */}
+                    <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4 border-t border-gray-200">
                         <button
                             onClick={() => setIsEditModalOpen(false)}
                             disabled={saving || uploadingImages}
-                            className="px-8 py-4 bg-white hover:bg-gray-50 text-gray-700 rounded-xl transition-all font-bold border-2 border-gray-300 hover:border-gray-400 disabled:opacity-50 shadow-md hover:shadow-lg"
+                            className="w-full sm:w-auto px-6 py-2.5 bg-white hover:bg-gray-50 text-gray-700 rounded-xl text-sm font-semibold border border-gray-300 disabled:opacity-50"
                         >
                             Cancelar
                         </button>
                         <button
                             onClick={handleSaveAlojamiento}
                             disabled={saving || uploadingImages || !formData.nombre}
-                            className="px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 hover:shadow-xl text-white rounded-xl transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3 shadow-lg transform hover:scale-105"
+                            className="w-full sm:w-auto px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
                             {saving || uploadingImages ? (
                                 <>
-                                    <Loader2 className="w-5 h-5 animate-spin" />
-                                    {uploadingImages ? 'Subiendo imágenes...' : 'Guardando...'}
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    {uploadingImages ? 'Subiendo...' : 'Guardando...'}
                                 </>
                             ) : (
                                 <>
-                                    {selectedAlojamiento ? <Edit className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
-                                    {selectedAlojamiento ? 'Actualizar Alojamiento' : 'Crear Alojamiento'}
+                                    {selectedAlojamiento ? <Edit className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                                    {selectedAlojamiento ? 'Actualizar' : 'Crear Alojamiento'}
                                 </>
                             )}
                         </button>
@@ -987,71 +954,68 @@ export default function HotelesAdminPage() {
             >
                 {selectedAlojamiento && (
                     <div className="space-y-6">
-                        {/* Galería de Fotos Mejorada */}
+                        {/* Galería de Fotos */}
                         {selectedAlojamiento.fotos_alojamiento && selectedAlojamiento.fotos_alojamiento.length > 0 && (
-                            <div className="relative">
-                                <div className="grid grid-cols-3 gap-3">
-                                    {selectedAlojamiento.fotos_alojamiento.slice(0, 3).map((foto, idx) => (
-                                        <div key={idx} className="relative group overflow-hidden rounded-2xl">
-                                            <img 
-                                                src={foto.url} 
-                                                alt={`Foto ${idx + 1}`}
-                                                className="w-full h-40 object-cover transition-transform duration-300 group-hover:scale-110"
-                                            />
-                                            {foto.es_principal && (
-                                                <div className="absolute top-2 right-2 bg-gradient-to-r from-yellow-300 to-yellow-400 text-white px-2 py-1 rounded-lg text-xs font-bold shadow-lg">
-                                                    Principal
-                                                </div>
-                                            )}
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                        </div>
-                                    ))}
-                                </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                {selectedAlojamiento.fotos_alojamiento.slice(0, 3).map((foto, idx) => (
+                                    <div key={idx} className="relative overflow-hidden rounded-xl">
+                                        <img 
+                                            src={foto.url} 
+                                            alt={`Foto ${idx + 1}`}
+                                            className="w-full h-28 sm:h-36 object-cover"
+                                        />
+                                        {foto.es_principal && (
+                                            <div className="absolute top-1.5 right-1.5 bg-yellow-400 text-white px-1.5 py-0.5 rounded text-[10px] font-bold">
+                                                Principal
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
                             </div>
                         )}
 
                         {/* Información Principal con Iconos */}
-                        <div className="grid md:grid-cols-2 gap-4">
-                            <div className="p-5 bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl border-2 border-purple-200 shadow-sm">
-                                <div className="flex items-center gap-3 mb-2">
-                                    <div className="w-10 h-10 bg-purple-500 rounded-xl flex items-center justify-center">
-                                        <Home className="w-5 h-5 text-white" />
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="p-4 bg-purple-50 rounded-xl border border-purple-200">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <div className="w-7 h-7 bg-purple-500 rounded-lg flex items-center justify-center">
+                                        <Home className="w-3.5 h-3.5 text-white" />
                                     </div>
-                                    <p className="text-xs text-purple-700 font-bold uppercase tracking-wide">Categoría</p>
+                                    <p className="text-[10px] text-purple-700 font-bold uppercase tracking-wide">Categoría</p>
                                 </div>
-                                <p className="text-xl font-bold text-purple-900">{selectedAlojamiento.categoria}</p>
+                                <p className="text-base font-bold text-purple-900">{selectedAlojamiento.categoria}</p>
                             </div>
 
-                            <div className="p-5 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl border-2 border-blue-200 shadow-sm">
-                                <div className="flex items-center gap-3 mb-2">
-                                    <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center">
-                                        <Home className="w-5 h-5 text-white" />
+                            <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <div className="w-7 h-7 bg-blue-500 rounded-lg flex items-center justify-center">
+                                        <Home className="w-3.5 h-3.5 text-white" />
                                     </div>
-                                    <p className="text-xs text-blue-700 font-bold uppercase tracking-wide">Tipo</p>
+                                    <p className="text-[10px] text-blue-700 font-bold uppercase tracking-wide">Tipo</p>
                                 </div>
-                                <p className="text-xl font-bold text-blue-900">{selectedAlojamiento.tipo}</p>
+                                <p className="text-base font-bold text-blue-900">{selectedAlojamiento.tipo}</p>
                             </div>
 
-                            <div className="p-5 bg-gradient-to-br from-green-50 to-green-100 rounded-2xl border-2 border-yellow-200 shadow-sm">
-                                <div className="flex items-center gap-3 mb-2">
-                                    <div className="w-10 h-10 bg-yellow-400 rounded-xl flex items-center justify-center">
-                                        <DollarSign className="w-5 h-5 text-white" />
+                            <div className="p-4 bg-yellow-50 rounded-xl border border-yellow-200">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <div className="w-7 h-7 bg-yellow-400 rounded-lg flex items-center justify-center">
+                                        <DollarSign className="w-3.5 h-3.5 text-white" />
                                     </div>
-                                    <p className="text-xs text-yellow-400 font-bold uppercase tracking-wide">Precio Base</p>
+                                    <p className="text-[10px] text-yellow-600 font-bold uppercase tracking-wide">Precio Base</p>
                                 </div>
-                                <p className="text-2xl font-bold text-yellow-400">S/. {selectedAlojamiento.precio_base.toLocaleString()}</p>
-                                <p className="text-xs text-yellow-400 font-medium mt-1">por noche</p>
+                                <p className="text-lg font-bold text-yellow-500">S/. {selectedAlojamiento.precio_base.toLocaleString()}</p>
+                                <p className="text-[10px] text-yellow-500 mt-0.5">por noche</p>
                             </div>
 
-                            <div className="p-5 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl border-2 border-orange-200 shadow-sm">
-                                <div className="flex items-center gap-3 mb-2">
-                                    <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center">
-                                        <Users className="w-5 h-5 text-white" />
+                            <div className="p-4 bg-orange-50 rounded-xl border border-orange-200">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <div className="w-7 h-7 bg-orange-500 rounded-lg flex items-center justify-center">
+                                        <Users className="w-3.5 h-3.5 text-white" />
                                     </div>
-                                    <p className="text-xs text-orange-700 font-bold uppercase tracking-wide">Capacidad</p>
+                                    <p className="text-[10px] text-orange-700 font-bold uppercase tracking-wide">Capacidad</p>
                                 </div>
-                                <p className="text-2xl font-bold text-orange-900">{selectedAlojamiento.capacidad_maxima}</p>
-                                <p className="text-xs text-orange-700 font-medium mt-1">personas máximo</p>
+                                <p className="text-lg font-bold text-orange-900">{selectedAlojamiento.capacidad_maxima}</p>
+                                <p className="text-[10px] text-orange-600 mt-0.5">personas máximo</p>
                             </div>
                         </div>
 
@@ -1099,15 +1063,15 @@ export default function HotelesAdminPage() {
                             </div>
                         )}
 
-                        {/* Servicios Incluidos Mejorados */}
+                        {/* Servicios Incluidos */}
                         {selectedAlojamiento.servicios_incluidos && selectedAlojamiento.servicios_incluidos.length > 0 && (
-                            <div className="p-5 bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-2xl border-2 border-cyan-200">
-                                <p className="text-xs text-cyan-700 mb-4 font-bold uppercase tracking-wide">Servicios Incluidos</p>
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                            <div className="p-4 bg-cyan-50 rounded-xl border border-cyan-200">
+                                <p className="text-xs text-cyan-700 mb-3 font-bold uppercase tracking-wide">Servicios Incluidos</p>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
                                     {selectedAlojamiento.servicios_incluidos.map((servicio, idx) => (
-                                        <div key={idx} className="flex items-center gap-2 px-3 py-2 bg-white rounded-xl border-2 border-cyan-200 shadow-sm">
-                                            <div className="w-2 h-2 bg-cyan-500 rounded-full" />
-                                            <span className="text-xs text-cyan-900 font-semibold">{servicio}</span>
+                                        <div key={idx} className="flex items-center gap-1.5 px-2 py-1.5 bg-white rounded-lg border border-cyan-200">
+                                            <div className="w-1.5 h-1.5 bg-cyan-500 rounded-full flex-shrink-0" />
+                                            <span className="text-xs text-cyan-900 font-medium truncate">{servicio}</span>
                                         </div>
                                     ))}
                                 </div>
