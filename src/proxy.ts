@@ -38,7 +38,7 @@ function isRouteMatch(pathname: string, routes: string[]) {
   return routes.some((route) => pathname === route || pathname.startsWith(`${route}/`))
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   try {
@@ -89,7 +89,7 @@ export async function middleware(request: NextRequest) {
 
     return supabaseResponse
   } catch (error) {
-    console.error('Middleware error:', error)
+    console.error('Proxy error:', error)
     return NextResponse.next()
   }
 }
