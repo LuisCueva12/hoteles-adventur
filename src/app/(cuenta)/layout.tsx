@@ -77,7 +77,6 @@ function CuentaLayoutContent({ children }: { children: React.ReactNode }) {
         router.refresh()
     }
 
-    // Evitar errores de hidratación
     if (!mounted) {
         return null
     }
