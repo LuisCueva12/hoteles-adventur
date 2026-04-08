@@ -50,12 +50,12 @@ export function FAQSection() {
             <div className="max-w-4xl mx-auto px-6">
                 <div className="text-center mb-12">
                     <div className="inline-block mb-4">
-                        <span className="px-4 py-1.5 bg-yellow-50 text-yellow-400 text-xs font-semibold tracking-[0.3em] uppercase rounded-full">
+                        <span className="px-4 py-1.5 bg-yellow-50 text-yellow-700 text-xs font-semibold tracking-[0.3em] uppercase rounded-full">
                             FAQ
                         </span>
                     </div>
                     <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 font-serif">
-                        Preguntas <span className="text-yellow-400">Frecuentes</span>
+                        Preguntas <span className="text-yellow-600">Frecuentes</span>
                     </h2>
                     <div className="flex items-center justify-center gap-3 mb-6">
                         <div className="h-px w-20 bg-gradient-to-r from-transparent via-red-600 to-yellow-400" />
@@ -82,7 +82,7 @@ export function FAQSection() {
                                     {faq.question}
                                 </span>
                                 <ChevronDown 
-                                    className={`w-5 h-5 text-yellow-400 flex-shrink-0 transition-transform duration-300 ${
+                                    className={`w-5 h-5 text-yellow-600 flex-shrink-0 transition-transform duration-300 ${
                                         openIndex === index ? 'rotate-180' : ''
                                     }`}
                                 />

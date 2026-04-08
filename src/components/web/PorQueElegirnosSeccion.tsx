@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 
 const FILTERS = ['Todo', 'Restaurante', 'Piscina', 'Spa', 'Eventos']
 
@@ -64,11 +65,14 @@ export function PorQueElegirnosSeccion() {
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-12">
                     {filtered.map((item, i) => (
                         <div key={i} className="group relative h-64 overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 animate-fadeInUp">
-                            <img
+                            <Image
                                 src={item.img}
                                 alt={item.alt}
-                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                fill
+                                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                                className="object-cover group-hover:scale-110 transition-transform duration-700"
                                 loading="lazy"
+                                quality={75}
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent group-hover:from-black/90 transition-all" />
                             

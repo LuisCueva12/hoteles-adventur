@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { ClientOnly } from '@/components/ui'
 
 const HERO_IMAGES = [
@@ -77,11 +78,15 @@ export function HeroSeccion() {
                 <div key={index} className={`absolute inset-0 transition-all duration-1000 ${
                     index === currentSlide ? 'opacity-100 scale-100' : 'opacity-0 scale-110'
                 }`}>
-                    <img
+                    <Image
                         src={image.url}
                         alt={image.title}
+                        fill
+                        sizes="100vw"
+                        className="object-cover"
+                        priority={index === 0}
                         loading={index === 0 ? 'eager' : 'lazy'}
-                        className="w-full h-full object-cover"
+                        quality={85}
                     />
                     {/* Overlay con gradiente animado */}
                     <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80" />
@@ -180,10 +185,10 @@ export function HeroSeccion() {
                     <button
                         key={index}
                         onClick={() => goToSlide(index)}
-                        className={`h-2 rounded-full transition-all duration-300 ${
+                        className={`h-3 rounded-full transition-all duration-300 min-w-[12px] ${
                             index === currentSlide 
                                 ? 'bg-yellow-400 w-12 shadow-lg shadow-yellow-400/50' 
-                                : 'bg-white/40 w-2 hover:bg-white/70 hover:w-8'
+                                : 'bg-white/40 w-3 hover:bg-white/70 hover:w-8'
                         }`}
                         aria-label={`Ir a la diapositiva ${index + 1}`}
                     />

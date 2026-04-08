@@ -1,5 +1,3 @@
-'use client'
-
 import { HeroSeccion } from '@/components/web/HeroSeccion'
 import { BuscadorHoteles } from '@/components/web/BuscadorHoteles'
 import { HabitacionesSeccion } from '@/components/web/HabitacionesSeccion'

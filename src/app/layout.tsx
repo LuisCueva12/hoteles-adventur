@@ -28,6 +28,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="es" suppressHydrationWarning data-scroll-behavior="smooth">
       <head>
         <link rel="icon" href="/favicon.ico" />
+        <link
+          rel="preload"
+          as="image"
+          href="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1920&q=80"
+          fetchPriority="high"
+        />
       </head>
       <body className={`${geist.variable} font-sans antialiased bg-gray-50`}>
         <SiteConfigProvider initialConfig={siteConfig}>

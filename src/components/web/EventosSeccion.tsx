@@ -1,3 +1,5 @@
+import Image from 'next/image'
+
 const EVENTS = [
     {
         day: '25',
@@ -49,9 +51,10 @@ export function EventosSeccion() {
                     {EVENTS.map((event, index) => (
                         <div key={event.title} className="group bg-white shadow-sm hover:shadow-lg transition-all duration-500 overflow-hidden rounded-2xl hover:-translate-y-2 animate-fadeInUp">
                             <div className="relative h-48 overflow-hidden">
-                                <img src={event.img} alt={event.title}
-                                    loading="lazy"
-                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                <Image src={event.img} alt={event.title}
+                                    fill sizes="(max-width: 768px) 100vw, 33vw"
+                                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                                    loading="lazy" quality={75} />
                                 <div className="absolute bottom-0 left-0 bg-yellow-400 text-gray-900 px-4 py-2 text-center min-w-[60px]">
                                     <p className="text-2xl font-bold leading-none">{event.day}</p>
                                     <p className="text-xs tracking-widest">{event.month}</p>

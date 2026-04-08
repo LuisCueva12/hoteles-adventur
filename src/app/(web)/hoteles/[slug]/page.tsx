@@ -3,6 +3,7 @@
 import { useState, useEffect, useSyncExternalStore } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { 
     ChevronLeft, ChevronRight, Users, Maximize, Bed, Eye, Building2, 
     Check, Star, Heart, Share2, Calendar, Clock, Wifi, Tv, Wind,
@@ -780,7 +781,7 @@ export default function HabitacionDetailPage() {
 
                         {/* Header */}
                         <div className="relative overflow-hidden h-40 flex-shrink-0">
-                            <img src={room.images[0]} alt={room.name} className="absolute inset-0 w-full h-full object-cover" />
+                            <Image src={room.images[0]} alt={room.name} fill sizes="448px" className="object-cover" loading="lazy" />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-red-700/60 to-transparent" />
                             <div className="relative z-10 flex items-end justify-between px-6 pb-5 h-full">
                                 <div>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { createClient } from '@/utils/supabase/client'
 import { Loader2 } from 'lucide-react'
 
@@ -107,13 +108,13 @@ export function HabitacionesSeccion() {
             <div className="max-w-7xl mx-auto px-6 relative z-10">
                 <div className="text-center mb-16 animate-fadeInUp">
                     <div className="inline-block mb-4">
-                        <span className="px-4 py-1.5 bg-yellow-50 text-yellow-400 text-xs font-semibold tracking-[0.3em] uppercase rounded-full">
+                        <span className="px-4 py-1.5 bg-yellow-50 text-yellow-700 text-xs font-semibold tracking-[0.3em] uppercase rounded-full">
                             Nuestras Habitaciones
                         </span>
                     </div>
                     
                     <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 font-serif">
-                        Bienvenido al <span className="text-yellow-400">Hotel</span>
+                        Bienvenido al <span className="text-yellow-600">Hotel</span>
                     </h2>
                     
                     <div className="flex items-center justify-center gap-3 mb-6">
@@ -131,9 +132,13 @@ export function HabitacionesSeccion() {
                     {rooms.map((room, idx) => (
                         <div key={room.id} className="group overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-3 bg-white animate-fadeInUp">
                             <div className="relative h-64 overflow-hidden">
-                                <img src={room.img} alt={room.title}
+                                <Image src={room.img} alt={room.title}
+                                    fill
+                                    sizes="(max-width: 768px) 100vw, 33vw"
+                                    className="object-cover group-hover:scale-110 transition-transform duration-700"
                                     loading="lazy"
-                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                    quality={80}
+                                />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent group-hover:from-black/70 transition-all" />
                                 
                                 {/* Badge de precio flotante */}
@@ -159,8 +164,8 @@ export function HabitacionesSeccion() {
                             
                             <div className="p-6 bg-white">
                                 <div className="flex items-center justify-between mb-3">
-                                    <h3 className="text-xl font-bold text-gray-900 group-hover:text-yellow-400 transition-colors">{room.title}</h3>
-                                    <div className="flex items-center gap-1 text-yellow-400">
+                                    <h3 className="text-xl font-bold text-gray-900 group-hover:text-yellow-600 transition-colors">{room.title}</h3>
+                                    <div className="flex items-center gap-1 text-yellow-500">
                                         {[...Array(5)].map((_, i) => (
                                             <svg key={i} className="w-4 h-4 fill-current" viewBox="0 0 20 20">
                                                 <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />

@@ -218,7 +218,7 @@ export default function NosotrosPage() {
                                         </div>
                                     </div>
                                     <div>
-                                        <h4 className="font-bold text-gray-900 mb-2 group-hover:text-yellow-400 transition-colors">{item.title}</h4>
+                                        <h3 className="font-bold text-gray-900 mb-2 group-hover:text-yellow-400 transition-colors">{item.title}</h3>
                                         <p className="text-sm text-gray-600">{item.desc}</p>
                                     </div>
                                 </div>

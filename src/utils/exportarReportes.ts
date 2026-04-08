@@ -1,9 +1,9 @@
-import jsPDF from 'jspdf'
-import autoTable from 'jspdf-autotable'
-import * as XLSX from 'xlsx'
-
 // Función para exportar reporte de ingresos a PDF
 export const exportIngresosPDF = async () => {
+    const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+        import('jspdf'),
+        import('jspdf-autotable'),
+    ])
     const doc = new jsPDF()
     
     // Configuración de colores
@@ -124,6 +124,7 @@ export const exportIngresosPDF = async () => {
 
 // Función para exportar reporte de reservas a Excel
 export const exportReservasExcel = async () => {
+    const XLSX = await import('xlsx')
     // Datos de ejemplo (en producción vendrían de Supabase)
     const reservasData = [
         {
@@ -225,6 +226,7 @@ export const exportReservasExcel = async () => {
 
 // Función para exportar reporte de usuarios a CSV
 export const exportUsuariosCSV = async () => {
+    const XLSX = await import('xlsx')
     // Datos de ejemplo (en producción vendrían de Supabase)
     const usuariosData = [
         {

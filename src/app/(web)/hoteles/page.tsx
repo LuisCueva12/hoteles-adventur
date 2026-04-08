@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense, useRef, useSyncExternalStore } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import {
     Users, Star, Building2, SlidersHorizontal, X, Search, MapPin,
     Grid3X3, List, ChevronUp, ChevronDown, Heart, ArrowUpDown,
@@ -30,9 +31,9 @@ const TIPOS = ['Cabaña', 'EcoLodge', 'Hotel', 'Hostal', 'Casa']
 
 const CATEGORIA_COLORS: Record<string, string> = {
     'Económico': 'bg-blue-100 text-blue-700',
-    'Familiar': 'bg-yellow-100 text-yellow-400',
+    'Familiar': 'bg-yellow-100 text-yellow-700',
     'Parejas': 'bg-pink-100 text-pink-700',
-    'Premium': 'bg-yellow-100 text-yellow-400',
+    'Premium': 'bg-yellow-100 text-yellow-700',
     'Naturaleza': 'bg-emerald-100 text-emerald-700',
 }
 
@@ -209,8 +210,8 @@ function HotelesContent() {
         <div className="bg-gray-50 min-h-screen">
             {/* ── HERO ─────────────────────────────────────────────────────── */}
             <section className="relative h-[42vh] flex items-end justify-center overflow-hidden">
-                <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1920&q=80"
-                    alt="Alojamientos" className="absolute inset-0 w-full h-full object-cover" />
+                <Image src="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1920&q=80"
+                    alt="Alojamientos" fill sizes="100vw" className="object-cover" priority quality={85} />
                 <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/75" />
                 <div className="relative z-10 w-full max-w-7xl mx-auto px-6 pb-10">
                     <h1 className="text-5xl font-bold text-white mb-2 font-serif">Nuestros Alojamientos</h1>
@@ -245,7 +246,7 @@ function HotelesContent() {
                         {checkIn && <Tag label={`${fmtFecha(checkIn)} → ${checkOut ? fmtFecha(checkOut) : '?'}`} onRemove={() => { setCheckIn(''); setCheckOut('') }} />}
                         {(precioMin || precioMax) && <Tag label={`S/. ${precioMin || '0'} – ${precioMax || '∞'}`} onRemove={() => { setPrecioMin(''); setPrecioMax('') }} />}
                         {busqueda && <Tag label={`"${busqueda}"`} onRemove={() => setBusqueda('')} />}
-                        <button onClick={limpiarTodo} className="ml-auto text-xs text-yellow-400 hover:text-yellow-400 font-bold transition-colors">
+                        <button onClick={limpiarTodo} className="ml-auto text-xs text-yellow-700 hover:text-yellow-800 font-bold transition-colors">
                             Limpiar todo
                         </button>
                     </div>
@@ -262,7 +263,7 @@ function HotelesContent() {
                                 <div className="flex items-center gap-2 text-white">
                                     <SlidersHorizontal size={17} />
                                     <span className="font-bold text-sm uppercase tracking-wide">Filtros</span>
-                                    {nFiltros > 0 && <span className="bg-white text-yellow-400 text-xs font-bold px-2 py-0.5 rounded-full">{nFiltros}</span>}
+                                    {nFiltros > 0 && <span className="bg-white text-yellow-700 text-xs font-bold px-2 py-0.5 rounded-full">{nFiltros}</span>}
                                 </div>
                                 {nFiltros > 0 && (
                                     <button onClick={limpiarTodo} className="text-white/80 hover:text-white text-xs flex items-center gap-1">
@@ -339,7 +340,7 @@ function HotelesContent() {
                                             />
                                         </div>
                                         {noches > 0 && (
-                                            <div className="bg-yellow-50 border border-yellow-200 rounded-xl px-3 py-2 text-xs text-yellow-400 font-semibold text-center">
+                                            <div className="bg-yellow-50 border border-yellow-200 rounded-xl px-3 py-2 text-xs text-yellow-700 font-semibold text-center">
                                                 {noches} noche{noches > 1 ? 's' : ''} seleccionada{noches > 1 ? 's' : ''}
                                             </div>
                                         )}
@@ -455,7 +456,7 @@ function HotelesContent() {
                         <div className="flex items-center gap-3">
                             <button onClick={() => setSidebarOpen(v => !v)}
                                 className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold transition-all border ${
-                                    sidebarOpen ? 'bg-yellow-50 text-yellow-400 border-yellow-200' : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                                    sidebarOpen ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                                 }`}>
                                 <SlidersHorizontal size={15} />
                                 {sidebarOpen ? 'Ocultar' : 'Filtros'}
@@ -563,9 +564,9 @@ function fmtFecha(fecha: string) {
 
 function Tag({ label, onRemove }: { label: string; onRemove: () => void }) {
     return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-yellow-50 text-yellow-400 border border-yellow-200 rounded-full text-xs font-semibold">
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-yellow-50 text-yellow-700 border border-yellow-200 rounded-full text-xs font-semibold">
             {label}
-            <button onClick={onRemove} className="hover:text-yellow-400 transition-colors ml-0.5">
+            <button onClick={onRemove} className="hover:text-yellow-800 transition-colors ml-0.5">
                 <X size={11} />
             </button>
         </span>
@@ -582,8 +583,10 @@ function CardGrid({ aloj, imagen, esFav, onFav, linkParams }: {
     return (
         <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md hover:-translate-y-0.5 transition-all group">
             <div className="relative h-52 overflow-hidden">
-                <img src={imagen} alt={aloj.nombre}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <Image src={imagen} alt={aloj.nombre} fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy" quality={75} />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                 <button onClick={onFav}
                     className={`absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center shadow-md transition-all ${esFav ? 'bg-yellow-400 text-gray-900' : 'bg-white/90 text-gray-600 hover:bg-yellow-50 hover:text-yellow-400'}`}>
@@ -607,7 +610,7 @@ function CardGrid({ aloj, imagen, esFav, onFav, linkParams }: {
                 <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                     <div>
                         <p className="text-xs text-gray-400">desde</p>
-                        <p className="text-lg font-bold text-yellow-400">S/. {aloj.precio_base.toLocaleString('es-PE')}</p>
+                        <p className="text-lg font-bold text-yellow-600">S/. {aloj.precio_base.toLocaleString('es-PE')}</p>
                         <p className="text-xs text-gray-400">por noche</p>
                     </div>
                     <div className="flex flex-col items-end gap-2">
@@ -615,7 +618,7 @@ function CardGrid({ aloj, imagen, esFav, onFav, linkParams }: {
                             <Users size={11} /> Hasta {aloj.capacidad_maxima}
                         </span>
                         <Link href={`/hoteles/${aloj.id}${linkParams}`}
-                            className="px-4 py-2 bg-yellow-400 hover:bg-yellow-400 text-gray-900 text-xs font-bold rounded-xl transition-colors">
+                            className="px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-gray-900 text-xs font-bold rounded-xl transition-colors">
                             Ver detalles
                         </Link>
                     </div>
@@ -635,8 +638,10 @@ function CardLista({ aloj, imagen, esFav, onFav, linkParams }: {
     return (
         <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-all flex group">
             <div className="relative w-56 flex-shrink-0 overflow-hidden">
-                <img src={imagen} alt={aloj.nombre}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <Image src={imagen} alt={aloj.nombre} fill
+                    sizes="224px"
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy" quality={75} />
                 <button onClick={onFav}
                     className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-all ${esFav ? 'bg-yellow-400 text-gray-900' : 'bg-white/90 text-gray-600 hover:bg-yellow-50 hover:text-yellow-400'}`}>
                     <Heart size={13} fill={esFav ? 'currentColor' : 'none'} />
@@ -664,7 +669,7 @@ function CardLista({ aloj, imagen, esFav, onFav, linkParams }: {
                     <div className="flex items-center gap-4">
                         <div>
                             <p className="text-xs text-gray-400">desde</p>
-                            <p className="text-xl font-bold text-yellow-400">S/. {aloj.precio_base.toLocaleString('es-PE')}</p>
+                            <p className="text-xl font-bold text-yellow-600">S/. {aloj.precio_base.toLocaleString('es-PE')}</p>
                             <p className="text-xs text-gray-400">por noche</p>
                         </div>
                         <span className="text-sm text-gray-500 flex items-center gap-1">
@@ -672,7 +677,7 @@ function CardLista({ aloj, imagen, esFav, onFav, linkParams }: {
                         </span>
                     </div>
                     <Link href={`/hoteles/${aloj.id}${linkParams}`}
-                        className="px-6 py-2.5 bg-yellow-400 hover:bg-yellow-400 text-gray-900 text-sm font-bold rounded-xl transition-colors">
+                        className="px-6 py-2.5 bg-yellow-400 hover:bg-yellow-500 text-gray-900 text-sm font-bold rounded-xl transition-colors">
                         Ver detalles
                     </Link>
                 </div>
