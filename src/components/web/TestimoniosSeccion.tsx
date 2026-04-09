@@ -233,11 +233,15 @@ export function TestimoniosSeccion() {
                                 <button
                                     key={index}
                                     onClick={() => setCurrentIndex(index)}
-                                    className={`h-2.5 rounded-full transition-all duration-300 ${
-                                        index === currentIndex ? 'w-12 bg-yellow-400' : 'w-2.5 bg-slate-300 hover:bg-slate-400'
+                                    className={`h-11 rounded-full transition-all duration-300 flex items-center justify-center ${
+                                        index === currentIndex ? 'w-14' : 'w-11'
                                     }`}
                                     aria-label={`Ir al testimonio ${index + 1}`}
-                                />
+                                >
+                                    <span className={`block rounded-full transition-all duration-300 ${
+                                        index === currentIndex ? 'w-10 h-2.5 bg-yellow-400' : 'w-2.5 h-2.5 bg-slate-300 hover:bg-slate-400'
+                                    }`} />
+                                </button>
                             ))}
                         </div>
                     </div>

@@ -31,7 +31,6 @@ export function Footer() {
 
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('Newsletter suscripcion:', email)
     setMessage('Gracias por suscribirte')
     setEmail('')
     setTimeout(() => setMessage(''), 3000)
@@ -106,7 +105,7 @@ export function Footer() {
                 href={config.facebook}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-800 text-gray-900 transition-all duration-300 hover:scale-110 hover:bg-yellow-400"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-800 text-gray-300 transition-all duration-300 hover:scale-110 hover:bg-yellow-400 hover:text-gray-900"
                 title="Facebook"
                 aria-label="Siguenos en Facebook"
               >
@@ -118,7 +117,7 @@ export function Footer() {
                 href={config.instagram}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-800 text-gray-900 transition-all duration-300 hover:scale-110 hover:bg-yellow-400"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-800 text-gray-300 transition-all duration-300 hover:scale-110 hover:bg-yellow-400 hover:text-gray-900"
                 title="Instagram"
                 aria-label="Siguenos en Instagram"
               >
@@ -130,7 +129,7 @@ export function Footer() {
                 href={config.twitter}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-800 text-gray-900 transition-all duration-300 hover:scale-110 hover:bg-yellow-400"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-800 text-gray-300 transition-all duration-300 hover:scale-110 hover:bg-yellow-400 hover:text-gray-900"
                 title="X"
                 aria-label="Siguenos en X"
               >
@@ -141,7 +140,7 @@ export function Footer() {
               href={`https://wa.me/${whatsappPhone}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-800 text-gray-900 transition-all duration-300 hover:scale-110 hover:bg-yellow-400"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-800 text-gray-300 transition-all duration-300 hover:scale-110 hover:bg-yellow-400 hover:text-gray-900"
               title="WhatsApp"
               aria-label="Contactanos por WhatsApp"
             >

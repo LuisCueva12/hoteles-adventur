@@ -37,8 +37,8 @@ export function Navbar() {
                             href={link.href}
                             className={`px-3 py-2 text-sm font-medium transition-colors ${
                                 isActive(link.href)
-                                    ? 'text-yellow-400 border-b-2 border-yellow-400'
-                                    : 'text-gray-700 hover:text-yellow-400'
+                                    ? 'text-yellow-600 border-b-2 border-yellow-500'
+                                    : 'text-gray-700 hover:text-yellow-600'
                             }`}
                         >
                             {link.label}
@@ -73,8 +73,8 @@ export function Navbar() {
                         <Link
                             key={link.href}
                             href={link.href}
-                            className={`text-sm ${
-                                isActive(link.href) ? 'text-yellow-400 font-semibold' : 'text-gray-700 hover:text-yellow-400'
+                            className={`py-3 px-2 text-sm min-h-[44px] flex items-center ${
+                                isActive(link.href) ? 'text-yellow-500 font-semibold' : 'text-gray-700 hover:text-yellow-500'
                             }`}
                             onClick={() => setOpen(false)}
                         >
