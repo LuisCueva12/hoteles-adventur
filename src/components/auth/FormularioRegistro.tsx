@@ -107,7 +107,7 @@ export function RegisterForm({ onSubmit, loading }: RegisterFormProps) {
             )}
           </div>
           {errors.nombre && (
-            <p className="text-[10px] text-yellow-400">⚠️ {errors.nombre.message}</p>
+            <p className="text-[10px] text-red-600" role="alert">⚠️ {errors.nombre.message}</p>
           )}
         </div>
 
@@ -135,7 +135,7 @@ export function RegisterForm({ onSubmit, loading }: RegisterFormProps) {
             )}
           </div>
           {errors.apellido && (
-            <p className="text-[10px] text-yellow-400">⚠️ {errors.apellido.message}</p>
+            <p className="text-[10px] text-red-600" role="alert">⚠️ {errors.apellido.message}</p>
           )}
         </div>
       </div>
@@ -164,7 +164,7 @@ export function RegisterForm({ onSubmit, loading }: RegisterFormProps) {
           )}
         </div>
         {errors.email && (
-          <p className="text-[10px] text-yellow-400">⚠️ {errors.email.message}</p>
+          <p className="text-[10px] text-red-600" role="alert">⚠️ {errors.email.message}</p>
         )}
       </div>
 
@@ -188,14 +188,14 @@ export function RegisterForm({ onSubmit, loading }: RegisterFormProps) {
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-yellow-400 transition-colors p-0.5 rounded hover:bg-yellow-50"
-            tabIndex={-1}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-yellow-400 transition-colors p-0.5 rounded hover:bg-yellow-50 min-w-[44px] min-h-[44px] flex items-center justify-center"
+            aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
           >
             {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
           </button>
         </div>
         {errors.password && (
-          <p className="text-[10px] text-yellow-400">⚠️ {errors.password.message}</p>
+          <p className="text-[10px] text-red-600" role="alert">⚠️ {errors.password.message}</p>
         )}
         
         {password && password.length > 0 && (
@@ -249,14 +249,14 @@ export function RegisterForm({ onSubmit, loading }: RegisterFormProps) {
           <button
             type="button"
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-yellow-400 transition-colors p-0.5 rounded hover:bg-yellow-50"
-            tabIndex={-1}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-yellow-400 transition-colors p-0.5 rounded hover:bg-yellow-50 min-w-[44px] min-h-[44px] flex items-center justify-center"
+            aria-label={showConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
           >
             {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
           </button>
         </div>
         {errors.confirmPassword && (
-          <p className="text-[10px] text-yellow-400">⚠️ {errors.confirmPassword.message}</p>
+          <p className="text-[10px] text-red-600" role="alert">⚠️ {errors.confirmPassword.message}</p>
         )}
       </div>
 

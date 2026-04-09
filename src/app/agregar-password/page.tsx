@@ -278,7 +278,7 @@ export default function AgregarPasswordPage() {
                 </button>
               </div>
               {confirmPassword && password !== confirmPassword && (
-                <p className="text-xs text-yellow-400 animate-fadeInUp">⚠️ Las contraseñas no coinciden</p>
+                <p className="text-xs text-red-600 animate-fadeInUp" role="alert">⚠️ Las contraseñas no coinciden</p>
               )}
               {confirmPassword && password === confirmPassword && (
                 <p className="text-xs text-yellow-400 flex items-center gap-1 animate-fadeInUp">

@@ -7,17 +7,17 @@ import { ClientOnly } from '@/components/ui'
 
 const HERO_IMAGES = [
     {
-        url: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1920&q=80',
+        url: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1280&q=75&auto=format&fit=crop',
         title: 'Adventur Hotels',
         subtitle: 'El lugar donde buscas escaparte'
     },
     {
-        url: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=1920&q=80',
+        url: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=1280&q=70&auto=format&fit=crop',
         title: 'Experiencias Únicas',
         subtitle: 'Vive momentos inolvidables'
     },
     {
-        url: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=1920&q=80',
+        url: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=1280&q=70&auto=format&fit=crop',
         title: 'Lujo y Confort',
         subtitle: 'Tu descanso es nuestra prioridad'
     }
@@ -86,7 +86,8 @@ export function HeroSeccion() {
                         className="object-cover"
                         priority={index === 0}
                         loading={index === 0 ? 'eager' : 'lazy'}
-                        quality={85}
+                        quality={index === 0 ? 80 : 65}
+                        fetchPriority={index === 0 ? 'high' : 'low'}
                     />
                     {/* Overlay con gradiente animado */}
                     <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80" />

@@ -31,7 +31,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link
           rel="preload"
           as="image"
-          href="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1920&q=80"
+          href="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1280&q=75&auto=format&fit=crop"
           fetchPriority="high"
         />
       </head>

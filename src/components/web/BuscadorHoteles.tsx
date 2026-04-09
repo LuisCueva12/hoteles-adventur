@@ -51,31 +51,34 @@ export function BuscadorHoteles() {
     <div className="bg-white shadow-2xl border-t-4 border-yellow-400 -mt-8 relative z-20 max-w-5xl mx-auto rounded-b-2xl overflow-visible">
       <div className="flex flex-col lg:flex-row divide-y lg:divide-y-0 lg:divide-x divide-gray-200">
         <div className="flex-1 px-5 py-4 flex items-center gap-3">
-          <MapPin size={18} className="text-yellow-400 flex-shrink-0" />
+          <MapPin size={18} className="text-yellow-400 flex-shrink-0" aria-hidden="true" />
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Destino o nombre</p>
+            <label htmlFor="buscar-destino" className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Destino o nombre</label>
             <input
+              id="buscar-destino"
               type="text"
               value={destino}
               onChange={(event) => setDestino(event.target.value)}
               onKeyDown={(event) => event.key === 'Enter' && handleBuscar()}
               placeholder="A donde vas?"
               className={inputCls}
+              aria-label="Destino o nombre del hotel"
             />
           </div>
           {destino && (
-            <button onClick={() => setDestino('')} className="text-gray-300 hover:text-gray-500">
+            <button onClick={() => setDestino('')} className="text-gray-300 hover:text-gray-500 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Limpiar destino">
               <X size={14} />
             </button>
           )}
         </div>
 
         <div className="flex-1 px-5 py-4 flex items-center gap-3">
-          <Calendar size={18} className="text-yellow-400 flex-shrink-0" />
+          <Calendar size={18} className="text-yellow-400 flex-shrink-0" aria-hidden="true" />
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Check-in</p>
+            <label htmlFor="buscar-checkin" className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Check-in</label>
             {mounted ? (
               <input
+                id="buscar-checkin"
                 type="date"
                 value={checkIn}
                 min={minDate}
@@ -84,6 +87,7 @@ export function BuscadorHoteles() {
                   if (checkOut && event.target.value >= checkOut) setCheckOut('')
                 }}
                 className={inputCls}
+                aria-label="Fecha de check-in"
               />
             ) : (
               <p className="text-sm text-gray-400">Seleccionar fecha</p>
@@ -92,18 +96,20 @@ export function BuscadorHoteles() {
         </div>
 
         <div className="flex-1 px-5 py-4 flex items-center gap-3">
-          <Calendar size={18} className="text-yellow-400 flex-shrink-0" />
+          <Calendar size={18} className="text-yellow-400 flex-shrink-0" aria-hidden="true" />
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">
+            <label htmlFor="buscar-checkout" className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">
               Check-out {noches > 0 && <span className="text-yellow-400 normal-case font-bold">· {noches}n</span>}
-            </p>
+            </label>
             {mounted ? (
               <input
+                id="buscar-checkout"
                 type="date"
                 value={checkOut}
                 min={checkIn || minDate}
                 onChange={(event) => setCheckOut(event.target.value)}
                 className={inputCls}
+                aria-label="Fecha de check-out"
               />
             ) : (
               <p className="text-sm text-gray-400">Seleccionar fecha</p>
@@ -112,13 +118,16 @@ export function BuscadorHoteles() {
         </div>
 
         <div className="flex-1 px-5 py-4 flex items-center gap-3 relative" ref={huespedesRef}>
-          <Users size={18} className="text-yellow-400 flex-shrink-0" />
+          <Users size={18} className="text-yellow-400 flex-shrink-0" aria-hidden="true" />
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Huespedes</p>
+            <p id="huespedes-label" className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Huespedes</p>
             <button
               type="button"
               onClick={() => setShowHuespedes((value) => !value)}
-              className="flex items-center gap-1 text-sm font-semibold text-gray-900"
+              className="flex items-center gap-1 text-sm font-semibold text-gray-900 min-h-[44px]"
+              aria-haspopup="true"
+              aria-expanded={showHuespedes}
+              aria-labelledby="huespedes-label"
             >
               {huespedes} {huespedes === 1 ? 'persona' : 'personas'}
               <ChevronDown size={13} className={`text-gray-400 transition-transform ml-1 ${showHuespedes ? 'rotate-180' : ''}`} />
@@ -152,7 +161,8 @@ export function BuscadorHoteles() {
         <div className="px-4 py-3 flex items-center justify-center lg:py-0">
           <button
             onClick={handleBuscar}
-            className="w-full lg:w-auto flex items-center justify-center gap-2 px-8 py-3.5 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold text-sm uppercase tracking-wider rounded-xl transition-all hover:shadow-lg whitespace-nowrap"
+            className="w-full lg:w-auto flex items-center justify-center gap-2 px-8 py-3.5 min-h-[44px] bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold text-sm uppercase tracking-wider rounded-xl transition-all hover:shadow-lg whitespace-nowrap"
+            aria-label="Buscar hoteles"
           >
             <Search size={16} />
             Buscar

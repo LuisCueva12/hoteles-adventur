@@ -45,7 +45,7 @@ export function Footer() {
           <div className="mb-4">
             <Logo className="h-10" variant="footer" />
           </div>
-          <h4 className="mb-4 text-sm font-semibold uppercase tracking-widest text-white">Contacto</h4>
+          <h2 className="mb-4 text-sm font-semibold uppercase tracking-widest text-white">Contacto</h2>
           <p className="text-sm leading-relaxed">{config.direccion}</p>
           <p className="mt-1 text-sm">{config.ciudad}, {config.pais}</p>
           <p className="mt-3 text-sm">{config.telefono}</p>
@@ -66,7 +66,7 @@ export function Footer() {
 
         {Object.entries(FOOTER_LINKS).map(([title, links]) => (
           <div key={title}>
-            <h4 className="mb-4 text-sm font-semibold uppercase tracking-widest text-white">{title}</h4>
+            <h2 className="mb-4 text-sm font-semibold uppercase tracking-widest text-white">{title}</h2>
             <ul className="space-y-2">
               {links.map((link) => (
                 <li key={link.label}>
@@ -80,7 +80,7 @@ export function Footer() {
         ))}
 
         <div>
-          <h4 className="mb-4 text-sm font-semibold uppercase tracking-widest text-white">Newsletter</h4>
+          <h2 className="mb-4 text-sm font-semibold uppercase tracking-widest text-white">Newsletter</h2>
           <p className="mb-4 text-sm">Suscribete para recibir las ultimas noticias y ofertas.</p>
           <form onSubmit={handleNewsletterSubmit} className="flex gap-2">
             <input

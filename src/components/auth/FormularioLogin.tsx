@@ -107,8 +107,8 @@ export function LoginForm({ onSubmit, loading }: LoginFormProps) {
             )}
           </div>
           {errors.email && (
-            <p className="flex items-center gap-1 text-[10px] text-yellow-500">
-              <span>!</span>
+            <p className="flex items-center gap-1 text-[10px] text-red-600" role="alert">
+              <span aria-hidden="true">!</span>
               <span>{errors.email.message}</span>
             </p>
           )}
@@ -143,15 +143,15 @@ export function LoginForm({ onSubmit, loading }: LoginFormProps) {
             <button
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600"
-              tabIndex={-1}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600 min-w-[44px] min-h-[44px] flex items-center justify-center"
+              aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
             >
               {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
             </button>
           </div>
           {errors.password && (
-            <p className="flex items-center gap-1 text-[10px] text-yellow-500">
-              <span>!</span>
+            <p className="flex items-center gap-1 text-[10px] text-red-600" role="alert">
+              <span aria-hidden="true">!</span>
               <span>{errors.password.message}</span>
             </p>
           )}
