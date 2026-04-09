@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { ArrowLeft, Shield, Lock, Star } from 'lucide-react'
@@ -33,6 +33,7 @@ function parseAuthError(message: string): string {
 export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [currentTestimonial, setCurrentTestimonial] = useState(0)
+  const redirectingRef = useRef(false)
 
   const searchParams = useSearchParams()
   const supabase = useMemo(() => createClient(), [])
@@ -74,9 +75,11 @@ export default function LoginPage() {
 
   useEffect(() => {
     const redirectIfAlreadySignedIn = async () => {
+      if (redirectingRef.current) return
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
+      redirectingRef.current = true
       const { data: usuario } = await supabase
         .from('usuarios')
         .select('rol')

@@ -98,18 +98,8 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  if (user && pathname === '/login') {
-    const { data: userData } = await supabase
-      .from('usuarios')
-      .select('rol')
-      .eq('id', user.id)
-      .maybeSingle()
-
-    const redirectUrl = userData?.rol === 'admin_adventur' ? '/admin' : '/'
-    const redirect = NextResponse.redirect(new URL(redirectUrl, request.url))
-    setSecurityHeaders(redirect)
-    return redirect
-  }
+  // Eliminar el bloque de redirección desde /login — ya está manejado en la página client-side
+  // para evitar loops de redirección
 
   return supabaseResponse
 }
