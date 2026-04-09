@@ -50,8 +50,9 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
         setMounted(true)
         checkAdminAccess()
 
-        const handleBeforeUnload = () => {
-            supabase.auth.signOut().catch(() => {})
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            // Solo mostrar confirmación, NO cerrar sesión automáticamente
+            e.preventDefault()
         }
 
         const handlePopState = async (event: PopStateEvent) => {
@@ -83,7 +84,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
         return () => {
             window.removeEventListener('beforeunload', handleBeforeUnload)
             window.removeEventListener('popstate', handlePopState)
-            supabase.auth.signOut().catch(() => {})
+            // NO cerrar sesión al desmontar — el usuario puede estar navegando entre páginas del admin
         }
     }, [])
 
