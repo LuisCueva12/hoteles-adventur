@@ -25,6 +25,16 @@ function CuentaLayoutContent({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         setMounted(true)
         checkUserAccess()
+
+        const handleBeforeUnload = () => {
+            supabase.auth.signOut().catch(() => {})
+        }
+
+        window.addEventListener('beforeunload', handleBeforeUnload)
+        return () => {
+            window.removeEventListener('beforeunload', handleBeforeUnload)
+            supabase.auth.signOut().catch(() => {})
+        }
     }, [])
 
     const checkUserAccess = async () => {

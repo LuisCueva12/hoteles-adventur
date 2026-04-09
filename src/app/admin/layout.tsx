@@ -49,6 +49,42 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
     useEffect(() => {
         setMounted(true)
         checkAdminAccess()
+
+        const handleBeforeUnload = () => {
+            supabase.auth.signOut().catch(() => {})
+        }
+
+        const handlePopState = async (event: PopStateEvent) => {
+            event.preventDefault()
+
+            const result = await Swal.fire({
+                title: '¿Quieres cerrar sesión?',
+                text: 'Si vuelves atrás se cerrará tu sesión y tendrás que iniciar sesión de nuevo.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, cerrar sesión',
+                cancelButtonText: 'No, quedarme aquí',
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#6b7280',
+            })
+
+            if (result.isConfirmed) {
+                await supabase.auth.signOut().catch(() => {})
+                router.push('/login')
+            } else {
+                window.history.pushState(null, '', window.location.href)
+            }
+        }
+
+        window.history.pushState(null, '', window.location.href)
+        window.addEventListener('beforeunload', handleBeforeUnload)
+        window.addEventListener('popstate', handlePopState)
+
+        return () => {
+            window.removeEventListener('beforeunload', handleBeforeUnload)
+            window.removeEventListener('popstate', handlePopState)
+            supabase.auth.signOut().catch(() => {})
+        }
     }, [])
 
     const checkAdminAccess = async () => {

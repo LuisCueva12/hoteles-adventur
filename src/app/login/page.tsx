@@ -72,6 +72,24 @@ export default function LoginPage() {
     return () => clearInterval(interval)
   }, [testimonials.length])
 
+  useEffect(() => {
+    const redirectIfAlreadySignedIn = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data: usuario } = await supabase
+        .from('usuarios')
+        .select('rol')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      const destination = usuario?.rol === 'admin_adventur' ? '/admin' : '/'
+      window.location.replace(redirectTo || destination)
+    }
+
+    redirectIfAlreadySignedIn()
+  }, [redirectTo, supabase])
+
   const handleSignIn = async (data: LoginInput) => {
     try {
       const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
