@@ -114,7 +114,7 @@ export function HeroSeccion() {
 
             <div className="relative z-10 text-center text-white px-6 max-w-4xl">
                 <div className="mb-6 animate-fadeInDown">
-                    <span className="inline-block px-4 py-1.5 bg-yellow-400/20 backdrop-blur-sm border border-yellow-400/30 rounded-full text-yellow-400 text-xs font-semibold tracking-[0.3em] uppercase">
+                    <span className="inline-block px-4 py-1.5 bg-yellow-400/20 backdrop-blur-sm border border-yellow-400/30 rounded-full text-yellow-300 text-xs font-semibold tracking-[0.3em] uppercase">
                         Bienvenido a
                     </span>
                 </div>
@@ -186,13 +186,17 @@ export function HeroSeccion() {
                     <button
                         key={index}
                         onClick={() => goToSlide(index)}
-                        className={`h-3 rounded-full transition-all duration-300 min-w-[12px] ${
+                        className={`h-8 rounded-full transition-all duration-300 min-w-[32px] flex items-center justify-center ${
                             index === currentSlide 
                                 ? 'bg-yellow-400 w-12 shadow-lg shadow-yellow-400/50' 
-                                : 'bg-white/40 w-3 hover:bg-white/70 hover:w-8'
+                                : 'bg-white/40 w-8 hover:bg-white/70'
                         }`}
                         aria-label={`Ir a la diapositiva ${index + 1}`}
-                    />
+                    >
+                        <span className={`block rounded-full transition-all duration-300 ${
+                            index === currentSlide ? 'w-8 h-2 bg-yellow-400' : 'w-2 h-2 bg-white/70'
+                        }`} />
+                    </button>
                 ))}
             </div>
             

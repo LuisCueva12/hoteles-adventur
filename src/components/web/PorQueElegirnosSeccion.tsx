@@ -45,7 +45,7 @@ export function PorQueElegirnosSeccion() {
                         <div className="h-px w-20 bg-gradient-to-l from-transparent to-yellow-400" />
                     </div>
                     
-                    <p className="text-gray-400 max-w-2xl mx-auto text-base leading-relaxed mb-10">
+                    <p className="text-gray-300 max-w-2xl mx-auto text-base leading-relaxed mb-10">
                         Descubre nuestras increíbles instalaciones diseñadas para tu comodidad y disfrute
                     </p>
                     
@@ -54,7 +54,7 @@ export function PorQueElegirnosSeccion() {
                             <button key={f} onClick={() => setActive(f)}
                                 className={`px-6 py-2.5 text-xs font-semibold uppercase tracking-wider rounded-full border-2 transition-all duration-300 ${active === f
                                     ? 'bg-yellow-400 border-yellow-400 text-gray-900 shadow-lg shadow-red-600/30 scale-105'
-                                    : 'border-gray-700 text-gray-400 hover:border-yellow-400 hover:text-yellow-400 hover:bg-yellow-400/5'
+                                    : 'border-gray-500 text-gray-300 hover:border-yellow-400 hover:text-yellow-400 hover:bg-yellow-400/5'
                                     }`}>
                                 {f}
                             </button>

@@ -25,8 +25,9 @@ export function InsigniasConfianza() {
     ]
 
     return (
-        <section className="py-12 bg-gray-50 border-y border-gray-200">
+        <section className="py-12 bg-gray-50 border-y border-gray-200" aria-label="Insignias de confianza">
             <div className="max-w-7xl mx-auto px-6">
+                <h2 className="sr-only">Por qué confiar en nosotros</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                     {badges.map((badge, index) => {
                         const Icon = badge.icon
@@ -38,7 +39,7 @@ export function InsigniasConfianza() {
                                 <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mb-3 transform hover:scale-110 transition-transform duration-300">
                                     <Icon className="w-6 h-6 text-yellow-700" />
                                 </div>
-                                <h3 className="font-semibold text-gray-900 text-sm mb-1">
+                                <h3 className="font-semibold text-gray-900 text-sm mb-1" aria-label={badge.title}>
                                     {badge.title}
                                 </h3>
                                 <p className="text-xs text-gray-600">
