@@ -16,7 +16,6 @@ const FOOTER_LINKS = {
   ],
   'Mi cuenta': [
     { label: 'Iniciar sesion', href: '/login' },
-    { label: 'Mis reservas', href: '/reservas' },
     { label: 'Mis pagos', href: '/pagos' },
   ],
 }

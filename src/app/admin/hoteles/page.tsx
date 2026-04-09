@@ -640,13 +640,15 @@ export default function HotelesAdminPage() {
                 </div>
             </div>
 
-            <DataTable
-                columns={columns}
-                data={filteredAlojamientos}
-                onView={handleView}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-            />
+            <div className="min-w-0 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <DataTable
+                    columns={columns}
+                    data={filteredAlojamientos}
+                    onView={handleView}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                />
+            </div>
 
             {/* Modal Crear/Editar */}
             <Modal

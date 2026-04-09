@@ -84,17 +84,17 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchable 
                 </div>
             )}
 
-            <div className="overflow-x-auto">
-                <table className="w-full">
+            <div className="w-full overflow-x-auto">
+                <table className="w-full min-w-[640px]">
                     <thead className="bg-gray-50 border-b-2 border-gray-200">
                         <tr>
                             {columns.map((column) => (
-                                <th key={column.key} className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">
+                                <th key={column.key} className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">
                                     {column.label}
                                 </th>
                             ))}
                             {(onEdit || onDelete || onView) && (
-                                <th className="px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">
+                                <th className="px-4 py-3 text-right text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">
                                     Acciones
                                 </th>
                             )}
@@ -111,12 +111,12 @@ export function DataTable({ columns, data, onEdit, onDelete, onView, searchable 
                             currentData.map((row, idx) => (
                                 <tr key={idx} className="hover:bg-gray-50 transition-all group">
                                     {columns.map((column) => (
-                                        <td key={column.key} className="px-6 py-4 text-sm text-gray-700 whitespace-nowrap group-hover:text-gray-900 transition-colors">
+                                        <td key={column.key} className="px-4 py-3 text-sm text-gray-700 group-hover:text-gray-900 transition-colors max-w-[200px] truncate">
                                             {column.render ? column.render(row[column.key], row) : row[column.key]}
                                         </td>
                                     ))}
                                     {(onEdit || onDelete || onView) && (
-                                        <td className="px-6 py-4 text-right text-sm whitespace-nowrap">
+                                        <td className="px-4 py-3 text-right text-sm whitespace-nowrap">
                                             <div className="flex items-center justify-end gap-1.5">
                                                 {onView && (
                                                     <button

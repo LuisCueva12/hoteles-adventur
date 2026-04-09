@@ -5,12 +5,11 @@ import { useRouter, usePathname } from 'next/navigation'
 import { useEffect, useState, Suspense } from 'react'
 import Link from 'next/link'
 
-import { Calendar, CreditCard } from 'lucide-react'
+import { CreditCard } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
 const MENU_ITEMS = [
-    { href: '/reservas', label: 'Mis Reservas', Icon: Calendar },
     { href: '/pagos', label: 'Mis Pagos', Icon: CreditCard },
 ]
 

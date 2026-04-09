@@ -1,17 +1,19 @@
 'use client'
 
-import { useState, useEffect, useSyncExternalStore } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { 
     ChevronLeft, ChevronRight, Users, Maximize, Bed, Eye, Building2, 
     Check, Star, Heart, Share2, Calendar, Clock, Wifi, Tv, Wind,
-    Coffee, Bath, Shield, Phone, MapPin, Award, Sparkles, X, Loader2
+    Coffee, Bath, Shield, Phone, MapPin, Award, Sparkles, Loader2,
+    MessageCircle, X
 } from 'lucide-react'
 import { useFavorites } from '@/hooks/useFavoritos'
-import Swal from 'sweetalert2'
 import { createClient } from '@/utils/supabase/client'
+import { useSiteConfig } from '@/components/providers/ProveedorConfiguracionSitio'
+import { getWhatsappPhone } from '@/lib/site-config'
 
 // Datos de respaldo para habitaciones (si no hay en BD)
 const ROOMS_DATA_FALLBACK = {
@@ -157,47 +159,24 @@ const ROOMS_DATA_FALLBACK = {
 
 export default function HabitacionDetailPage() {
     const params = useParams()
-    const router = useRouter()
     const slug = params.slug as string
     const supabase = createClient()
+    const { config } = useSiteConfig()
     
     const [room, setRoom] = useState<any>(null)
     const [loading, setLoading] = useState(true)
     const [currentImageIndex, setCurrentImageIndex] = useState(0)
-    const [showReservaModal, setShowReservaModal] = useState(false)
     const { toggleFavorite, isFavorite } = useFavorites()
-
-    const [formData, setFormData] = useState({
+    const [showModal, setShowModal] = useState(false)
+    const [form, setForm] = useState({
         nombre: '',
-        fechaInicio: '',
-        fechaFin: '',
+        telefono: '',
+        email: '',
+        checkIn: '',
+        checkOut: '',
         huespedes: 1,
+        comentario: '',
     })
-    const [reservando, setReservando] = useState(false)
-    const [errorReserva, setErrorReserva] = useState('')
-    const isClient = useSyncExternalStore(
-        () => () => undefined,
-        () => true,
-        () => false,
-    )
-    const minDate = isClient ? new Date().toISOString().split('T')[0] : ''
-
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const sp = new URLSearchParams(window.location.search)
-            const checkIn = sp.get('checkIn')
-            const checkOut = sp.get('checkOut')
-            const huespedes = sp.get('huespedes')
-            if (checkIn || checkOut || huespedes) {
-                setFormData(prev => ({
-                    ...prev,
-                    fechaInicio: checkIn || prev.fechaInicio,
-                    fechaFin: checkOut || prev.fechaFin,
-                    huespedes: huespedes ? Number(huespedes) : prev.huespedes,
-                }))
-            }
-        }
-    }, [])
 
     // Cargar alojamiento desde la base de datos
     useEffect(() => {
@@ -380,95 +359,50 @@ export default function HabitacionDetailPage() {
     }
 
     const calcularNoches = () => {
-        if (!formData.fechaInicio || !formData.fechaFin) return 0
-        const diff = new Date(formData.fechaFin).getTime() - new Date(formData.fechaInicio).getTime()
+        if (!form.checkIn || !form.checkOut) return 0
+        const diff = new Date(form.checkOut).getTime() - new Date(form.checkIn).getTime()
         return Math.max(0, Math.ceil(diff / 86400000))
     }
 
-    const handleReservar = async (e: React.FormEvent) => {
+    const handleEnviarWhatsApp = (e: React.FormEvent) => {
         e.preventDefault()
-        setErrorReserva('')
+        const noches = calcularNoches()
+        const totalNum = room.price * noches * form.huespedes
+        const total = noches > 0 ? `S/. ${totalNum.toLocaleString()}` : 'Por confirmar'
+        const fmtFecha = (d: string) => d ? new Date(d + 'T12:00:00').toLocaleDateString('es-PE', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }) : '-'
 
-        // Validaciones
-        if (!formData.fechaInicio || !formData.fechaFin) {
-            setErrorReserva('Selecciona las fechas de estadía')
-            return
-        }
-        if (new Date(formData.fechaFin) <= new Date(formData.fechaInicio)) {
-            setErrorReserva('La fecha de salida debe ser posterior a la de entrada')
-            return
-        }
-        if (formData.huespedes < 1 || formData.huespedes > room.capacity) {
-            setErrorReserva(`El número de huéspedes debe ser entre 1 y ${room.capacity}`)
-            return
-        }
+        const linea = '▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬'
 
-        setReservando(true)
-        try {
-            const { data: { user } } = await supabase.auth.getUser()
-            if (!user) {
-                window.location.href = `/login?redirect=/hoteles/${slug}`
-                return
-            }
+        const msg = [
+            `*RESERVA ADVENTUR HOTELS*`,
+            `${linea}`,
+            `*${room.name}*`,
+            ``,
+            `*CLIENTE*`,
+            `› Nombre:   ${form.nombre}`,
+            `› Telefono: ${form.telefono}`,
+            form.email ? `› Email:    ${form.email}` : null,
+            ``,
+            `*ESTADIA*`,
+            `› Check-in:   ${fmtFecha(form.checkIn)}`,
+            `› Check-out:  ${fmtFecha(form.checkOut)}`,
+            noches > 0 ? `› Noches:     ${noches}` : null,
+            `› Huespedes:  ${form.huespedes} persona${form.huespedes > 1 ? 's' : ''}`,
+            ``,
+            `*PRECIO*`,
+            `› Tarifa/noche:  S/. ${room.price}`,
+            noches > 0 ? `› Noches:        ${noches}` : null,
+            form.huespedes > 1 ? `› Huespedes:     ${form.huespedes}` : null,
+            `${linea}`,
+            `*TOTAL:  ${total}*`,
+            `${linea}`,
+            form.comentario ? `\n*NOTA DEL CLIENTE*\n${form.comentario}\n` : null,
+            `_hoteles.adventur.pe_`,
+        ].filter(Boolean).join('\n')
 
-            // Verificar disponibilidad
-            const { data: conflictos } = await supabase
-                .from('reservas')
-                .select('id')
-                .eq('alojamiento_id', room.id)
-                .eq('estado', 'confirmada')
-                .lt('fecha_inicio', formData.fechaFin)
-                .gt('fecha_fin', formData.fechaInicio)
-
-            if (conflictos && conflictos.length > 0) {
-                setErrorReserva('Lo sentimos, este alojamiento no está disponible en las fechas seleccionadas')
-                setReservando(false)
-                return
-            }
-
-            const noches = calcularNoches()
-            const total = room.price * noches
-            const adelanto = Math.round(total * 0.3)
-            const codigoReserva = `RES-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`
-
-            const { error } = await supabase
-                .from('reservas')
-                .insert({
-                    usuario_id: user.id,
-                    alojamiento_id: room.id,
-                    codigo_reserva: codigoReserva,
-                    fecha_inicio: formData.fechaInicio,
-                    fecha_fin: formData.fechaFin,
-                    personas: formData.huespedes,
-                    total,
-                    adelanto,
-                    estado: 'pendiente',
-                })
-
-            if (error) throw error
-
-            setShowReservaModal(false)
-            setFormData({ nombre: '', fechaInicio: '', fechaFin: '', huespedes: 1 })
-
-            await Swal.fire({
-                icon: 'success',
-                title: '¡Reserva creada!',
-                html: `
-                    <p class="text-gray-700 mb-2">Tu reserva <strong>${codigoReserva}</strong> fue registrada.</p>
-                    <p class="text-sm text-gray-500">Revisa el estado en tu panel de reservas.</p>
-                `,
-                confirmButtonText: 'Ver mis reservas',
-                confirmButtonColor: '#facc15',
-                showCancelButton: true,
-                cancelButtonText: 'Cerrar',
-            }).then(result => {
-                if (result.isConfirmed) window.location.href = '/reservas'
-            })
-        } catch (err: any) {
-            setErrorReserva(err.message || 'Error al crear la reserva. Intenta nuevamente.')
-        } finally {
-            setReservando(false)
-        }
+        window.open(`https://wa.me/51918146783?text=${encodeURIComponent(msg)}`, '_blank')
+        setShowModal(false)
+        setForm({ nombre: '', telefono: '', email: '', checkIn: '', checkOut: '', huespedes: 1, comentario: '' })
     }
 
     return (
@@ -716,9 +650,9 @@ export default function HabitacionDetailPage() {
                         </div>
                     </div>
 
-                    {/* Sidebar de Reserva */}
+                    {/* Sidebar Reserva */}
                     <div className="lg:col-span-1">
-                        <div className="sticky top-24 bg-white border-2 border-gray-200 rounded-lg p-6 shadow-lg">
+                        <div className="sticky top-24 bg-white border-2 border-gray-200 rounded-2xl p-6 shadow-lg">
                             <div className="mb-6">
                                 {room.originalPrice && (
                                     <p className="text-lg text-gray-500 line-through">S/. {room.originalPrice}</p>
@@ -728,34 +662,35 @@ export default function HabitacionDetailPage() {
                                     <span className="text-gray-600">/ noche</span>
                                 </div>
                                 {room.originalPrice && (
-                                    <div className="mt-2 inline-block bg-yellow-100 text-yellow-400 px-3 py-1 rounded-full text-sm font-semibold">
+                                    <div className="mt-2 inline-block bg-yellow-100 text-yellow-600 px-3 py-1 rounded-full text-sm font-semibold">
                                         Ahorra {Math.round((1 - room.price / room.originalPrice) * 100)}%
                                     </div>
                                 )}
                             </div>
 
                             <button
-                                onClick={() => setShowReservaModal(true)}
-                                className="w-full py-4 bg-yellow-400 hover:bg-yellow-400 text-gray-900 font-semibold rounded-lg transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl mb-4"
+                                onClick={() => setShowModal(true)}
+                                className="w-full py-4 bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-xl mb-3 flex items-center justify-center gap-3 text-base"
                             >
-                                Reservar Ahora
+                                <MessageCircle className="w-5 h-5" />
+                                Reservar por WhatsApp
                             </button>
 
-                            <p className="text-center text-sm text-gray-600 mb-6">
-                                No se realizará ningún cargo todavía
+                            <p className="text-center text-xs text-gray-500 mb-6">
+                                Completa el formulario y te contactamos en minutos
                             </p>
 
                             <div className="space-y-3 pt-6 border-t border-gray-200">
                                 <div className="flex items-center gap-3 text-sm text-gray-700">
-                                    <Check className="w-5 h-5 text-yellow-400" />
-                                    <span>Cancelación gratuita</span>
+                                    <Check className="w-5 h-5 text-yellow-400 flex-shrink-0" />
+                                    <span>Atención personalizada</span>
                                 </div>
                                 <div className="flex items-center gap-3 text-sm text-gray-700">
-                                    <Check className="w-5 h-5 text-yellow-400" />
+                                    <Check className="w-5 h-5 text-yellow-400 flex-shrink-0" />
                                     <span>Confirmación inmediata</span>
                                 </div>
                                 <div className="flex items-center gap-3 text-sm text-gray-700">
-                                    <Check className="w-5 h-5 text-yellow-400" />
+                                    <Check className="w-5 h-5 text-yellow-400 flex-shrink-0" />
                                     <span>Mejor precio garantizado</span>
                                 </div>
                             </div>
@@ -763,10 +698,10 @@ export default function HabitacionDetailPage() {
                             <div className="mt-6 pt-6 border-t border-gray-200">
                                 <Link 
                                     href="/contacto"
-                                    className="flex items-center justify-center gap-2 text-yellow-400 hover:text-yellow-400 font-semibold"
+                                    className="flex items-center justify-center gap-2 text-yellow-500 hover:text-yellow-600 font-semibold text-sm"
                                 >
-                                    <Phone className="w-5 h-5" />
-                                    <span>¿Necesitas ayuda?</span>
+                                    <Phone className="w-4 h-4" />
+                                    <span>Otras formas de contacto</span>
                                 </Link>
                             </div>
                         </div>
@@ -775,145 +710,156 @@ export default function HabitacionDetailPage() {
             </section>
 
             {/* Modal de Reserva */}
-            {showReservaModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-                    <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full max-h-[95vh] overflow-hidden flex flex-col">
-
+            {showModal && (
+                <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowModal(false)}>
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[95vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
                         {/* Header */}
-                        <div className="relative overflow-hidden h-40 flex-shrink-0">
-                            <Image src={room.images[0]} alt={room.name} fill sizes="448px" className="object-cover" loading="lazy" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-red-700/60 to-transparent" />
-                            <div className="relative z-10 flex items-end justify-between px-6 pb-5 h-full">
-                                <div>
-                                    <span className="inline-block bg-yellow-400 text-gray-900 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full mb-2">Solicitar reserva</span>
-                                    <h2 className="text-xl font-bold text-white leading-tight">Reserva tu Habitación</h2>
-                                    <p className="text-white/75 text-sm mt-0.5">{room.name}</p>
-                                </div>
-                                <button onClick={() => setShowReservaModal(false)}
-                                    className="w-10 h-10 bg-black/30 hover:bg-black/50 rounded-full flex items-center justify-center border border-white/20 transition-all flex-shrink-0">
-                                    <X className="w-5 h-5 text-white" />
-                                </button>
+                        <div className="relative h-32 rounded-t-3xl overflow-hidden flex-shrink-0">
+                            {room.images[0] && (
+                                <img src={room.images[0]} alt={room.name} className="w-full h-full object-cover" />
+                            )}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                            <div className="absolute bottom-4 left-5 right-12">
+                                <span className="inline-block bg-yellow-400 text-gray-900 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full mb-1">Solicitar reserva</span>
+                                <h2 className="text-lg font-bold text-white leading-tight">{room.name}</h2>
+                                <p className="text-white/70 text-xs">S/. {room.price}/noche</p>
                             </div>
-                        </div>
-
-                        {/* Info precio */}
-                        <div className="flex items-center justify-between px-6 py-3.5 bg-gray-900 flex-shrink-0">
-                            <div className="flex items-baseline gap-1.5">
-                                <span className="text-2xl font-bold text-white">S/. {room.price}</span>
-                                <span className="text-gray-400 text-sm">/ noche</span>
-                            </div>
-                            <div className="flex items-center gap-3 text-xs text-gray-300">
-                                <span className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-yellow-400" />{room.capacity} pers.</span>
-                                <span className="w-px h-3 bg-gray-600" />
-                                <span className="flex items-center gap-1.5"><Maximize className="w-3.5 h-3.5 text-yellow-400" />{room.size}m²</span>
-                                <span className="w-px h-3 bg-gray-600" />
-                                <span className="flex items-center gap-1.5"><Bed className="w-3.5 h-3.5 text-yellow-400" />{room.beds.split(' ')[2] || '1'} cama</span>
-                            </div>
+                            <button
+                                onClick={() => setShowModal(false)}
+                                className="absolute top-3 right-3 w-9 h-9 bg-black/30 hover:bg-black/50 rounded-full flex items-center justify-center border border-white/20 transition-all"
+                                aria-label="Cerrar"
+                            >
+                                <X className="w-4 h-4 text-white" />
+                            </button>
                         </div>
 
                         {/* Formulario */}
-                        <form onSubmit={handleReservar} className="overflow-y-auto flex-1 px-6 py-5 space-y-5">
-
-                            {/* Error */}
-                            {errorReserva && (
-                                <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl">
-                                    {errorReserva}
+                        <form onSubmit={handleEnviarWhatsApp} className="p-6 space-y-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label htmlFor="res-nombre" className="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">Nombre completo *</label>
+                                    <input
+                                        id="res-nombre"
+                                        type="text"
+                                        required
+                                        value={form.nombre}
+                                        onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))}
+                                        placeholder="Tu nombre"
+                                        className="w-full px-3 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900 transition-colors"
+                                    />
                                 </div>
-                            )}
-
-                            {/* Fechas */}
-                            <div>
-                                <p className="text-sm font-bold text-gray-800 mb-2">Fechas de estadía</p>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Check-in</label>
-                                        <input
-                                            type="date"
-                                            value={formData.fechaInicio}
-                                            min={minDate}
-                                            onChange={e => setFormData({ ...formData, fechaInicio: e.target.value, fechaFin: '' })}
-                                            required
-                                            suppressHydrationWarning
-                                            className="w-full px-3 py-3 border-2 border-gray-200 rounded-xl focus:border-yellow-400 focus:outline-none text-gray-900 text-sm transition-colors"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">
-                                            Check-out {calcularNoches() > 0 && <span className="text-yellow-400 normal-case font-bold">· {calcularNoches()} noche{calcularNoches() > 1 ? 's' : ''}</span>}
-                                        </label>
-                                        <input
-                                            type="date"
-                                            value={formData.fechaFin}
-                                            min={formData.fechaInicio || minDate}
-                                            onChange={e => setFormData({ ...formData, fechaFin: e.target.value })}
-                                            required
-                                            suppressHydrationWarning
-                                            className="w-full px-3 py-3 border-2 border-gray-200 rounded-xl focus:border-yellow-400 focus:outline-none text-gray-900 text-sm transition-colors"
-                                        />
-                                    </div>
+                                <div>
+                                    <label htmlFor="res-telefono" className="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">Teléfono / WhatsApp *</label>
+                                    <input
+                                        id="res-telefono"
+                                        type="tel"
+                                        required
+                                        value={form.telefono}
+                                        onChange={e => setForm(f => ({ ...f, telefono: e.target.value }))}
+                                        placeholder="+51 999 999 999"
+                                        className="w-full px-3 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900 transition-colors"
+                                    />
                                 </div>
                             </div>
 
-                            {/* Huéspedes */}
                             <div>
-                                <label className="block text-sm font-bold text-gray-800 mb-2">Huéspedes</label>
+                                <label htmlFor="res-email" className="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">Email (opcional)</label>
+                                <input
+                                    id="res-email"
+                                    type="email"
+                                    value={form.email}
+                                    onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                                    placeholder="tu@email.com"
+                                    className="w-full px-3 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900 transition-colors"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label htmlFor="res-checkin" className="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">Check-in *</label>
+                                    <input
+                                        id="res-checkin"
+                                        type="date"
+                                        required
+                                        value={form.checkIn}
+                                        min={new Date().toISOString().split('T')[0]}
+                                        onChange={e => setForm(f => ({ ...f, checkIn: e.target.value, checkOut: '' }))}
+                                        className="w-full px-3 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900 transition-colors"
+                                    />
+                                </div>
+                                <div>
+                                    <label htmlFor="res-checkout" className="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">
+                                        Check-out *{calcularNoches() > 0 && <span className="text-green-600 normal-case font-bold ml-1">· {calcularNoches()}n</span>}
+                                    </label>
+                                    <input
+                                        id="res-checkout"
+                                        type="date"
+                                        required
+                                        value={form.checkOut}
+                                        min={form.checkIn || new Date().toISOString().split('T')[0]}
+                                        onChange={e => setForm(f => ({ ...f, checkOut: e.target.value }))}
+                                        className="w-full px-3 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900 transition-colors"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">Huéspedes</label>
                                 <div className="flex items-center border-2 border-gray-200 rounded-xl overflow-hidden">
-                                    <button type="button"
-                                        onClick={() => setFormData(f => ({ ...f, huespedes: Math.max(1, f.huespedes - 1) }))}
-                                        className="w-14 h-12 flex items-center justify-center text-gray-600 hover:bg-yellow-50 hover:text-yellow-400 text-xl font-bold transition-colors border-r-2 border-gray-200">
-                                        −
-                                    </button>
+                                    <button type="button" onClick={() => setForm(f => ({ ...f, huespedes: Math.max(1, f.huespedes - 1) }))}
+                                        className="w-12 h-11 flex items-center justify-center text-gray-600 hover:bg-yellow-50 hover:text-yellow-500 text-xl font-bold transition-colors border-r-2 border-gray-200">−</button>
                                     <div className="flex-1 text-center">
-                                        <span className="text-xl font-bold text-gray-900">{formData.huespedes}</span>
-                                        <span className="text-xs text-gray-400 ml-2">/ máx. {room.capacity}</span>
+                                        <span className="text-lg font-bold text-gray-900">{form.huespedes}</span>
+                                        <span className="text-xs text-gray-400 ml-1">/ máx. {room.capacity}</span>
                                     </div>
-                                    <button type="button"
-                                        onClick={() => setFormData(f => ({ ...f, huespedes: Math.min(room.capacity, f.huespedes + 1) }))}
-                                        className="w-14 h-12 flex items-center justify-center text-gray-600 hover:bg-yellow-50 hover:text-yellow-400 text-xl font-bold transition-colors border-l-2 border-gray-200">
-                                        +
-                                    </button>
+                                    <button type="button" onClick={() => setForm(f => ({ ...f, huespedes: Math.min(room.capacity, f.huespedes + 1) }))}
+                                        className="w-12 h-11 flex items-center justify-center text-gray-600 hover:bg-yellow-50 hover:text-yellow-500 text-xl font-bold transition-colors border-l-2 border-gray-200">+</button>
                                 </div>
                             </div>
 
-                            {/* Resumen */}
                             {calcularNoches() > 0 && (
                                 <div className="bg-gray-900 rounded-2xl p-4 text-white">
-                                    <p className="text-xs text-gray-400 uppercase tracking-widest mb-3">Resumen</p>
+                                    <p className="text-xs text-gray-400 uppercase tracking-widest mb-2">Resumen estimado</p>
                                     <div className="flex justify-between text-sm text-gray-300 mb-1">
-                                        <span>S/. {room.price} × {calcularNoches()} {calcularNoches() === 1 ? 'noche' : 'noches'}</span>
+                                        <span>S/. {room.price} × {calcularNoches()} noche{calcularNoches() > 1 ? 's' : ''}</span>
                                         <span>S/. {(room.price * calcularNoches()).toLocaleString()}</span>
                                     </div>
-                                    <div className="flex justify-between text-sm text-gray-300 mb-2">
-                                        <span>{formData.huespedes} {formData.huespedes === 1 ? 'huésped' : 'huéspedes'} × S/. {room.price}</span>
-                                        <span>× {formData.huespedes}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center border-t border-gray-700 pt-3">
-                                        <span className="font-semibold text-gray-200">Total estimado</span>
-                                        <span className="text-2xl font-bold text-yellow-400">S/. {(room.price * calcularNoches() * formData.huespedes).toLocaleString()}</span>
+                                    {form.huespedes > 1 && (
+                                        <div className="flex justify-between text-sm text-gray-300 mb-1">
+                                            <span>× {form.huespedes} huéspedes</span>
+                                            <span>S/. {(room.price * calcularNoches() * form.huespedes).toLocaleString()}</span>
+                                        </div>
+                                    )}
+                                    <div className="flex justify-between items-center border-t border-gray-700 pt-2 mt-2">
+                                        <span className="font-semibold text-gray-200 text-sm">Total estimado</span>
+                                        <span className="text-xl font-bold text-yellow-400">
+                                            S/. {(room.price * calcularNoches() * form.huespedes).toLocaleString()}
+                                        </span>
                                     </div>
                                 </div>
                             )}
 
-                            {/* Botones */}
-                            <div className="flex gap-3 pb-2">
-                                <button type="button" onClick={() => setShowReservaModal(false)}
-                                    className="flex-1 py-3.5 border-2 border-gray-200 text-gray-700 font-semibold rounded-2xl hover:bg-gray-50 transition-all text-sm">
+                            <div>
+                                <label htmlFor="res-comentario" className="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">Comentario (opcional)</label>
+                                <textarea
+                                    id="res-comentario"
+                                    rows={2}
+                                    value={form.comentario}
+                                    onChange={e => setForm(f => ({ ...f, comentario: e.target.value }))}
+                                    placeholder="Alguna solicitud especial, hora de llegada..."
+                                    className="w-full px-3 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900 transition-colors resize-none"
+                                />
+                            </div>
+
+                            <div className="flex gap-3 pt-1">
+                                <button type="button" onClick={() => setShowModal(false)}
+                                    className="flex-1 py-3 border-2 border-gray-200 text-gray-700 font-semibold rounded-2xl hover:bg-gray-50 transition-all text-sm">
                                     Cancelar
                                 </button>
                                 <button type="submit"
-                                    disabled={!formData.fechaInicio || !formData.fechaFin || reservando}
-                                    className="flex-1 py-3.5 bg-yellow-400 hover:bg-yellow-500 disabled:bg-gray-300 disabled:cursor-not-allowed text-gray-900 font-bold rounded-2xl transition-all hover:shadow-lg flex items-center justify-center gap-2 text-sm">
-                                    {reservando ? (
-                                        <>
-                                            <Loader2 className="w-4 h-4 animate-spin" />
-                                            Reservando...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Calendar className="w-4 h-4" />
-                                            Confirmar Reserva
-                                        </>
-                                    )}
+                                    className="flex-1 py-3 bg-green-500 hover:bg-green-600 text-white font-bold rounded-2xl transition-all hover:shadow-lg flex items-center justify-center gap-2 text-sm">
+                                    <MessageCircle className="w-4 h-4" />
+                                    Enviar por WhatsApp
                                 </button>
                             </div>
                         </form>

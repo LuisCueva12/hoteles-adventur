@@ -7,9 +7,9 @@ import { EventosSeccion } from '@/components/web/EventosSeccion'
 import { TestimoniosSeccion } from '@/components/web/TestimoniosSeccion'
 import { OfertasEspeciales } from '@/components/web/OfertasEspeciales'
 import { InsigniasConfianza } from '@/components/web/InsigniasConfianza'
+import { ClientOnly } from '@/components/ui'
 
-// Carga diferida del chatbot — no es crítico para el LCP
-const AIChatbot = dynamic(() => import('@/components/web/ChatbotIA'), { ssr: false })
+const AIChatbot = dynamic(() => import('@/components/web/ChatbotIA'))
 
 export default function HomePage() {
     return (
@@ -24,7 +24,9 @@ export default function HomePage() {
             <PorQueElegirnosSeccion />
             <TestimoniosSeccion />
             <EventosSeccion />
-            <AIChatbot />
+            <ClientOnly>
+                <AIChatbot />
+            </ClientOnly>
         </>
     )
 }

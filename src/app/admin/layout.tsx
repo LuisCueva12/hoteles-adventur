@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { LayoutDashboard, Hotel, Calendar, Users, TrendingUp, Settings, Home, LogOut, Menu, X, Camera } from 'lucide-react'
+import { LayoutDashboard, Hotel, Calendar, Users, TrendingUp, Settings, Home, LogOut, Menu, X, Camera, Images } from 'lucide-react'
 import { Modal } from '@/components/admin/Modal'
 import { Logo } from '@/components/web/Logo'
 import Image from 'next/image'
@@ -16,6 +16,7 @@ export const dynamic = 'force-dynamic'
 const NAV_ITEMS = [
     { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, badge: null },
     { href: '/admin/hoteles', label: 'Habitaciones', icon: Hotel, badge: null },
+    { href: '/admin/galeria', label: 'Galería', icon: Images, badge: null },
     { href: '/admin/reservas', label: 'Reservas', icon: Calendar, badge: null },
     { href: '/admin/usuarios', label: 'Usuarios', icon: Users, badge: null },
     { href: '/admin/reportes', label: 'Reportes', icon: TrendingUp, badge: null },
@@ -291,8 +292,8 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
     }
 
     return (
-        <div className="min-h-screen flex bg-gray-50">
-            <aside className={`${isSidebarOpen ? 'w-64' : 'w-20'} bg-gradient-to-b from-white to-gray-50 border-r border-gray-200 transition-all duration-300 hidden lg:flex flex-col shadow-xl h-screen sticky top-0`}>
+        <div className="h-screen flex bg-gray-50 overflow-hidden">
+            <aside className={`${isSidebarOpen ? 'w-64' : 'w-20'} flex-shrink-0 bg-gradient-to-b from-white to-gray-50 border-r border-gray-200 transition-all duration-300 hidden lg:flex flex-col shadow-xl h-full`}>
                 {/* Header con Logo */}
                 <div className="p-4 border-b border-gray-200 flex items-center justify-center flex-shrink-0 bg-white">
                     {isSidebarOpen ? (
@@ -389,7 +390,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
                 </div>
             </aside>
 
-            <div className="flex-1 flex flex-col">
+            <div className="flex-1 min-w-0 flex flex-col h-full overflow-hidden">
                 <header className="bg-white border-b border-gray-200 p-4 flex items-center justify-between shadow-sm">
                     <button
                         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -405,7 +406,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
                         {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
                     </button>
 
-                    <div className="flex-1 max-w-xl mx-4">
+                    <div className="hidden md:block flex-1 max-w-xl mx-4">
                         <div className="relative">
                             <input
                                 type="text"
@@ -476,8 +477,8 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
                     </div>
                 )}
 
-                <main className="flex-1 overflow-auto bg-gray-50">
-                    <div className="p-4 lg:p-8">
+                <main className="flex-1 overflow-y-auto min-w-0 bg-gray-50">
+                    <div className="p-4 lg:p-6 min-w-0">
                         {children}
                     </div>
                 </main>
