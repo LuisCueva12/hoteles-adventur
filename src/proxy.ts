@@ -1,3 +1,4 @@
+import { createServerClient } from '@supabase/ssr'
 import { type NextRequest, NextResponse } from 'next/server'
 
 const PUBLIC_ROUTES = [
@@ -37,45 +38,31 @@ function isRouteMatch(pathname: string, routes: string[]) {
   return routes.some((route) => pathname === route || pathname.startsWith(`${route}/`))
 }
 
-// Lee el JWT de Supabase desde las cookies sin importar @supabase/ssr
-function getSessionFromCookies(request: NextRequest): { userId: string | null; expired: boolean } {
-  const cookies = request.cookies.getAll()
-  for (const cookie of cookies) {
-    if (cookie.name.startsWith('sb-') && cookie.name.endsWith('-auth-token')) {
-      try {
-        let token: string | null = null
-        try {
-          const parsed = JSON.parse(cookie.value)
-          token = parsed.access_token ?? null
-        } catch {
-          token = cookie.value
-        }
-        if (!token) continue
-
-        const parts = token.split('.')
-        if (parts.length !== 3) continue
-
-        const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')))
-        const exp = payload.exp as number | undefined
-        if (exp && exp * 1000 <= Date.now()) return { userId: null, expired: true }
-
-        return { userId: (payload.sub as string) ?? null, expired: false }
-      } catch {
-        continue
-      }
-    }
-  }
-  return { userId: null, expired: false }
-}
-
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  const response = NextResponse.next({ request })
-  setSecurityHeaders(response)
+  let supabaseResponse = NextResponse.next({ request })
 
-  const { userId } = getSessionFromCookies(request)
-  const isAuthenticated = !!userId
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll: () => request.cookies.getAll(),
+        setAll: (cookiesToSet) => {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+          supabaseResponse = NextResponse.next({ request })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          )
+        },
+      },
+    }
+  )
+
+  const { data: { user } } = await supabase.auth.getUser().catch(() => ({ data: { user: null } }))
+
+  setSecurityHeaders(supabaseResponse)
 
   const isPublicRoute = isRouteMatch(pathname, PUBLIC_ROUTES)
   const isUserRoute = isRouteMatch(pathname, USER_ROUTES)
@@ -83,10 +70,10 @@ export async function proxy(request: NextRequest) {
   const isProtectedAPI = isRouteMatch(pathname, API_PROTECTED_ROUTES)
 
   if (isPublicRoute && !isAdminRoute && !isUserRoute) {
-    return response
+    return supabaseResponse
   }
 
-  if (!isAuthenticated && (isUserRoute || isAdminRoute || isProtectedAPI)) {
+  if (!user && (isUserRoute || isAdminRoute || isProtectedAPI)) {
     if (isProtectedAPI) {
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
     }
@@ -97,8 +84,34 @@ export async function proxy(request: NextRequest) {
     return redirect
   }
 
-  // La verificación de rol admin se delega al layout de /admin (ya lo hace con Supabase client)
-  return response
+  if (user && isAdminRoute) {
+    const { data: userData, error } = await supabase
+      .from('usuarios')
+      .select('rol')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    if (error || !userData || userData.rol !== 'admin_adventur') {
+      const denied = NextResponse.redirect(new URL('/acceso-denegado', request.url))
+      setSecurityHeaders(denied)
+      return denied
+    }
+  }
+
+  if (user && pathname === '/login') {
+    const { data: userData } = await supabase
+      .from('usuarios')
+      .select('rol')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    const redirectUrl = userData?.rol === 'admin_adventur' ? '/admin' : '/'
+    const redirect = NextResponse.redirect(new URL(redirectUrl, request.url))
+    setSecurityHeaders(redirect)
+    return redirect
+  }
+
+  return supabaseResponse
 }
 
 export const config = {
