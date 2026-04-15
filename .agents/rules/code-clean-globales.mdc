@@ -1,0 +1,19 @@
+---
+description: Estándares globales de código limpio, arquitectura clara y legibilidad
+alwaysApply: true
+---
+
+# Código limpio y arquitectura del proyecto
+
+- Prioriza código limpio, simple y mantenible en cada cambio.
+- No agregues comentarios en el código, salvo que el usuario lo pida explícitamente.
+- Usa nombres de variables, funciones, clases y archivos que expresen intención de negocio.
+- Cada función debe tener una responsabilidad clara y un tamaño acotado.
+- Evita lógica compleja en controladores o vistas; mueve reglas de negocio a servicios o capas de dominio.
+- Mantén separación clara de capas: presentación, aplicación, dominio e infraestructura.
+- Prefiere composición y reutilización antes que duplicar código.
+- Elimina código muerto, ramas innecesarias y validaciones redundantes; no dejes **archivos del repositorio** (componentes, utilidades, tipos, rutas API, assets en `src/` o `server/`) que no estén referenciados o que sean restos de refactors, salvo que formen parte de un feature en curso acordado.
+- Aplica retorno temprano para reducir anidaciones profundas.
+- Haz que las interfaces y contratos sean explícitos y consistentes entre módulos.
+- Mantén consistencia de estilo y convenciones del proyecto en todos los archivos.
+- Antes de finalizar, valida que el flujo quede funcional, legible y coherente con la arquitectura existente.
