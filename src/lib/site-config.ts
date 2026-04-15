@@ -24,6 +24,11 @@ export interface SiteConfig {
   porcentaje_adelanto: number
   ruc: string
   razon_social: string
+  modo_mantenimiento: boolean
+  mensaje_mantenimiento: string
+  fecha_reanudacion: string
+  mostrar_contador: boolean
+  permitir_admin: boolean
   created_at?: string
   updated_at?: string
 }
@@ -51,6 +56,11 @@ export const defaultSiteConfig: SiteConfig = {
   porcentaje_adelanto: 30,
   ruc: '',
   razon_social: '',
+  modo_mantenimiento: false,
+  mensaje_mantenimiento: 'Estamos realizando mejoras para brindarte un mejor servicio. Volveremos pronto.',
+  fecha_reanudacion: '',
+  mostrar_contador: false,
+  permitir_admin: true,
 }
 
 const optionalUrl = z
@@ -94,6 +104,11 @@ export const siteConfigSchema = z.object({
     .trim()
     .refine((value) => value === '' || /^\d{11}$/.test(value), 'El RUC debe tener 11 digitos'),
   razon_social: z.string().trim().max(160, 'Razon social demasiado larga'),
+  modo_mantenimiento: z.boolean().default(false),
+  mensaje_mantenimiento: z.string().trim().max(500).default(''),
+  fecha_reanudacion: z.string().default(''),
+  mostrar_contador: z.boolean().default(false),
+  permitir_admin: z.boolean().default(true),
 })
 
 export type SiteConfigInput = z.infer<typeof siteConfigSchema>

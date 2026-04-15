@@ -1,307 +1,414 @@
-// Función para exportar reporte de ingresos a PDF
-export const exportIngresosPDF = async () => {
+import type { Reserva, Usuario } from '@/types/basedatos'
+
+// ─── TIPOS DE DATOS REALES ───────────────────────────────────────────────────
+
+export interface ReservaConRelaciones extends Reserva {
+    usuarios?: { nombre: string; apellido: string; email: string } | null
+    alojamientos?: { nombre: string; tipo: string } | null
+    pagos?: { monto: number; estado: string; metodo: string }[]
+}
+
+export interface DatosReporte {
+    reservas: ReservaConRelaciones[]
+    usuarios: Usuario[]
+    ingresosMensuales: { mes: string; ingresos: number }[]
+    totalIngresos: number
+    tasaOcupacion: number
+}
+
+// ─── HELPERS ────────────────────────────────────────────────────────────────
+
+async function loadImageAsBase64(path: string): Promise<string> {
+    return new Promise((resolve) => {
+        const img = new Image()
+        img.crossOrigin = 'Anonymous'
+        img.onload = () => {
+            const canvas = document.createElement('canvas')
+            canvas.width = img.width
+            canvas.height = img.height
+            const ctx = canvas.getContext('2d')!
+            ctx.drawImage(img, 0, 0)
+            resolve(canvas.toDataURL('image/png'))
+        }
+        img.onerror = () => resolve('')
+        img.src = path
+    })
+}
+
+function formatFecha(iso: string) {
+    return new Date(iso).toLocaleDateString('es-PE', {
+        year: 'numeric', month: '2-digit', day: '2-digit',
+    })
+}
+
+function formatMonto(n: number) {
+    return `S/. ${n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
+
+function calcNochesDiff(inicio: string, fin: string) {
+    const ms = new Date(fin).getTime() - new Date(inicio).getTime()
+    return Math.round(ms / 86_400_000)
+}
+
+/** Dibuja la cabecera premium Adventur */
+function drawHeader(
+    doc: import('jspdf').jsPDF,
+    logoBase64: string,
+    titulo: string
+) {
+    const W = doc.internal.pageSize.getWidth()
+    const GOLD: [number, number, number] = [234, 179, 8]
+    const DARK: [number, number, number] = [15, 15, 15]
+
+    // Fondo negro
+    doc.setFillColor(DARK[0], DARK[1], DARK[2])
+    doc.rect(0, 0, W, 50, 'F')
+
+    // Franja dorada
+    doc.setFillColor(GOLD[0], GOLD[1], GOLD[2])
+    doc.rect(0, 48, W, 3, 'F')
+
+    // Logo
+    if (logoBase64) {
+        try { doc.addImage(logoBase64, 'PNG', 10, 7, 34, 34) } catch { /* sin logo */ }
+    }
+
+    // Nombre empresa
+    const textX = logoBase64 ? 50 : 14
+    doc.setTextColor(255, 255, 255)
+    doc.setFontSize(20)
+    doc.setFont('helvetica', 'bold')
+    doc.text('HOTEL ADVENTUR', textX, 22)
+
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'italic')
+    doc.setTextColor(200, 200, 200)
+    doc.text('Atrévete y descubre', textX, 30)
+
+    // Título del reporte (derecha)
+    doc.setFontSize(14)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(GOLD[0], GOLD[1], GOLD[2])
+    doc.text(titulo.toUpperCase(), W - 12, 22, { align: 'right' })
+
+    const fecha = new Date().toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' })
+    doc.setFontSize(8.5)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(180, 180, 180)
+    doc.text(fecha, W - 12, 31, { align: 'right' })
+}
+
+/** Dibuja el pie de página en todas las páginas */
+function drawFooter(doc: import('jspdf').jsPDF) {
+    const W = doc.internal.pageSize.getWidth()
+    const H = doc.internal.pageSize.getHeight()
+    const total = doc.getNumberOfPages()
+    for (let i = 1; i <= total; i++) {
+        doc.setPage(i)
+        doc.setDrawColor(234, 179, 8)
+        doc.setLineWidth(0.4)
+        doc.line(14, H - 14, W - 14, H - 14)
+        doc.setFontSize(7.5)
+        doc.setFont('helvetica', 'normal')
+        doc.setTextColor(140, 140, 140)
+        doc.text('© Hotel Adventur — Documento Confidencial', 14, H - 8)
+        doc.text(`Página ${i} de ${total}`, W - 14, H - 8, { align: 'right' })
+    }
+}
+
+/** Dibuja una tarjeta KPI */
+function drawKpi(
+    doc: import('jspdf').jsPDF,
+    x: number, y: number, w: number, h: number,
+    label: string, value: string, accent = false
+) {
+    if (accent) {
+        doc.setFillColor(234, 179, 8)
+    } else {
+        doc.setFillColor(248, 248, 248)
+    }
+    doc.setDrawColor(220, 220, 220)
+    doc.setLineWidth(0.3)
+    doc.roundedRect(x, y, w, h, 3, 3, accent ? 'F' : 'FD')
+
+    doc.setFontSize(15)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(20, 20, 20)
+    doc.text(value, x + w / 2, y + h / 2 - 1, { align: 'center' })
+
+    doc.setFontSize(7.5)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(80, 80, 80)
+    doc.text(label, x + w / 2, y + h / 2 + 6.5, { align: 'center' })
+}
+
+function sectionTitle(doc: import('jspdf').jsPDF, text: string, y: number) {
+    const DARK: [number, number, number] = [15, 15, 15]
+    const GOLD: [number, number, number] = [234, 179, 8]
+    doc.setFontSize(11)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(DARK[0], DARK[1], DARK[2])
+    doc.text(text, 14, y)
+    doc.setDrawColor(GOLD[0], GOLD[1], GOLD[2])
+    doc.setLineWidth(0.8)
+    doc.line(14, y + 2, 14 + text.length * 2.1, y + 2)
+}
+
+// ─── REPORTE DE INGRESOS (PDF) ───────────────────────────────────────────────
+
+export const exportIngresosPDF = async (datos: DatosReporte) => {
     const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
         import('jspdf'),
         import('jspdf-autotable'),
     ])
-    const doc = new jsPDF()
-    
-    // Configuración de colores
-    const primaryColor: [number, number, number] = [37, 99, 235] // Azul
-    const secondaryColor: [number, number, number] = [243, 244, 246] // Gris claro
-    
-    // Encabezado
-    doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2])
-    doc.rect(0, 0, 210, 40, 'F')
-    
-    doc.setTextColor(255, 255, 255)
-    doc.setFontSize(24)
-    doc.setFont('helvetica', 'bold')
-    doc.text('Hotel Adventur', 105, 15, { align: 'center' })
-    
-    doc.setFontSize(16)
-    doc.setFont('helvetica', 'normal')
-    doc.text('Reporte de Ingresos', 105, 25, { align: 'center' })
-    
-    doc.setFontSize(10)
-    doc.text(`Fecha: ${new Date().toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' })}`, 105, 33, { align: 'center' })
-    
-    // Resumen ejecutivo
-    doc.setTextColor(0, 0, 0)
-    doc.setFontSize(14)
-    doc.setFont('helvetica', 'bold')
-    doc.text('Resumen Ejecutivo', 14, 50)
-    
-    // Tabla de resumen
+
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+    const W = doc.internal.pageSize.getWidth()
+    const GOLD: [number, number, number] = [234, 179, 8]
+    const DARK: [number, number, number] = [15, 15, 15]
+    const GRAY: [number, number, number] = [248, 248, 248]
+
+    const logoBase64 = await loadImageAsBase64('/logoadventure.png')
+    drawHeader(doc, logoBase64, 'Reporte de Ingresos')
+
+    // ── KPIs
+    let y = 62
+    sectionTitle(doc, 'RESUMEN EJECUTIVO', y)
+
+    const totalReservas = datos.reservas.length
+    const promedio = totalReservas > 0 ? Math.round(datos.totalIngresos / totalReservas) : 0
+    const canceladas = datos.reservas.filter(r => r.estado === 'cancelada').length
+    const tasaCancelacion = totalReservas > 0 ? Math.round((canceladas / totalReservas) * 100) : 0
+
+    y += 8
+    const kpis = [
+        { label: 'Ingresos Totales', value: formatMonto(datos.totalIngresos), accent: true },
+        { label: 'Total Reservas', value: String(totalReservas), accent: false },
+        { label: 'Promedio/Reserva', value: formatMonto(promedio), accent: false },
+        { label: 'Tasa Cancelación', value: `${tasaCancelacion}%`, accent: false },
+    ]
+    const kw = (W - 28 - 9) / 4
+    kpis.forEach((k, i) => drawKpi(doc, 14 + i * (kw + 3), y, kw, 22, k.label, k.value, k.accent))
+
+    // ── Ingresos mensuales
+    y += 30
+    sectionTitle(doc, 'INGRESOS MENSUALES', y)
+
+    const mesesConDatos = datos.ingresosMensuales.filter(m => m.ingresos > 0)
+    const totalMeses = mesesConDatos.reduce((s, m) => s + m.ingresos, 0)
+    let ingresoPrevio = 0
+
+    const bodyMeses = datos.ingresosMensuales.map((m) => {
+        const variacion = ingresoPrevio === 0
+            ? '—'
+            : m.ingresos >= ingresoPrevio
+                ? `+${formatMonto(m.ingresos - ingresoPrevio)}`
+                : `-${formatMonto(ingresoPrevio - m.ingresos)}`
+        const pct = totalMeses > 0 ? `${((m.ingresos / totalMeses) * 100).toFixed(1)}%` : '0%'
+        ingresoPrevio = m.ingresos
+        return [m.mes, formatMonto(m.ingresos), variacion, pct]
+    })
+    bodyMeses.push(['TOTAL', formatMonto(totalMeses), '—', '100%'])
+
     autoTable(doc, {
-        startY: 55,
-        head: [['Concepto', 'Valor']],
-        body: [
-            ['Ingresos Totales', 'S/. 125,450'],
-            ['Ingresos Enero', 'S/. 95,000'],
-            ['Ingresos Febrero', 'S/. 125,450'],
-            ['Promedio por Reserva', 'S/. 1,410'],
-            ['Total de Reservas', '89'],
-        ],
-        headStyles: {
-            fillColor: primaryColor,
-            fontSize: 11,
-            fontStyle: 'bold',
-            halign: 'center'
-        },
-        bodyStyles: {
-            fontSize: 10
-        },
-        alternateRowStyles: {
-            fillColor: secondaryColor
-        },
+        startY: y + 6,
+        head: [['Mes', 'Ingresos (S/.)', 'Variación', '% del Total']],
+        body: bodyMeses,
+        headStyles: { fillColor: DARK, textColor: GOLD, fontSize: 9, fontStyle: 'bold', halign: 'center', cellPadding: 4 },
+        bodyStyles: { fontSize: 9, cellPadding: 3.5 },
+        alternateRowStyles: { fillColor: GRAY },
         columnStyles: {
-            0: { fontStyle: 'bold', cellWidth: 100 },
-            1: { halign: 'right', cellWidth: 80 }
+            0: { fontStyle: 'bold', cellWidth: 55 },
+            1: { halign: 'right', cellWidth: 48 },
+            2: { halign: 'right', cellWidth: 48 },
+            3: { halign: 'center', cellWidth: 30 },
+        },
+        didParseCell(data) {
+            const isLastRow = data.row.index === bodyMeses.length - 1
+            if (isLastRow && data.section === 'body') {
+                data.cell.styles.fillColor = GOLD
+                data.cell.styles.textColor = DARK
+                data.cell.styles.fontStyle = 'bold'
+            }
+        },
+        tableLineColor: [220, 220, 220],
+        tableLineWidth: 0.2,
+    })
+
+    // ── Top habitaciones más rentables
+    const habitMap = new Map<string, { nombre: string; tipo: string; reservas: number; ingresos: number }>()
+    datos.reservas.forEach(r => {
+        if (r.alojamientos) {
+            const key = r.alojamientos.nombre
+            const prev = habitMap.get(key) || { nombre: key, tipo: r.alojamientos.tipo, reservas: 0, ingresos: 0 }
+            prev.reservas++
+            prev.ingresos += r.total || 0
+            habitMap.set(key, prev)
         }
     })
-    
-    // Ingresos mensuales
-    doc.setFontSize(14)
-    doc.setFont('helvetica', 'bold')
-    doc.text('Ingresos Mensuales Detallados', 14, (doc as any).lastAutoTable.finalY + 15)
-    
+    const topHabit = Array.from(habitMap.values()).sort((a, b) => b.ingresos - a.ingresos).slice(0, 8)
+
+    const afterMeses = (doc as any).lastAutoTable.finalY + 10
+    sectionTitle(doc, 'ALOJAMIENTOS MÁS RENTABLES', afterMeses)
+
     autoTable(doc, {
-        startY: (doc as any).lastAutoTable.finalY + 20,
-        head: [['Mes', 'Ingresos', 'Variación', 'Porcentaje']],
-        body: [
-            ['Enero 2024', 'S/. 95,000', '-', '43.1%'],
-            ['Febrero 2024', 'S/. 125,450', '+S/. 30,450', '56.9%'],
-            ['Total', 'S/. 220,450', '-', '100%'],
-        ],
-        headStyles: {
-            fillColor: primaryColor,
-            fontSize: 11,
-            fontStyle: 'bold',
-            halign: 'center'
-        },
-        bodyStyles: {
-            fontSize: 10
-        },
-        alternateRowStyles: {
-            fillColor: secondaryColor
-        },
+        startY: afterMeses + 6,
+        head: [['#', 'Alojamiento', 'Tipo', 'Reservas', 'Ingresos (S/.)']],
+        body: topHabit.map((h, i) => [
+            String(i + 1), h.nombre, h.tipo, String(h.reservas), formatMonto(h.ingresos)
+        ]),
+        headStyles: { fillColor: DARK, textColor: GOLD, fontSize: 9, fontStyle: 'bold', halign: 'center', cellPadding: 4 },
+        bodyStyles: { fontSize: 9, cellPadding: 3.5 },
+        alternateRowStyles: { fillColor: GRAY },
         columnStyles: {
-            0: { cellWidth: 50 },
-            1: { halign: 'right', cellWidth: 50 },
-            2: { halign: 'right', cellWidth: 50 },
-            3: { halign: 'center', cellWidth: 40 }
+            0: { halign: 'center', cellWidth: 10 },
+            1: { fontStyle: 'bold', cellWidth: 65 },
+            2: { cellWidth: 28 },
+            3: { halign: 'center', cellWidth: 25 },
+            4: { halign: 'right', cellWidth: 45 },
         },
-        footStyles: {
-            fillColor: [220, 252, 231] as [number, number, number],
-            textColor: [22, 163, 74] as [number, number, number],
-            fontStyle: 'bold'
-        }
+        tableLineColor: [220, 220, 220],
+        tableLineWidth: 0.2,
     })
-    
-    // Pie de página
-    const pageCount = doc.getNumberOfPages()
-    for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i)
-        doc.setFontSize(8)
-        doc.setTextColor(128, 128, 128)
-        doc.text(
-            `Página ${i} de ${pageCount}`,
-            105,
-            290,
-            { align: 'center' }
-        )
-        doc.text(
-            'Hotel Adventur - Reporte Confidencial',
-            14,
-            290
-        )
-    }
-    
-    // Guardar PDF
+
+    drawFooter(doc)
     doc.save(`Reporte_Ingresos_${new Date().toISOString().split('T')[0]}.pdf`)
 }
 
-// Función para exportar reporte de reservas a Excel
-export const exportReservasExcel = async () => {
+// ─── REPORTE DE RESERVAS (Excel) ─────────────────────────────────────────────
+
+export const exportReservasExcel = async (reservas: ReservaConRelaciones[]) => {
     const XLSX = await import('xlsx')
-    // Datos de ejemplo (en producción vendrían de Supabase)
-    const reservasData = [
-        {
-            'Código': 'RES-001',
-            'Cliente': 'Juan Pérez',
-            'Email': 'juan@example.com',
-            'Habitación': 'Suite Premium 301',
-            'Check-in': '2024-02-01',
-            'Check-out': '2024-02-05',
-            'Noches': 4,
-            'Huéspedes': 2,
-            'Total': 2080,
-            'Adelanto': 1040,
-            'Estado': 'Confirmada',
-            'Fecha Reserva': '2024-01-15'
-        },
-        {
-            'Código': 'RES-002',
-            'Cliente': 'María García',
-            'Email': 'maria@example.com',
-            'Habitación': 'Suite Deluxe 101',
-            'Check-in': '2024-02-10',
-            'Check-out': '2024-02-13',
-            'Noches': 3,
-            'Huéspedes': 2,
-            'Total': 1050,
-            'Adelanto': 525,
-            'Estado': 'Confirmada',
-            'Fecha Reserva': '2024-01-20'
-        },
-        {
-            'Código': 'RES-003',
-            'Cliente': 'Carlos López',
-            'Email': 'carlos@example.com',
-            'Habitación': 'Habitación Superior 202',
-            'Check-in': '2024-02-15',
-            'Check-out': '2024-02-18',
-            'Noches': 3,
-            'Huéspedes': 1,
-            'Total': 750,
-            'Adelanto': 375,
-            'Estado': 'Pendiente',
-            'Fecha Reserva': '2024-02-01'
-        }
-    ]
-    
-    // Crear libro de trabajo
+
+    // Hoja 1: Detalle de reservas
+    const detalle = reservas.map((r, i) => ({
+        '#': i + 1,
+        'Código': r.codigo_reserva || r.id.substring(0, 8).toUpperCase(),
+        'Cliente': r.usuarios ? `${r.usuarios.nombre} ${r.usuarios.apellido}` : '—',
+        'Email': r.usuarios?.email || '—',
+        'Alojamiento': r.alojamientos?.nombre || '—',
+        'Tipo': r.alojamientos?.tipo || '—',
+        'Check-in': formatFecha(r.fecha_inicio),
+        'Check-out': formatFecha(r.fecha_fin),
+        'Noches': calcNochesDiff(r.fecha_inicio, r.fecha_fin),
+        'Huéspedes': r.personas,
+        'Total (S/.)': r.total,
+        'Adelanto (S/.)': r.adelanto,
+        'Estado': r.estado.charAt(0).toUpperCase() + r.estado.slice(1),
+        'Fecha Reserva': formatFecha(r.fecha_creacion),
+    }))
+
     const wb = XLSX.utils.book_new()
-    
-    // Hoja 1: Reservas detalladas
-    const ws1 = XLSX.utils.json_to_sheet(reservasData)
-    
-    // Ajustar ancho de columnas
-    const colWidths = [
-        { wch: 12 }, // Código
-        { wch: 20 }, // Cliente
-        { wch: 25 }, // Email
-        { wch: 25 }, // Habitación
-        { wch: 12 }, // Check-in
-        { wch: 12 }, // Check-out
-        { wch: 8 },  // Noches
-        { wch: 10 }, // Huéspedes
-        { wch: 12 }, // Total
-        { wch: 12 }, // Adelanto
-        { wch: 12 }, // Estado
-        { wch: 15 }  // Fecha Reserva
+
+    const ws1 = XLSX.utils.json_to_sheet(detalle)
+    ws1['!cols'] = [
+        { wch: 5 }, { wch: 14 }, { wch: 24 }, { wch: 28 }, { wch: 30 },
+        { wch: 14 }, { wch: 13 }, { wch: 13 }, { wch: 9 }, { wch: 10 },
+        { wch: 13 }, { wch: 14 }, { wch: 13 }, { wch: 16 },
     ]
-    ws1['!cols'] = colWidths
-    
-    XLSX.utils.book_append_sheet(wb, ws1, 'Reservas')
-    
+    XLSX.utils.book_append_sheet(wb, ws1, 'Reservas Detalladas')
+
     // Hoja 2: Resumen por estado
-    const resumenEstado = [
-        { 'Estado': 'Confirmadas', 'Cantidad': 45, 'Porcentaje': '51%', 'Ingresos': 'S/. 63,450' },
-        { 'Estado': 'Pendientes', 'Cantidad': 20, 'Porcentaje': '22%', 'Ingresos': 'S/. 28,200' },
-        { 'Estado': 'Completadas', 'Cantidad': 18, 'Porcentaje': '20%', 'Ingresos': 'S/. 25,380' },
-        { 'Estado': 'Canceladas', 'Cantidad': 6, 'Porcentaje': '7%', 'Ingresos': 'S/. 8,420' }
-    ]
+    const estados = ['pendiente', 'confirmada', 'cancelada']
+    const resumenEstado = estados.map(estado => {
+        const filtradas = reservas.filter(r => r.estado === estado)
+        const ingresos = filtradas.reduce((s, r) => s + (r.total || 0), 0)
+        return {
+            'Estado': estado.charAt(0).toUpperCase() + estado.slice(1),
+            'Cantidad': filtradas.length,
+            'Porcentaje': reservas.length > 0 ? `${((filtradas.length / reservas.length) * 100).toFixed(1)}%` : '0%',
+            'Ingresos (S/.)': ingresos.toFixed(2),
+        }
+    })
+    resumenEstado.push({
+        'Estado': 'TOTAL',
+        'Cantidad': reservas.length,
+        'Porcentaje': '100%',
+        'Ingresos (S/.)': reservas.reduce((s, r) => s + (r.total || 0), 0).toFixed(2),
+    })
+
     const ws2 = XLSX.utils.json_to_sheet(resumenEstado)
-    ws2['!cols'] = [{ wch: 15 }, { wch: 10 }, { wch: 12 }, { wch: 15 }]
+    ws2['!cols'] = [{ wch: 16 }, { wch: 11 }, { wch: 13 }, { wch: 16 }]
     XLSX.utils.book_append_sheet(wb, ws2, 'Resumen por Estado')
-    
-    // Hoja 3: Estadísticas
+
+    // Hoja 3: Estadísticas generales
+    const totalIngresos = reservas.reduce((s, r) => s + (r.total || 0), 0)
+    const totalConfirmadas = reservas.filter(r => r.estado === 'confirmada').length
+    const promedio = reservas.length > 0 ? (totalIngresos / reservas.length) : 0
+    const duracionProm = reservas.length > 0
+        ? (reservas.reduce((s, r) => s + calcNochesDiff(r.fecha_inicio, r.fecha_fin), 0) / reservas.length).toFixed(1)
+        : '0'
+
     const estadisticas = [
-        { 'Métrica': 'Total de Reservas', 'Valor': '89' },
-        { 'Métrica': 'Ingresos Totales', 'Valor': 'S/. 125,450' },
-        { 'Métrica': 'Promedio por Reserva', 'Valor': 'S/. 1,410' },
-        { 'Métrica': 'Duración Promedio', 'Valor': '3.2 días' },
-        { 'Métrica': 'Tasa de Ocupación', 'Valor': '78%' },
-        { 'Métrica': 'Tasa de Cancelación', 'Valor': '7%' }
+        { 'Métrica': 'Total de Reservas', 'Valor': String(reservas.length) },
+        { 'Métrica': 'Confirmadas', 'Valor': String(totalConfirmadas) },
+        { 'Métrica': 'Ingresos Totales (S/.)', 'Valor': totalIngresos.toFixed(2) },
+        { 'Métrica': 'Promedio por Reserva (S/.)', 'Valor': promedio.toFixed(2) },
+        { 'Métrica': 'Duración Promedio (noches)', 'Valor': duracionProm },
+        { 'Métrica': 'Tasa de Cancelación', 'Valor': reservas.length > 0 ? `${((reservas.filter(r => r.estado === 'cancelada').length / reservas.length) * 100).toFixed(1)}%` : '0%' },
+        { 'Métrica': 'Fecha del Reporte', 'Valor': new Date().toLocaleDateString('es-PE') },
     ]
     const ws3 = XLSX.utils.json_to_sheet(estadisticas)
-    ws3['!cols'] = [{ wch: 25 }, { wch: 20 }]
+    ws3['!cols'] = [{ wch: 30 }, { wch: 22 }]
     XLSX.utils.book_append_sheet(wb, ws3, 'Estadísticas')
-    
-    // Guardar archivo
+
     XLSX.writeFile(wb, `Reporte_Reservas_${new Date().toISOString().split('T')[0]}.xlsx`)
 }
 
-// Función para exportar reporte de usuarios a CSV
-export const exportUsuariosCSV = async () => {
-    const XLSX = await import('xlsx')
-    // Datos de ejemplo (en producción vendrían de Supabase)
-    const usuariosData = [
-        {
-            'ID': 'USR-001',
-            'Nombre': 'Juan',
-            'Apellido': 'Pérez',
-            'Email': 'juan@example.com',
-            'Teléfono': '+51 987654321',
-            'Tipo Documento': 'DNI',
-            'Número Documento': '12345678',
-            'País': 'Perú',
-            'Rol': 'Cliente',
-            'Estado': 'Verificado',
-            'Fecha Registro': '2024-01-15',
-            'Total Reservas': 5,
-            'Total Gastado': 'S/. 7,050'
-        },
-        {
-            'ID': 'USR-002',
-            'Nombre': 'María',
-            'Apellido': 'García',
-            'Email': 'maria@example.com',
-            'Teléfono': '+51 987654322',
-            'Tipo Documento': 'DNI',
-            'Número Documento': '87654321',
-            'País': 'Perú',
-            'Rol': 'Cliente',
-            'Estado': 'Verificado',
-            'Fecha Registro': '2024-01-20',
-            'Total Reservas': 3,
-            'Total Gastado': 'S/. 4,230'
-        },
-        {
-            'ID': 'USR-003',
-            'Nombre': 'Carlos',
-            'Apellido': 'López',
-            'Email': 'carlos@example.com',
-            'Teléfono': '+51 987654323',
-            'Tipo Documento': 'Pasaporte',
-            'Número Documento': 'P123456',
-            'País': 'Colombia',
-            'Rol': 'Cliente',
-            'Estado': 'Pendiente',
-            'Fecha Registro': '2024-02-01',
-            'Total Reservas': 1,
-            'Total Gastado': 'S/. 750'
-        }
+// ─── REPORTE DE USUARIOS (CSV) ───────────────────────────────────────────────
+
+export const exportUsuariosCSV = async (usuarios: Usuario[]) => {
+    const fecha = new Date().toLocaleDateString('es-PE', {
+        year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit',
+    })
+
+    const headers = [
+        'ID', 'Nombre', 'Apellido', 'Email', 'Teléfono',
+        'Tipo Documento', 'Número Documento', 'País', 'Rol',
+        'Verificado', 'Fecha Registro',
     ]
-    
-    // Crear CSV con formato elegante
-    const headers = Object.keys(usuariosData[0])
-    const csvContent = [
-        // Encabezado del reporte
-        ['HOTEL ADVENTUR'],
-        ['Reporte de Usuarios'],
-        [`Fecha de Generación: ${new Date().toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`],
+
+    const filas = usuarios.map(u => [
+        u.id,
+        u.nombre,
+        u.apellido,
+        u.email || '—',
+        u.telefono || '—',
+        u.tipo_documento || '—',
+        u.documento_identidad || '—',
+        u.pais || '—',
+        u.rol,
+        u.verificado ? 'Sí' : 'No',
+        formatFecha(u.fecha_registro),
+    ])
+
+    const verificados = usuarios.filter(u => u.verificado).length
+    const noVerificados = usuarios.length - verificados
+
+    const csvRows = [
+        ['=== HOTEL ADVENTUR — Atrévete y descubre ==='],
+        ['REPORTE DE USUARIOS'],
+        [`Generado el: ${fecha}`],
         [''],
-        ['DATOS DE USUARIOS'],
+        ['── LISTADO DE USUARIOS ──'],
         headers,
-        ...usuariosData.map(row => headers.map(header => row[header as keyof typeof row])),
+        ...filas,
         [''],
-        ['RESUMEN'],
-        ['Total de Usuarios', usuariosData.length],
-        ['Usuarios Verificados', usuariosData.filter(u => u.Estado === 'Verificado').length],
-        ['Usuarios Pendientes', usuariosData.filter(u => u.Estado === 'Pendiente').length],
-        ['Total de Reservas', usuariosData.reduce((sum, u) => sum + u['Total Reservas'], 0)]
-    ].map(row => row.join(',')).join('\n')
-    
-    // Crear blob y descargar
-    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' })
+        ['── RESUMEN ──'],
+        ['Total de Usuarios', String(usuarios.length)],
+        ['Usuarios Verificados', String(verificados)],
+        ['Usuarios No Verificados', String(noVerificados)],
+        ['Administradores', String(usuarios.filter(u => u.rol === 'admin_adventur').length)],
+        ['Propietarios', String(usuarios.filter(u => u.rol === 'propietario').length)],
+        ['Turistas', String(usuarios.filter(u => u.rol === 'turista').length)],
+    ]
+
+    const csv = csvRows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n')
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
     const link = document.createElement('a')
-    const url = URL.createObjectURL(blob)
-    link.setAttribute('href', url)
-    link.setAttribute('download', `Reporte_Usuarios_${new Date().toISOString().split('T')[0]}.csv`)
-    link.style.visibility = 'hidden'
+    link.href = URL.createObjectURL(blob)
+    link.download = `Reporte_Usuarios_${new Date().toISOString().split('T')[0]}.csv`
+    link.style.display = 'none'
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)

@@ -81,12 +81,6 @@ function HotelesContent() {
     const [vista, setVista] = useState<'grid' | 'lista'>('grid')
     const [sidebarOpen, setSidebarOpen] = useState(true)
     const [favoritos, setFavoritos] = useState<Set<string>>(new Set())
-    const [secFechas, setSecFechas] = useState(true)
-    const [secHuespedes, setSecHuespedes] = useState(true)
-    const [secCategoria, setSecCategoria] = useState(true)
-    const [secTipo, setSecTipo] = useState(true)
-    const [secPrecio, setSecPrecio] = useState(true)
-    const [secOrganizar, setSecOrganizar] = useState(true)
 
     // Ref para evitar doble fetch en StrictMode
     const fetchRef = useRef(0)
@@ -189,20 +183,15 @@ function HotelesContent() {
     const linkParams = checkIn ? `?checkIn=${checkIn}&checkOut=${checkOut}&huespedes=${huespedes}` : ''
     const ordenActual = ORDENES.find((item) => item.value === orden) ?? ORDENES[0]
 
-    const inputCls = "w-full border-2 border-gray-300 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-all"
+    const inputCls = "w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-all"
 
     // ── SIDEBAR ──────────────────────────────────────────────────────────────
-    const SidebarSection = ({ title, icon: Icon, open, onToggle, children }: {
-        title: string; icon: React.ElementType; open: boolean; onToggle: () => void; children: React.ReactNode
+    const SidebarSection = ({ title, children }: {
+        title: string; children: React.ReactNode
     }) => (
-        <div className="px-5 py-4 border-b border-gray-100 last:border-0">
-            <button onClick={onToggle} className="flex items-center justify-between w-full mb-3 group">
-                <span className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-2">
-                    <Icon size={13} className="text-yellow-400" /> {title}
-                </span>
-                {open ? <ChevronUp size={14} className="text-gray-400" /> : <ChevronDown size={14} className="text-gray-400" />}
-            </button>
-            {open && children}
+        <div className="py-4 border-b border-gray-100 last:border-0">
+            <p className="text-xs font-semibold text-gray-500 mb-3">{title}</p>
+            {children}
         </div>
     )
 
@@ -211,7 +200,7 @@ function HotelesContent() {
             {/* ── HERO ─────────────────────────────────────────────────────── */}
             <section className="relative h-[42vh] flex items-end justify-center overflow-hidden">
                 <Image src="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1920&q=80"
-                    alt="Alojamientos" fill sizes="100vw" className="object-cover" priority quality={85} />
+                    alt="Alojamientos" fill sizes="100vw" className="object-cover" priority />
                 <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/75" />
                 <div className="relative z-10 w-full max-w-7xl mx-auto px-6 pb-10">
                     <h1 className="text-5xl font-bold text-white mb-2 font-serif">Nuestros Alojamientos</h1>
@@ -256,194 +245,130 @@ function HotelesContent() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex flex-col gap-6 lg:flex-row lg:items-start">
                 {/* ── SIDEBAR ──────────────────────────────────────────────── */}
                 {sidebarOpen && (
-                    <aside className="w-full lg:w-72 lg:flex-shrink-0 lg:self-start lg:sticky lg:top-24">
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <aside className="w-full lg:w-64 lg:flex-shrink-0 lg:self-start lg:sticky lg:top-24">
+                        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
                             {/* Header */}
-                            <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-yellow-400 to-yellow-500">
-                                <div className="flex items-center gap-2 text-white">
-                                    <SlidersHorizontal size={17} />
-                                    <span className="font-bold text-sm uppercase tracking-wide">Filtros</span>
-                                    {nFiltros > 0 && <span className="bg-white text-yellow-700 text-xs font-bold px-2 py-0.5 rounded-full">{nFiltros}</span>}
-                                </div>
+                            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                                <span className="font-bold text-sm text-gray-900 flex items-center gap-2">
+                                    <SlidersHorizontal size={15} className="text-gray-500" />
+                                    Filtros
+                                    {nFiltros > 0 && (
+                                        <span className="bg-yellow-400 text-gray-900 text-xs font-bold px-2 py-0.5 rounded-full">{nFiltros}</span>
+                                    )}
+                                </span>
                                 {nFiltros > 0 && (
-                                    <button onClick={limpiarTodo} className="text-white/80 hover:text-white text-xs flex items-center gap-1">
-                                        <X size={11} /> Limpiar
+                                    <button onClick={limpiarTodo} className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
+                                        Limpiar
                                     </button>
                                 )}
                             </div>
 
-                            <div className="overflow-visible lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
-                                <div className="px-5 pt-5">
-                                    <div className="rounded-2xl border border-yellow-100 bg-gradient-to-br from-yellow-50 via-white to-white p-3.5">
-                                        <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-yellow-500">Exploracion</p>
-                                        <div className="mt-2 flex items-start justify-between gap-3">
-                                            <div>
-                                                <p className="text-sm font-semibold text-gray-900">
-                                                    {loading ? 'Actualizando resultados...' : `${alojamientos.length} opciones disponibles`}
-                                                </p>
-                                                <p className="text-xs text-gray-500">Orden actual: {ordenActual.label}</p>
-                                            </div>
-                                            <span className="rounded-full border border-yellow-100 bg-white px-2.5 py-1 text-[11px] font-bold text-gray-600 shadow-sm">
-                                                {vista === 'grid' ? 'Vista grid' : 'Vista lista'}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <SidebarSection title="Ordenar resultados" icon={ArrowUpDown} open={secOrganizar} onToggle={() => setSecOrganizar(v => !v)}>
-                                    <div className="space-y-2">
-                                        {ORDENES.map((item) => (
-                                            <button
-                                                key={item.value}
-                                                onClick={() => setOrden(item.value)}
-                                                className={`w-full rounded-2xl border px-3.5 py-3 text-left transition-all ${
-                                                    orden === item.value
-                                                        ? 'border-yellow-400 bg-yellow-50 shadow-sm'
-                                                        : 'border-gray-200 hover:border-yellow-200 hover:bg-gray-50'
-                                                }`}
-                                            >
-                                                <div className="flex items-start justify-between gap-3">
-                                                    <div>
-                                                        <p className="text-sm font-semibold text-gray-900">{item.label}</p>
-                                                        <p className="mt-1 text-xs text-gray-500">{item.helper}</p>
-                                                    </div>
-                                                    <span
-                                                        className={`shrink-0 rounded-full px-2 py-1 text-[11px] font-bold ${
-                                                            orden === item.value ? 'bg-yellow-400 text-gray-900' : 'bg-gray-100 text-gray-500'
-                                                        }`}
-                                                    >
-                                                        {orden === item.value ? 'Activo' : 'Usar'}
-                                                    </span>
-                                                </div>
-                                            </button>
-                                        ))}
-                                    </div>
-                                </SidebarSection>
-
-                                {/* Disponibilidad */}
-                                <SidebarSection title="Disponibilidad" icon={Calendar} open={secFechas} onToggle={() => setSecFechas(v => !v)}>
-                                    <div className="space-y-3">
-                                        <div>
-                                            <label className="text-xs text-gray-500 font-semibold mb-1.5 block">Check-in</label>
-                                            <input type="date" value={checkIn} min={minDate}
-                                                onChange={e => setCheckIn(e.target.value)}
-                                                className={inputCls}
-                                                suppressHydrationWarning
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="text-xs text-gray-500 font-semibold mb-1.5 block">Check-out</label>
-                                            <input type="date" value={checkOut} min={checkIn || minDate}
-                                                onChange={e => setCheckOut(e.target.value)}
-                                                className={inputCls}
-                                                suppressHydrationWarning
-                                            />
-                                        </div>
-                                        {noches > 0 && (
-                                            <div className="bg-yellow-50 border border-yellow-200 rounded-xl px-3 py-2 text-xs text-yellow-700 font-semibold text-center">
-                                                {noches} noche{noches > 1 ? 's' : ''} seleccionada{noches > 1 ? 's' : ''}
-                                            </div>
-                                        )}
-                                    </div>
-                                </SidebarSection>
-
-                                {/* Huéspedes */}
-                                <SidebarSection title="Huéspedes" icon={Users} open={secHuespedes} onToggle={() => setSecHuespedes(v => !v)}>
-                                    <div className="flex items-center justify-between bg-gray-50 rounded-xl p-3">
-                                        <button onClick={() => setHuespedes(h => Math.max(1, h - 1))}
-                                            className="w-9 h-9 rounded-lg bg-white shadow border border-gray-200 flex items-center justify-center hover:border-yellow-400 hover:text-yellow-400 transition-all">
-                                            <Minus size={14} />
-                                        </button>
-                                        <div className="text-center">
-                                            <p className="text-2xl font-bold text-gray-900">{huespedes}</p>
-                                            <p className="text-xs text-gray-500">{huespedes === 1 ? 'persona' : 'personas'}</p>
-                                        </div>
-                                        <button onClick={() => setHuespedes(h => Math.min(20, h + 1))}
-                                            className="w-9 h-9 rounded-lg bg-white shadow border border-gray-200 flex items-center justify-center hover:border-yellow-400 hover:text-yellow-400 transition-all">
-                                            <Plus size={14} />
-                                        </button>
-                                    </div>
-                                </SidebarSection>
+                            <div className="px-5 divide-y divide-gray-100">
 
                                 {/* Categoría */}
-                                <SidebarSection title="Categoría" icon={Star} open={secCategoria} onToggle={() => setSecCategoria(v => !v)}>
-                                    <div className="space-y-1.5">
+                                <SidebarSection title="Categoría">
+                                    <div className="grid grid-cols-2 gap-2">
                                         {CATEGORIAS.map(cat => (
                                             <button key={cat}
                                                 onClick={() => setCategoria(c => c === cat ? '' : cat)}
-                                                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition-all border ${
+                                                className={`px-3 py-2 rounded-lg text-sm text-center transition-all border ${
                                                     categoria === cat
-                                                        ? 'bg-yellow-400 text-gray-900 border-yellow-400 shadow-sm'
-                                                        : 'border-gray-200 text-gray-700 hover:border-yellow-300 hover:bg-yellow-50'
+                                                        ? 'bg-yellow-400 text-gray-900 border-yellow-400 font-semibold'
+                                                        : 'border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'
                                                 }`}>
-                                                <span>{cat}</span>
-                                                {categoria === cat && <X size={12} />}
+                                                {cat}
                                             </button>
                                         ))}
                                     </div>
                                 </SidebarSection>
 
                                 {/* Tipo */}
-                                <SidebarSection title="Tipo de alojamiento" icon={Building2} open={secTipo} onToggle={() => setSecTipo(v => !v)}>
+                                <SidebarSection title="Tipo de alojamiento">
                                     <div className="grid grid-cols-2 gap-2">
-                                        {TIPOS.map(tipo => {
-                                            const Icon = TIPO_ICONS[tipo] || Building2
-                                            return (
-                                                <button key={tipo}
-                                                    onClick={() => setTipAloj(t => t === tipo ? '' : tipo)}
-                                                    className={`flex flex-col items-center gap-1.5 py-3 rounded-xl text-xs font-bold transition-all border ${
-                                                        tipAloj === tipo
-                                                            ? 'bg-yellow-400 text-gray-900 border-yellow-400 shadow-sm'
-                                                            : 'border-gray-200 text-gray-600 hover:border-yellow-300 hover:bg-yellow-50'
-                                                    }`}>
-                                                    <Icon size={18} />
-                                                    {tipo}
-                                                </button>
-                                            )
-                                        })}
+                                        {TIPOS.map(tipo => (
+                                            <button key={tipo}
+                                                onClick={() => setTipAloj(t => t === tipo ? '' : tipo)}
+                                                className={`px-3 py-2 rounded-lg text-sm text-center transition-all border ${
+                                                    tipAloj === tipo
+                                                        ? 'bg-yellow-400 text-gray-900 border-yellow-400 font-semibold'
+                                                        : 'border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                                                }`}>
+                                                {tipo}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </SidebarSection>
+
+                                {/* Ordenar */}
+                                <SidebarSection title="Ordenar">
+                                    <div className="space-y-1.5">
+                                        {ORDENES.map((item) => (
+                                            <button
+                                                key={item.value}
+                                                onClick={() => setOrden(item.value)}
+                                                className={`w-full px-3 py-2.5 rounded-lg text-sm text-left transition-all border ${
+                                                    orden === item.value
+                                                        ? 'bg-yellow-400 text-gray-900 border-yellow-400 font-semibold'
+                                                        : 'border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                                                }`}>
+                                                {item.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </SidebarSection>
+
+                                {/* Huéspedes */}
+                                <SidebarSection title="Huéspedes">
+                                    <div className="flex items-center justify-between gap-3">
+                                        <button onClick={() => setHuespedes(h => Math.max(1, h - 1))}
+                                            className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center hover:border-yellow-400 hover:text-yellow-600 transition-all text-gray-600">
+                                            <Minus size={13} />
+                                        </button>
+                                        <span className="text-sm font-semibold text-gray-900">
+                                            {huespedes} {huespedes === 1 ? 'persona' : 'personas'}
+                                        </span>
+                                        <button onClick={() => setHuespedes(h => Math.min(20, h + 1))}
+                                            className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center hover:border-yellow-400 hover:text-yellow-600 transition-all text-gray-600">
+                                            <Plus size={13} />
+                                        </button>
                                     </div>
                                 </SidebarSection>
 
                                 {/* Precio */}
-                                <SidebarSection title="Precio por noche" icon={Star} open={secPrecio} onToggle={() => setSecPrecio(v => !v)}>
-                                    <div className="space-y-3">
-                                        <div className="flex gap-2">
-                                            <div className="flex-1">
-                                                <label className="text-xs text-gray-500 font-semibold mb-1.5 block">Mínimo</label>
-                                                <div className="relative">
-                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 font-bold">S/.</span>
-                                                    <input type="number" value={precioMin} min={0} placeholder="0"
-                                                        onChange={e => setPrecioMin(e.target.value)}
-                                                        className="w-full border-2 border-gray-300 rounded-xl pl-9 pr-3 py-2.5 text-sm font-medium text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400"
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div className="flex-1">
-                                                <label className="text-xs text-gray-500 font-semibold mb-1.5 block">Máximo</label>
-                                                <div className="relative">
-                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 font-bold">S/.</span>
-                                                    <input type="number" value={precioMax} min={0} placeholder="∞"
-                                                        onChange={e => setPrecioMax(e.target.value)}
-                                                        className="w-full border-2 border-gray-300 rounded-xl pl-9 pr-3 py-2.5 text-sm font-medium text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="flex flex-wrap gap-1.5">
-                                            {[['', '100', 'Hasta S/.100'], ['100', '200', 'S/.100–200'], ['200', '400', 'S/.200–400'], ['400', '', 'S/.400+']].map(([min, max, label]) => (
-                                                <button key={label}
-                                                    onClick={() => { setPrecioMin(min); setPrecioMax(max) }}
-                                                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all ${
-                                                        precioMin === min && precioMax === max
-                                                            ? 'bg-yellow-400 text-gray-900 border-yellow-400'
-                                                            : 'border-gray-300 text-gray-600 hover:border-yellow-400 hover:bg-yellow-50'
-                                                    }`}>
-                                                    {label}
-                                                </button>
-                                            ))}
-                                        </div>
+                                <SidebarSection title="Precio por noche (S/.)">
+                                    <div className="flex gap-2">
+                                        <input type="number" value={precioMin} min={0} placeholder="Mín"
+                                            onChange={e => setPrecioMin(e.target.value)}
+                                            className={inputCls}
+                                        />
+                                        <input type="number" value={precioMax} min={0} placeholder="Máx"
+                                            onChange={e => setPrecioMax(e.target.value)}
+                                            className={inputCls}
+                                        />
                                     </div>
                                 </SidebarSection>
+
+                                {/* Disponibilidad */}
+                                <SidebarSection title="Disponibilidad">
+                                    <div className="space-y-2">
+                                        <input type="date" value={checkIn} min={minDate}
+                                            onChange={e => setCheckIn(e.target.value)}
+                                            className={inputCls}
+                                            suppressHydrationWarning
+                                        />
+                                        <input type="date" value={checkOut} min={checkIn || minDate}
+                                            onChange={e => setCheckOut(e.target.value)}
+                                            className={inputCls}
+                                            suppressHydrationWarning
+                                        />
+                                        {noches > 0 && (
+                                            <p className="text-xs text-yellow-700 font-semibold text-center">
+                                                {noches} noche{noches > 1 ? 's' : ''}
+                                            </p>
+                                        )}
+                                    </div>
+                                </SidebarSection>
+
                             </div>
                         </div>
                     </aside>
@@ -452,15 +377,15 @@ function HotelesContent() {
                 {/* ── CONTENIDO PRINCIPAL ──────────────────────────────────── */}
                 <div className="flex-1 min-w-0">
                     {/* Toolbar */}
-                    <div className="flex items-center justify-between mb-5 bg-white rounded-2xl shadow-sm border border-gray-100 px-4 py-3 gap-3 flex-wrap">
+                    <div className="flex items-center justify-between mb-5 bg-white rounded-2xl border border-gray-200 px-4 py-3 gap-3 flex-wrap">
                         <div className="flex items-center gap-3">
                             <button onClick={() => setSidebarOpen(v => !v)}
-                                className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold transition-all border ${
-                                    sidebarOpen ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all border ${
+                                    sidebarOpen ? 'bg-yellow-400 text-gray-900 border-yellow-400' : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                                 }`}>
                                 <SlidersHorizontal size={15} />
-                                {sidebarOpen ? 'Ocultar' : 'Filtros'}
-                                {nFiltros > 0 && <span className="bg-yellow-400 text-gray-900 text-xs px-1.5 py-0.5 rounded-full">{nFiltros}</span>}
+                                Filtros
+                                {nFiltros > 0 && <span className="bg-gray-900 text-white text-xs px-1.5 py-0.5 rounded-full">{nFiltros}</span>}
                             </button>
                             <p className="text-sm text-gray-500">
                                 {loading ? 'Buscando...' : (
@@ -468,35 +393,18 @@ function HotelesContent() {
                                 )}
                             </p>
                         </div>
-                        <div className="flex items-center gap-2 ml-auto">
-                            <div className="hidden sm:flex items-center gap-2 rounded-2xl border border-gray-200 bg-gray-50 px-3 py-2">
-                                <div className="flex h-8 w-8 items-center justify-center rounded-xl border border-gray-200 bg-white shadow-sm">
-                                    <ArrowUpDown size={14} className="text-yellow-500" />
-                                </div>
-                                <div className="leading-tight">
-                                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gray-400">Orden actual</p>
-                                    <p className="text-sm font-semibold text-gray-900">{ordenActual.label}</p>
-                                </div>
-                            </div>
-                            <div className="hidden items-center gap-1.5 border-2 border-gray-300 rounded-xl px-3 py-2 bg-white">
-                                <ArrowUpDown size={13} className="text-gray-500" />
-                                <select value={orden} onChange={e => setOrden(e.target.value as Orden)}
-                                    className="text-xs font-semibold text-gray-800 outline-none bg-transparent cursor-pointer">
-                                    <option value="precio_asc">Precio: menor a mayor</option>
-                                    <option value="precio_desc">Precio: mayor a menor</option>
-                                    <option value="nombre">Nombre A–Z</option>
-                                </select>
-                            </div>
-                            <div className="flex border-2 border-gray-300 rounded-xl overflow-hidden">
-                                <button onClick={() => setVista('grid')}
-                                    className={`p-2 transition-colors ${vista === 'grid' ? 'bg-yellow-400 text-gray-900' : 'text-gray-500 hover:bg-gray-50'}`}>
-                                    <Grid3X3 size={15} />
-                                </button>
-                                <button onClick={() => setVista('lista')}
-                                    className={`p-2 transition-colors ${vista === 'lista' ? 'bg-yellow-400 text-gray-900' : 'text-gray-500 hover:bg-gray-50'}`}>
-                                    <List size={15} />
-                                </button>
-                            </div>
+                        {/* Toggle vista grid/lista */}
+                        <div className="flex border border-gray-200 rounded-lg overflow-hidden">
+                            <button onClick={() => setVista('grid')}
+                                className={`p-2 transition-colors ${vista === 'grid' ? 'bg-yellow-400 text-gray-900' : 'text-gray-500 hover:bg-gray-50'}`}
+                                aria-label="Vista cuadrícula">
+                                <Grid3X3 size={15} />
+                            </button>
+                            <button onClick={() => setVista('lista')}
+                                className={`p-2 transition-colors ${vista === 'lista' ? 'bg-yellow-400 text-gray-900' : 'text-gray-500 hover:bg-gray-50'}`}
+                                aria-label="Vista lista">
+                                <List size={15} />
+                            </button>
                         </div>
                     </div>
 
@@ -586,7 +494,7 @@ function CardGrid({ aloj, imagen, esFav, onFav, linkParams }: {
                 <Image src={imagen} alt={aloj.nombre} fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     className="object-cover group-hover:scale-105 transition-transform duration-500"
-                    loading="lazy" quality={75} />
+                    loading="lazy" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                 <button onClick={onFav}
                     className={`absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center shadow-md transition-all ${esFav ? 'bg-yellow-400 text-gray-900' : 'bg-white/90 text-gray-600 hover:bg-yellow-50 hover:text-yellow-400'}`}>
@@ -641,7 +549,7 @@ function CardLista({ aloj, imagen, esFav, onFav, linkParams }: {
                 <Image src={imagen} alt={aloj.nombre} fill
                     sizes="224px"
                     className="object-cover group-hover:scale-105 transition-transform duration-500"
-                    loading="lazy" quality={75} />
+                    loading="lazy" />
                 <button onClick={onFav}
                     className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-all ${esFav ? 'bg-yellow-400 text-gray-900' : 'bg-white/90 text-gray-600 hover:bg-yellow-50 hover:text-yellow-400'}`}>
                     <Heart size={13} fill={esFav ? 'currentColor' : 'none'} />

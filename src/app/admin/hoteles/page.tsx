@@ -5,7 +5,7 @@ import { DataTable } from '@/components/admin/TablasDatos'
 import { Modal } from '@/components/admin/Modal'
 import { adminService } from '@/services/admin.servicio'
 import { notificationsService } from '@/services/notificaciones.servicio'
-import { RefreshCw, Loader2, Home, MapPin, DollarSign, Users, Plus, Edit, X } from 'lucide-react'
+import { RefreshCw, Loader2, Home, MapPin, DollarSign, Users, Plus, Edit, X, Search, Image as ImageIcon, CheckCircle } from 'lucide-react'
 import Swal from 'sweetalert2'
 
 interface Alojamiento {
@@ -42,6 +42,8 @@ export default function HotelesAdminPage() {
     const [selectedAlojamiento, setSelectedAlojamiento] = useState<Alojamiento | null>(null)
     const [filterCategoria, setFilterCategoria] = useState<string>('todas')
     const [filterTipo, setFilterTipo] = useState<string>('todos')
+    const [filterEstado, setFilterEstado] = useState<string>('todos')
+    const [searchTerm, setSearchTerm] = useState<string>('')
     const [saving, setSaving] = useState(false)
     const [uploadingImages, setUploadingImages] = useState(false)
     const [imagePreviews, setImagePreviews] = useState<string[]>([])
@@ -164,11 +166,11 @@ export default function HotelesAdminPage() {
                     await uploadImages(selectedAlojamiento.id)
                 }
                 
-                // Notificar a los administradores
+// Notificar a los administradores
                 await notificationsService.notifyAdmins(
                     'info',
-                    '🏨 Habitación actualizada',
-                    `La habitación "${formData.nombre}" ha sido actualizada`,
+                    'Habitacion actualizada',
+                    `La habitacion "${formData.nombre}" ha sido actualizada`,
                     '/admin/hoteles',
                     { alojamientoId: selectedAlojamiento.id, nombre: formData.nombre }
                 )
@@ -202,11 +204,11 @@ export default function HotelesAdminPage() {
                     await uploadImages(created.id)
                 }
                 
-                // Notificar a los administradores
+// Notificar a los administradores
                 await notificationsService.notifyAdmins(
                     'success',
-                    '✨ Nueva habitación creada',
-                    `Se ha creado la habitación "${formData.nombre}" (${formData.tipo})`,
+                    'Nueva habitacion creada',
+                    `Se ha creado la habitacion "${formData.nombre}" (${formData.tipo})`,
                     '/admin/hoteles',
                     { nombre: formData.nombre, tipo: formData.tipo }
                 )
@@ -509,7 +511,15 @@ export default function HotelesAdminPage() {
     const filteredAlojamientos = alojamientos.filter(a => {
         const matchCategoria = filterCategoria === 'todas' || a.categoria === filterCategoria
         const matchTipo = filterTipo === 'todos' || a.tipo === filterTipo
-        return matchCategoria && matchTipo
+        const matchEstado = filterEstado === 'todos' || 
+            (filterEstado === 'activo' && a.activo) || 
+            (filterEstado === 'inactivo' && !a.activo)
+        const matchSearch = searchTerm === '' || 
+            a.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (a.direccion && a.direccion.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (a.distrito && a.distrito.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (a.provincia && a.provincia.toLowerCase().includes(searchTerm.toLowerCase()))
+        return matchCategoria && matchTipo && matchEstado && matchSearch
     })
 
     const stats = [
@@ -600,44 +610,66 @@ export default function HotelesAdminPage() {
                 })}
             </div>
 
-            {/* Filtros */}
-            <div className="mb-5 bg-white border border-gray-200 rounded-xl p-4 space-y-3">
-                <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wide w-full sm:w-auto">Categoría:</span>
-                    <div className="flex flex-wrap gap-1.5">
-                        {['todas', 'Económico', 'Familiar', 'Parejas', 'Premium', 'Naturaleza'].map((cat) => (
-                            <button
-                                key={cat}
-                                onClick={() => setFilterCategoria(cat)}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                                    filterCategoria === cat
-                                        ? 'bg-blue-600 text-white shadow-sm'
-                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                }`}
-                            >
-                                {cat === 'todas' ? 'Todas' : cat}
-                            </button>
-                        ))}
+{/* Filtros mejorados */}
+            <div className="mb-5 bg-white border border-gray-200 rounded-xl p-4">
+                <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+                    <div className="flex-1 min-w-0">
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wide block mb-2">Buscar por nombre</label>
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <input
+                                type="text"
+                                placeholder="Buscar alojamiento..."
+                                className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
                     </div>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wide w-full sm:w-auto">Tipo:</span>
-                    <div className="flex flex-wrap gap-1.5">
-                        {['todos', 'Cabaña', 'EcoLodge', 'Hotel', 'Hostal', 'Casa'].map((tipo) => (
-                            <button
-                                key={tipo}
-                                onClick={() => setFilterTipo(tipo)}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                                    filterTipo === tipo
-                                        ? 'bg-blue-600 text-white shadow-sm'
-                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                }`}
+                    <div className="flex flex-col sm:flex-row gap-3">
+                        <div className="min-w-[160px]">
+                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wide block mb-1.5">Categoria</label>
+                            <select
+                                value={filterCategoria}
+                                onChange={(e) => setFilterCategoria(e.target.value)}
+                                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             >
-                                {tipo === 'todos' ? 'Todos' : tipo}
-                            </button>
-                        ))}
+                                <option value="todas">Todas las categorias</option>
+                                <option value="Econ%C3%B3mico">Economico</option>
+                                <option value="Familiar">Familiar</option>
+                                <option value="Parejas">Parejas</option>
+                                <option value="Premium">Premium</option>
+                                <option value="Naturaleza">Naturaleza</option>
+                            </select>
+                        </div>
+                        <div className="min-w-[160px]">
+                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wide block mb-1.5">Tipo</label>
+                            <select
+                                value={filterTipo}
+                                onChange={(e) => setFilterTipo(e.target.value)}
+                                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="todos">Todos los tipos</option>
+                                <option value="Cabana">Cabana</option>
+                                <option value="EcoLodge">EcoLodge</option>
+                                <option value="Hotel">Hotel</option>
+                                <option value="Hostal">Hostal</option>
+                                <option value="Casa">Casa</option>
+                            </select>
+                        </div>
+                        <div className="min-w-[140px]">
+                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wide block mb-1.5">Estado</label>
+                            <select
+                                value={filterEstado}
+                                onChange={(e) => setFilterEstado(e.target.value)}
+                                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="todos">Todos</option>
+                                <option value="activo">Activo</option>
+                                <option value="inactivo">Inactivo</option>
+                            </select>
+                        </div>
                     </div>
-                </div>
             </div>
 
             <div className="min-w-0 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
@@ -654,7 +686,7 @@ export default function HotelesAdminPage() {
             <Modal
                 isOpen={isEditModalOpen}
                 onClose={() => setIsEditModalOpen(false)}
-                title={selectedAlojamiento ? '✏️ Editar Alojamiento' : '✨ Nuevo Alojamiento'}
+                title={selectedAlojamiento ? 'Editar Alojamiento' : 'Nuevo Alojamiento'}
                 size="lg"
             >
                 <div className="space-y-6">
@@ -664,31 +696,30 @@ export default function HotelesAdminPage() {
                             <Home className="w-4 h-4" />
                             Información Básica
                         </h3>
-                        <div className="space-y-3">
-                            <div>
-                                <label className="block text-xs font-bold text-gray-700 mb-1.5">Nombre del Alojamiento *</label>
-                                <input
-                                    type="text"
-                                    value={formData.nombre}
-                                    onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-                                    className="w-full px-3 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    placeholder="Ej: EcoLodge Aventura Verde"
-                                    required
-                                />
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+<div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                <div className="col-span-2">
+                                    <label className="block text-xs font-bold text-gray-700 mb-1.5">Nombre del Alojamiento *</label>
+                                    <input
+                                        type="text"
+                                        value={formData.nombre}
+                                        onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                                        className="w-full px-3 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        placeholder="Ej: EcoLodge Aventura Verde"
+                                        required
+                                    />
+                                </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-700 mb-1.5">Categoría *</label>
+                                    <label className="block text-xs font-bold text-gray-700 mb-1.5">Categoria *</label>
                                     <select
                                         value={formData.categoria}
                                         onChange={(e) => setFormData({ ...formData, categoria: e.target.value as any })}
                                         className="w-full px-3 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     >
-                                        <option value="Económico">💰 Económico</option>
-                                        <option value="Familiar">👨‍👩‍👧‍👦 Familiar</option>
-                                        <option value="Parejas">💑 Parejas</option>
-                                        <option value="Premium">⭐ Premium</option>
-                                        <option value="Naturaleza">🌿 Naturaleza</option>
+                                        <option value="Economico">Economico</option>
+                                        <option value="Familiar">Familiar</option>
+                                        <option value="Parejas">Parejas</option>
+                                        <option value="Premium">Premium</option>
+                                        <option value="Naturaleza">Naturaleza</option>
                                     </select>
                                 </div>
                                 <div>
@@ -698,40 +729,64 @@ export default function HotelesAdminPage() {
                                         onChange={(e) => setFormData({ ...formData, tipo: e.target.value as any })}
                                         className="w-full px-3 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     >
-                                        <option value="Cabaña">🏡 Cabaña</option>
-                                        <option value="EcoLodge">🌲 EcoLodge</option>
-                                        <option value="Hotel">🏨 Hotel</option>
-                                        <option value="Hostal">🏠 Hostal</option>
-                                        <option value="Casa">🏘️ Casa</option>
+                                        <option value="Cabana">Cabana</option>
+                                        <option value="EcoLodge">EcoLodge</option>
+                                        <option value="Hotel">Hotel</option>
+                                        <option value="Hostal">Hostal</option>
+                                        <option value="Casa">Casa</option>
                                     </select>
                                 </div>
                                 <div>
                                     <label className="block text-xs font-bold text-gray-700 mb-1.5">Precio Base (S/.) *</label>
-                                    <div className="relative">
-                                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                        <input
-                                            type="number"
-                                            value={formData.precio_base}
-                                            onChange={(e) => setFormData({ ...formData, precio_base: Number(e.target.value) })}
-                                            className="w-full pl-9 pr-3 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                            placeholder="320"
-                                            min="0"
-                                        />
-                                    </div>
+                                    <input
+                                        type="number"
+                                        value={formData.precio_base}
+                                        onChange={(e) => setFormData({ ...formData, precio_base: Number(e.target.value) })}
+                                        className="w-full px-3 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        placeholder="320"
+                                        min="0"
+                                    />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-700 mb-1.5">Capacidad Máxima *</label>
-                                    <div className="relative">
-                                        <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                        <input
-                                            type="number"
-                                            value={formData.capacidad_maxima}
-                                            onChange={(e) => setFormData({ ...formData, capacidad_maxima: Number(e.target.value) })}
-                                            className="w-full pl-9 pr-3 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                            placeholder="4"
-                                            min="1"
-                                        />
-                                    </div>
+                                    <label className="block text-xs font-bold text-gray-700 mb-1.5">Capacidad Maxima *</label>
+                                    <input
+                                        type="number"
+                                        value={formData.capacidad_maxima}
+                                        onChange={(e) => setFormData({ ...formData, capacidad_maxima: Number(e.target.value) })}
+                                        className="w-full px-3 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        placeholder="4"
+                                        min="1"
+                                    />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-700 mb-1.5">Categoría *</label>
+<select
+                                        value={formData.categoria}
+                                        onChange={(e) => setFormData({ ...formData, categoria: e.target.value as any })}
+                                        className="w-full px-3 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    >
+                                        <option value="Econ%C3%B3mico">Economico</option>
+                                        <option value="Familiar">Familiar</option>
+                                        <option value="Parejas">Parejas</option>
+                                        <option value="Premium">Premium</option>
+                                        <option value="Naturaleza">Naturaleza</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-700 mb-1.5">Tipo *</label>
+                                    <select
+                                        value={formData.tipo}
+                                        onChange={(e) => setFormData({ ...formData, tipo: e.target.value as any })}
+                                        className="w-full px-3 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    >
+                                        <option value="Cabana">Cabana</option>
+                                        <option value="EcoLodge">EcoLodge</option>
+                                        <option value="Hotel">Hotel</option>
+                                        <option value="Hostal">Hostal</option>
+                                        <option value="Casa">Casa</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -805,9 +860,9 @@ export default function HotelesAdminPage() {
                     {/* Imágenes */}
                     <div className="bg-orange-50 rounded-xl p-4 border border-orange-200">
                         <h3 className="text-sm font-bold text-orange-900 mb-1 flex items-center gap-2">
-                            📸 Imágenes del Alojamiento
+                            <ImageIcon className="w-4 h-4" /> Imágenes del Alojamiento
                         </h3>
-                        <p className="text-xs text-gray-600 mb-3">Máx. 10 imágenes (5MB c/u). La marcada con ⭐ será la principal.</p>
+                        <p className="text-xs text-gray-600 mb-3">Máx. 10 imágenes (5MB c/u). La marcada con Principal será la principal.</p>
                         
                         <label className={`cursor-pointer inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${
                             imagePreviews.length >= 10 
@@ -839,7 +894,7 @@ export default function HotelesAdminPage() {
                                             />
                                             {index === principalImageIndex && (
                                                 <div className="absolute top-1 left-1 bg-yellow-400 text-white px-1.5 py-0.5 rounded text-[10px] font-bold">
-                                                    ⭐ Principal
+                                                    Principal
                                                 </div>
                                             )}
                                             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 p-1">
@@ -848,7 +903,7 @@ export default function HotelesAdminPage() {
                                                         onClick={() => setPrincipalImageIndex(index)}
                                                         className="w-full px-2 py-1 bg-yellow-400 text-white rounded text-[10px] font-bold"
                                                     >
-                                                        ⭐ Principal
+                                                        Principal
                                                     </button>
                                                 )}
                                                 <button
@@ -873,7 +928,8 @@ export default function HotelesAdminPage() {
                     {/* Servicios */}
                     <div className="bg-cyan-50 rounded-xl p-4 border border-cyan-200">
                         <h3 className="text-sm font-bold text-cyan-900 mb-1 flex items-center gap-2">
-                            ✨ Servicios Incluidos
+                            <CheckCircle className="w-4 h-4" />
+                            Servicios Incluidos
                         </h3>
                         <p className="text-xs text-gray-600 mb-3">
                             {formData.servicios_incluidos.length} seleccionado{formData.servicios_incluidos.length !== 1 ? 's' : ''}
@@ -898,7 +954,7 @@ export default function HotelesAdminPage() {
                         <div className="flex items-center justify-between gap-4">
                             <div className="min-w-0">
                                 <p className="text-sm font-bold text-gray-900">
-                                    {formData.activo ? '✅' : '❌'} Estado del Alojamiento
+                                    {formData.activo ? 'Activo' : 'Inactivo'} Estado del Alojamiento
                                 </p>
                                 <p className="text-xs text-gray-500 mt-0.5">
                                     {formData.activo ? 'Visible y disponible para reservas' : 'Oculto, no acepta reservas'}
@@ -912,7 +968,7 @@ export default function HotelesAdminPage() {
                                         : 'bg-gray-400 hover:bg-gray-500 text-white'
                                 }`}
                             >
-                                {formData.activo ? '✓ Activo' : '✕ Inactivo'}
+                                {formData.activo ? 'OK Activo' : 'X Inactivo'}
                             </button>
                         </div>
                     </div>
@@ -1095,7 +1151,7 @@ export default function HotelesAdminPage() {
                                             : 'bg-gradient-to-r from-yellow-300 to-yellow-400 text-white'
                                     }`}
                                 >
-                                    {selectedAlojamiento.activo ? '✓ Activo' : '✕ Inactivo'}
+                                    {selectedAlojamiento.activo ? 'OK Activo' : 'X Inactivo'}
                                 </button>
                             </div>
                         </div>

@@ -6,6 +6,7 @@ import {
   useContext,
   useMemo,
   useState,
+  useEffect,
   type ReactNode,
 } from 'react'
 import { createClient } from '@/utils/supabase/client'
@@ -27,8 +28,35 @@ export function SiteConfigProvider({
   children: ReactNode
   initialConfig?: Partial<SiteConfig> | null
 }) {
-  const [config, setConfig] = useState<SiteConfig>(normalizeSiteConfig(initialConfig))
+  const [config, setConfig] = useState<SiteConfig>(() => normalizeSiteConfig(initialConfig))
   const [loading, setLoading] = useState(false)
+  const [initialFetchDone, setInitialFetchDone] = useState(false)
+
+  useEffect(() => {
+    if (initialFetchDone) return
+    setInitialFetchDone(true)
+    
+    const fetchConfig = async () => {
+      try {
+        const supabase = createClient()
+        const { data, error } = await supabase
+          .from('configuracion')
+          .select('*')
+          .order('created_at', { ascending: true })
+          .limit(1)
+          .maybeSingle()
+
+        if (!error && data) {
+          const normalized = normalizeSiteConfig(data)
+          setConfig(normalized)
+        }
+      } catch (err) {
+        console.warn('Error fetching site config:', err)
+      }
+    }
+
+    fetchConfig()
+  }, [initialFetchDone])
 
   const refreshConfig = useCallback(async () => {
     setLoading(true)

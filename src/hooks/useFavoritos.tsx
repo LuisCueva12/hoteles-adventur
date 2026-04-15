@@ -1,21 +1,48 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { createClient } from '@/utils/supabase/client'
+
+function safeGetItem(key: string): string | null {
+    if (typeof window === 'undefined') return null
+    try {
+        return localStorage.getItem(key)
+    } catch {
+        return null
+    }
+}
+
+function safeSetItem(key: string, value: string): void {
+    if (typeof window === 'undefined') return
+    try {
+        localStorage.setItem(key, value)
+    } catch {
+        // Silently fail
+    }
+}
 
 export function useFavorites() {
     const [favorites, setFavorites] = useState<string[]>([])
     const [userId, setUserId] = useState<string | null>(null)
-    const supabase = createClient()
+    const [mounted, setMounted] = useState(false)
+    const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null)
+    
+    if (!supabaseRef.current) {
+        supabaseRef.current = createClient()
+    }
 
-    // Cargar usuario y favoritos al montar
     useEffect(() => {
+        setMounted(true)
+    }, [])
+
+    useEffect(() => {
+        if (!mounted) return
+        
         const init = async () => {
-            const { data: { user } } = await supabase.auth.getUser()
+            const { data: { user } } = await supabaseRef.current!.auth.getUser()
             if (user) {
                 setUserId(user.id)
-                // Cargar favoritos desde BD
-                const { data } = await supabase
+                const { data } = await supabaseRef.current!
                     .from('favoritos')
                     .select('alojamiento_id')
                     .eq('usuario_id', user.id)
@@ -23,15 +50,19 @@ export function useFavorites() {
                     setFavorites(data.map((f: any) => f.alojamiento_id))
                 }
             } else {
-                // Sin sesión: usar localStorage
-                try {
-                    const stored = localStorage.getItem('favorites')
-                    if (stored) setFavorites(JSON.parse(stored))
-                } catch { /* ignore */ }
+                const stored = safeGetItem('favorites')
+                if (stored) {
+                    try {
+                        setFavorites(JSON.parse(stored))
+                    } catch {
+                        // Ignore
+                    }
+                }
             }
         }
+        
         init()
-    }, [])
+    }, [mounted])
 
     const toggleFavorite = async (id: string) => {
         const isCurrentlyFav = favorites.includes(id)
@@ -42,21 +73,19 @@ export function useFavorites() {
         setFavorites(newFavorites)
 
         if (userId) {
-            // Sincronizar con BD
             if (isCurrentlyFav) {
-                await supabase
+                await supabaseRef.current!
                     .from('favoritos')
                     .delete()
                     .eq('usuario_id', userId)
                     .eq('alojamiento_id', id)
             } else {
-                await supabase
+                await supabaseRef.current!
                     .from('favoritos')
                     .insert({ usuario_id: userId, alojamiento_id: id })
             }
         } else {
-            // Sin sesión: persistir en localStorage
-            localStorage.setItem('favorites', JSON.stringify(newFavorites))
+            safeSetItem('favorites', JSON.stringify(newFavorites))
         }
     }
 

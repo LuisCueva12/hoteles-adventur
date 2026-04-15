@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react'
 import { StatCard } from '@/components/admin/TarjetaEstadistica'
 import { DollarSign, Calendar, Hotel, Users, FileText, Download, Loader2 } from 'lucide-react'
-import { exportIngresosPDF, exportReservasExcel, exportUsuariosCSV } from '@/utils/exportarReportes'
+import { exportIngresosPDF, exportReservasExcel, exportUsuariosCSV, type ReservaConRelaciones, type DatosReporte } from '@/utils/exportarReportes'
 import { adminService } from '@/services/admin.servicio'
+import type { Usuario } from '@/types/basedatos'
 
 export default function ReportesAdminPage() {
     const [periodo, setPeriodo] = useState<'dia' | 'semana' | 'mes' | 'ano'>('mes')
@@ -19,6 +20,9 @@ export default function ReportesAdminPage() {
     const [ingresosMensuales, setIngresosMensuales] = useState<Array<{ mes: string; ingresos: number }>>([])
     const [reservasPorEstado, setReservasPorEstado] = useState<Array<{ estado: string; cantidad: number; porcentaje: number }>>([])
     const [topHabitaciones, setTopHabitaciones] = useState<Array<{ nombre: string; reservas: number; ingresos: number }>>([])
+    // Datos crudos para exportaciones reales
+    const [rawReservas, setRawReservas] = useState<ReservaConRelaciones[]>([])
+    const [rawUsuarios, setRawUsuarios] = useState<Usuario[]>([])
 
     useEffect(() => {
         loadReportData()
@@ -123,6 +127,9 @@ export default function ReportesAdminPage() {
             setIngresosMensuales(ingresosMensualesData)
             setReservasPorEstado(reservasPorEstadoData)
             setTopHabitaciones(topHabitacionesData)
+            // Guardar datos crudos para exportaciones
+            setRawReservas((reservas || []) as ReservaConRelaciones[])
+            setRawUsuarios((usuarios || []) as Usuario[])
 
         } catch (error) {
             console.error('Error loading report data:', error)
@@ -135,14 +142,22 @@ export default function ReportesAdminPage() {
         setExporting(type)
         try {
             switch (type) {
-                case 'ingresos':
-                    await exportIngresosPDF()
+                case 'ingresos': {
+                    const datosReporte: DatosReporte = {
+                        reservas: rawReservas,
+                        usuarios: rawUsuarios,
+                        ingresosMensuales,
+                        totalIngresos: stats.totalIngresos,
+                        tasaOcupacion: stats.tasaOcupacion,
+                    }
+                    await exportIngresosPDF(datosReporte)
                     break
+                }
                 case 'reservas':
-                    await exportReservasExcel()
+                    await exportReservasExcel(rawReservas)
                     break
                 case 'usuarios':
-                    await exportUsuariosCSV()
+                    await exportUsuariosCSV(rawUsuarios)
                     break
             }
         } catch (error) {

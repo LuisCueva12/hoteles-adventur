@@ -1,7 +1,9 @@
-import { GoogleGenerativeAI } from '@google/generative-ai'
 import { NextRequest, NextResponse } from 'next/server'
-
 import { createClient } from '@/utils/supabase/server'
+
+// Forzar Node.js runtime — evita conflictos de Web Streams con Edge runtime
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 type ChatIntent =
   | 'booking'
@@ -279,57 +281,51 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
+    const prompt = `Eres el concierge de Adventur Hotels. Responde en español, breve y directo.
 
-    const prompt = `
-Eres el concierge digital premium de Adventur. Responde en espanol claro, elegante y util.
+FORMATO OBLIGATORIO - NO usar markdown:
+- Sin asteriscos, sin #, sin **, sin _, sin backticks
+- Listas: empieza cada punto con "- " (guion espacio)
+- Máximo 3 puntos de lista O 3 oraciones. Nunca más.
+- Termina con una pregunta corta o acción
 
-Objetivo:
-- Recomendar alojamientos reales de Adventur.
-- Dar respuestas concretas, breves pero valiosas.
-- No inventes habitaciones, precios ni ubicaciones fuera del contexto.
-- No uses markdown complejo ni tablas.
-- Puedes usar listas cortas con guiones.
-- Cierra con una accion util si aplica.
+POLÍTICAS: Check-in 3PM, Check-out 12PM, adelanto 30%, cancelación gratis hasta 48h antes.
 
-Politicas base:
-- Check-in referencial: 3:00 PM
-- Check-out referencial: 12:00 PM
-- Adelanto referencial: 30%
-- Cancelacion referencial: gratuita hasta 48 horas antes
-- WiFi y estacionamiento sujetos a la informacion publicada del alojamiento
-
-Inventario real disponible:
+ALOJAMIENTOS DISPONIBLES:
 ${buildHotelContext(rooms)}
 
-Habitaciones destacadas para esta consulta:
-${selectedRooms
-  .map(
-    (room) =>
-      `- ${room.name} | S/. ${room.price} | ${room.capacity} huespedes | ${room.type} | ${room.location || 'Adventur'}`,
-  )
-  .join('\n')}
+OPCIONES PARA ESTA CONSULTA:
+${selectedRooms.map(r => `- ${r.name}: S/. ${r.price}/noche, ${r.capacity} personas`).join('\n')}
 
-Historial reciente:
-${(history ?? [])
-  .slice(-6)
-  .map((item) => `${item.role === 'user' ? 'Cliente' : 'Asistente'}: ${item.content}`)
-  .join('\n')}
+${(history ?? []).slice(-4).map(m => `${m.role === 'user' ? 'Cliente' : 'AI'}: ${m.content}`).join('\n')}
 
-Consulta actual del cliente:
-${message}
-`.trim()
+Cliente: ${message}
+AI:`
 
     let responseText = ''
 
     try {
-      const result = await model.generateContent(prompt)
-      const response = await result.response
-      responseText = response.text().trim()
+      // Usar fetch directo a la API REST de Gemini — evita el bug de TransformStream en Node 22
+      const geminiRes = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            generationConfig: { maxOutputTokens: 512, temperature: 0.7 },
+          }),
+        }
+      )
+
+      if (geminiRes.ok) {
+        const geminiData = await geminiRes.json()
+        responseText = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? ''
+      } else {
+        console.error('Gemini API error:', geminiRes.status, await geminiRes.text())
+      }
     } catch (modelError) {
-      console.error('Gemini chat error:', modelError)
-      responseText = fallbackResponse(intent, selectedRooms)
+      console.error('Gemini fetch error:', modelError)
     }
 
     return NextResponse.json({

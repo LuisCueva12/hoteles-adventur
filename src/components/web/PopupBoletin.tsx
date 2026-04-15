@@ -3,26 +3,57 @@
 import { useState, useEffect } from 'react'
 import { X, Mail, Check } from 'lucide-react'
 
+function safeGetItem(key: string): boolean {
+    if (typeof window === 'undefined') return false
+    try {
+        return localStorage.getItem(key) === 'true'
+    } catch {
+        return false
+    }
+}
+
+function safeSetItem(key: string, value: string): void {
+    if (typeof window === 'undefined') return
+    try {
+        localStorage.setItem(key, value)
+    } catch {
+        // Silently fail
+    }
+}
+
 export function NewsletterPopup() {
     const [isVisible, setIsVisible] = useState(false)
     const [email, setEmail] = useState('')
     const [isSubmitted, setIsSubmitted] = useState(false)
 
     useEffect(() => {
-        const hasSeenPopup = localStorage.getItem('newsletter-popup-seen')
-        
-        if (!hasSeenPopup) {
-            const timer = setTimeout(() => {
-                setIsVisible(true)
-            }, 10000) // Mostrar después de 10 segundos
+        if (safeGetItem('newsletter-popup-seen')) return
 
-            return () => clearTimeout(timer)
+        let handle: number | ReturnType<typeof setTimeout>
+
+        if (typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function') {
+            handle = window.requestIdleCallback(
+                () => setIsVisible(true),
+                { timeout: 12000 }
+            )
+        } else {
+            handle = setTimeout(() => setIsVisible(true), 10000)
+        }
+
+        return () => {
+            if (typeof window !== 'undefined') {
+                if (typeof window.cancelIdleCallback === 'function' && typeof handle === 'number') {
+                    window.cancelIdleCallback(handle as number)
+                } else {
+                    clearTimeout(handle as ReturnType<typeof setTimeout>)
+                }
+            }
         }
     }, [])
 
     const handleClose = () => {
         setIsVisible(false)
-        localStorage.setItem('newsletter-popup-seen', 'true')
+        safeSetItem('newsletter-popup-seen', 'true')
     }
 
     const handleSubmit = async (e: React.FormEvent) => {

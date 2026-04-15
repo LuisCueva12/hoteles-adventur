@@ -6,21 +6,21 @@ const EVENTS = [
         month: 'ABR',
         title: 'Noche de Gala Culinaria',
         desc: 'Una velada exclusiva con los mejores chefs del Peru y cena de autor.',
-        img: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=600&q=80',
+        img: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=600&q=65',
     },
     {
         day: '22',
         month: 'JUN',
         title: 'Festival de Musica Andina',
         desc: 'Disfruta de musica en vivo con artistas de talla nacional e internacional.',
-        img: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=600&q=80',
+        img: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=600&q=65',
     },
     {
         day: '15',
         month: 'AGO',
         title: 'Retiro de Bienestar y Spa',
         desc: 'Fin de semana de relajacion con tratamientos exclusivos y actividades de mindfulness.',
-        img: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=600&q=80',
+        img: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=600&q=65',
     },
 ]
 
@@ -54,7 +54,7 @@ export function EventosSeccion() {
                                 <Image src={event.img} alt={event.title}
                                     fill sizes="(max-width: 768px) 100vw, 33vw"
                                     className="object-cover group-hover:scale-105 transition-transform duration-500"
-                                    loading="lazy" quality={75} />
+                                    loading="lazy" />
                                 <div className="absolute bottom-0 left-0 bg-yellow-400 text-gray-900 px-4 py-2 text-center min-w-[60px]">
                                     <p className="text-2xl font-bold leading-none">{event.day}</p>
                                     <p className="text-xs tracking-widest">{event.month}</p>

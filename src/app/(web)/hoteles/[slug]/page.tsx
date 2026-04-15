@@ -10,6 +10,7 @@ import {
     Coffee, Bath, Shield, Phone, MapPin, Award, Sparkles, Loader2,
     MessageCircle, X
 } from 'lucide-react'
+import { SeccionResenas } from '@/components/web/SeccionResenas'
 import { useFavorites } from '@/hooks/useFavoritos'
 import { createClient } from '@/utils/supabase/client'
 import { useSiteConfig } from '@/components/providers/ProveedorConfiguracionSitio'
@@ -648,6 +649,14 @@ export default function HabitacionDetailPage() {
                                 ))}
                             </div>
                         </div>
+
+                        {/* Reseñas */}
+                        {room.id && !room.id.startsWith('fallback') && (
+                            <div>
+                                <h2 className="text-2xl font-bold text-gray-900 mb-6">Reseñas de huéspedes</h2>
+                                <SeccionResenas alojamientoId={room.id} />
+                            </div>
+                        )}
                     </div>
 
                     {/* Sidebar Reserva */}

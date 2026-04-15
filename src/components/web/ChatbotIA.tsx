@@ -96,59 +96,141 @@ function formatTime(value: string) {
 }
 
 function sanitizeText(text: string) {
-  return text.replace(/\*\*/g, '').replace(/\*/g, '').trim()
+  return text
+    .replace(/\*\*(.*?)\*\*/gs, '$1')      // bold **texto**
+    .replace(/\*(.*?)\*/gs, '$1')           // italic *texto*
+    .replace(/_{2}(.*?)_{2}/gs, '$1')       // bold __texto__
+    .replace(/_(.*?)_/gs, '$1')             // italic _texto_
+    .replace(/#{1,6}\s+/g, '')              // headers # ## ###
+    .replace(/`{3}[\s\S]*?`{3}/g, '')       // code blocks ```
+    .replace(/`([^`]+)`/g, '$1')            // inline code
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // links [texto](url)
+    .replace(/^>\s+/gm, '')                 // blockquotes
+    .replace(/---+/g, '')                   // horizontal rules
+    .replace(/\n{3,}/g, '\n\n')             // múltiples saltos
+    .trim()
 }
 
-export default function AIChatbot() {
-  const [isOpen, setIsOpen] = useState(false)
+// Renderiza texto con formato limpio: listas, numerados, párrafos
+function MessageText({ text }: { text: string }) {
+  const blocks = text.split('\n\n').filter(b => b.trim())
+
+  return (
+    <div className="space-y-2 text-sm leading-relaxed">
+      {blocks.map((block, bi) => {
+        const lines = block.split('\n').filter(l => l.trim())
+
+        // Bloque de lista
+        const isList = lines.every(l => /^[-•·*]\s/.test(l.trim()) || /^\d+[.)]\s/.test(l.trim()))
+        if (isList && lines.length > 1) {
+          return (
+            <ul key={bi} className="space-y-1">
+              {lines.map((line, li) => {
+                const trimmed = line.trim()
+                const isNumbered = /^\d+[.)]\s/.test(trimmed)
+                const content = trimmed.replace(/^[-•·*]\s/, '').replace(/^\d+[.)]\s/, '')
+                const num = isNumbered ? trimmed.match(/^(\d+)/)?.[1] : null
+                return (
+                  <li key={li} className="flex items-start gap-2">
+                    {isNumbered
+                      ? <span className="flex-shrink-0 text-xs font-bold text-yellow-500 mt-0.5 w-4">{num}.</span>
+                      : <span className="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-yellow-400" />
+                    }
+                    <span>{content}</span>
+                  </li>
+                )
+              })}
+            </ul>
+          )
+        }
+
+        // Líneas individuales dentro del bloque
+        return (
+          <div key={bi} className="space-y-1">
+            {lines.map((line, li) => {
+              const trimmed = line.trim()
+              if (/^[-•·*]\s/.test(trimmed)) {
+                return (
+                  <div key={li} className="flex items-start gap-2">
+                    <span className="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-yellow-400" />
+                    <span>{trimmed.replace(/^[-•·*]\s/, '')}</span>
+                  </div>
+                )
+              }
+              if (/^\d+[.)]\s/.test(trimmed)) {
+                const num = trimmed.match(/^(\d+)/)?.[1]
+                return (
+                  <div key={li} className="flex items-start gap-2">
+                    <span className="flex-shrink-0 text-xs font-bold text-yellow-500 mt-0.5 w-4">{num}.</span>
+                    <span>{trimmed.replace(/^\d+[.)]\s/, '')}</span>
+                  </div>
+                )
+              }
+              return <p key={li}>{trimmed}</p>
+            })}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function safeRemoveFromStorage(key: string): void {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.removeItem(key)
+  } catch {
+    // Silently fail
+  }
+}
+
+export default function AIChatbot({ defaultOpen = false }: { defaultOpen?: boolean }) {
+  const [isOpen, setIsOpen] = useState(defaultOpen)
   const [isCollapsed, setIsCollapsed] = useState(false)
-  const [messages, setMessages] = useState<Message[]>([INITIAL_MESSAGE])
+  const [messages, setMessages] = useState<Message[]>(() => {
+    if (typeof window === 'undefined') return [INITIAL_MESSAGE]
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved) {
+        const parsed = JSON.parse(saved) as { messages?: Message[] }
+        if (parsed.messages?.length) return parsed.messages
+      }
+    } catch {
+      // Ignore
+    }
+    return [INITIAL_MESSAGE]
+  })
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isListening, setIsListening] = useState(false)
   const [copyState, setCopyState] = useState<string | null>(null)
   const [sessionStartedAt] = useState(Date.now())
+  const [isClient, setIsClient] = useState(false)
   const bodyRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const recognitionRef = useRef<any>(null)
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY)
-      if (!saved) return
-
-      const parsed = JSON.parse(saved) as { messages?: Message[] }
-      if (parsed.messages?.length) {
-        setMessages(parsed.messages)
-      }
-    } catch (error) {
-      console.error('Error loading chatbot state:', error)
-    }
+    setIsClient(true)
   }, [])
 
   useEffect(() => {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
-        messages,
-      }),
-    )
-  }, [messages])
-
-  useEffect(() => {
+    if (!isClient) return
     bodyRef.current?.scrollTo({
       top: bodyRef.current.scrollHeight,
       behavior: 'smooth',
     })
-  }, [messages, isLoading])
+  }, [messages, isLoading, isClient])
 
   useEffect(() => {
+    if (!isClient) return
     if (isOpen && !isCollapsed) {
       textareaRef.current?.focus()
     }
-  }, [isOpen, isCollapsed])
+  }, [isOpen, isCollapsed, isClient])
 
   useEffect(() => {
+    if (!isClient) return
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault()
@@ -158,7 +240,7 @@ export default function AIChatbot() {
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [])
+  }, [isClient])
 
   const assistantMessages = useMemo(
     () => messages.filter((message) => message.role === 'assistant').length,
@@ -237,23 +319,29 @@ export default function AIChatbot() {
   }
 
   const handleReset = () => {
-    localStorage.removeItem(STORAGE_KEY)
+    safeRemoveFromStorage(STORAGE_KEY)
     setMessages([INITIAL_MESSAGE])
     setInput('')
     setIsCollapsed(false)
   }
 
   const handleCopyTranscript = async () => {
+    if (typeof window === 'undefined') return
     const transcript = messages
       .map((message) => `${message.role === 'user' ? 'Cliente' : 'Adventur AI'}: ${message.content}`)
       .join('\n\n')
 
-    await navigator.clipboard.writeText(transcript)
-    setCopyState('transcript')
-    window.setTimeout(() => setCopyState(null), 1600)
+    try {
+        await navigator.clipboard.writeText(transcript)
+        setCopyState('transcript')
+        window.setTimeout(() => setCopyState(null), 1600)
+    } catch {
+        // Silently fail
+    }
   }
 
   const handleExport = () => {
+    if (typeof window === 'undefined') return
     const transcript = messages
       .map(
         (message) =>
@@ -261,18 +349,23 @@ export default function AIChatbot() {
       )
       .join('\n\n')
 
-    const blob = new Blob([transcript], { type: 'text/plain;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const anchor = document.createElement('a')
-    anchor.href = url
-    anchor.download = `adventur-chat-${new Date().toISOString().slice(0, 10)}.txt`
-    document.body.appendChild(anchor)
-    anchor.click()
-    document.body.removeChild(anchor)
-    URL.revokeObjectURL(url)
+    try {
+        const blob = new Blob([transcript], { type: 'text/plain;charset=utf-8' })
+        const url = URL.createObjectURL(blob)
+        const anchor = document.createElement('a')
+        anchor.href = url
+        anchor.download = `adventur-chat-${new Date().toISOString().slice(0, 10)}.txt`
+        document.body.appendChild(anchor)
+        anchor.click()
+        document.body.removeChild(anchor)
+        URL.revokeObjectURL(url)
+    } catch {
+        // Silently fail
+    }
   }
 
   const toggleVoice = () => {
+    if (typeof window === 'undefined') return
     const SpeechRecognition =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
 
@@ -389,7 +482,7 @@ export default function AIChatbot() {
                             : 'rounded-[24px] rounded-bl-md border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm'
                         }
                       >
-                        <div className="whitespace-pre-wrap leading-6">{message.content}</div>
+                        <MessageText text={message.content} />
 
                         {message.rooms?.length ? (
                           <div className="mt-4 grid gap-3">

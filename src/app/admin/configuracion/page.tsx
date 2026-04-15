@@ -15,6 +15,12 @@ import {
   RefreshCcw,
   Save,
   Settings,
+  Wrench,
+  BellOff,
+  Clock,
+  ShieldAlert,
+  Zap,
+  MessageSquare
 } from 'lucide-react'
 import Swal from 'sweetalert2'
 import {
@@ -28,7 +34,7 @@ import {
 } from '@/lib/site-config'
 import { useSiteConfig } from '@/components/providers/ProveedorConfiguracionSitio'
 
-type ConfigTab = 'general' | 'contacto' | 'redes' | 'politicas' | 'facturacion'
+type ConfigTab = 'general' | 'contacto' | 'redes' | 'politicas' | 'facturacion' | 'mantenimiento'
 
 const CONFIG_TABS: Array<{ id: ConfigTab; label: string; icon: typeof Settings }> = [
   { id: 'general', label: 'General', icon: Settings },
@@ -36,6 +42,7 @@ const CONFIG_TABS: Array<{ id: ConfigTab; label: string; icon: typeof Settings }
   { id: 'redes', label: 'Redes', icon: Globe },
   { id: 'politicas', label: 'Politicas', icon: FileText },
   { id: 'facturacion', label: 'Facturacion', icon: ReceiptText },
+  { id: 'mantenimiento', label: 'Mantenimiento', icon: Wrench },
 ]
 
 function getPersistedConfigPayload(config: SiteConfig) {
@@ -62,6 +69,11 @@ function getPersistedConfigPayload(config: SiteConfig) {
     porcentaje_adelanto: Number(config.porcentaje_adelanto) || 0,
     ruc: config.ruc,
     razon_social: config.razon_social,
+    modo_mantenimiento: config.modo_mantenimiento || false,
+    mensaje_mantenimiento: config.mensaje_mantenimiento || '',
+    fecha_reanudacion: config.fecha_reanudacion || '',
+    mostrar_contador: config.mostrar_contador || false,
+    permitir_admin: config.permitir_admin || true,
     updated_at: new Date().toISOString(),
   }
 }
@@ -276,8 +288,36 @@ export default function ConfiguracionPage() {
         </div>
       ) : null}
 
+      {/* Logo de Adventur */}
+      <div className="flex justify-center mb-2">
+        <div className="flex items-center gap-3 bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 rounded-2xl shadow-lg">
+          <svg viewBox="0 0 200 200" className="w-10 h-10" xmlns="http://www.w3.org/2000/svg">
+            <path 
+              d="M 60 150 L 100 50 L 140 150 L 120 150 L 100 100 L 80 150 Z" 
+              fill="white"
+            />
+            <g transform="translate(120, 40)">
+              <rect x="0" y="0" width="30" height="50" fill="white" rx="2"/>
+              <rect x="3" y="3" width="4" height="4" fill="#FDB913"/>
+              <rect x="10" y="3" width="4" height="4" fill="#FDB913"/>
+              <rect x="17" y="3" width="4" height="4" fill="#FDB913"/>
+              <rect x="24" y="3" width="4" height="4" fill="#FDB913"/>
+              <rect x="3" y="10" width="4" height="4" fill="#FDB913"/>
+              <rect x="10" y="10" width="4" height="4" fill="#FDB913"/>
+              <rect x="17" y="10" width="4" height="4" fill="#FDB913"/>
+              <rect x="24" y="10" width="4" height="4" fill="#FDB913"/>
+              <rect x="3" y="17" width="4" height="4" fill="#FDB913"/>
+              <rect x="10" y="17" width="4" height="4" fill="#FDB913"/>
+              <rect x="17" y="17" width="4" height="4" fill="#FDB913"/>
+              <rect x="24" y="17" width="4" height="4" fill="#FDB913"/>
+            </g>
+          </svg>
+          <span className="text-white font-bold text-xl">ADVENTUR</span>
+        </div>
+      </div>
+
       <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <div className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm">
+        <div className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-lg">
           <div className="flex overflow-x-auto border-b border-gray-200">
             {CONFIG_TABS.map((tab) => {
               const Icon = tab.icon
@@ -400,6 +440,90 @@ export default function ConfiguracionPage() {
                 </div>
               </div>
             ) : null}
+
+            {activeTab === 'mantenimiento' ? (
+              <div className="space-y-6">
+                <SectionHeader
+                  title="Modo Mantenimiento"
+                  description="Configura el sitio en modo mantenimiento para actualizaciones o mantenimientos programados."
+                />
+                
+                {/* Toggle principal de mantenimiento */}
+                <div className={`rounded-2xl border p-6 transition-all ${config.modo_mantenimiento ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200'}`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${config.modo_mantenimiento ? 'bg-red-500 text-white' : 'bg-gray-200 text-gray-600'}`}>
+                        <Wrench size={28} />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-900">Modo Mantenimiento</h3>
+                        <p className="text-sm text-gray-600 mt-1">Activa para mostrar página de mantenimiento a los visitantes</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => updateField('modo_mantenimiento', !config.modo_mantenimiento)}
+                      className={`relative w-16 h-8 rounded-full transition-all duration-300 ${config.modo_mantenimiento ? 'bg-red-500' : 'bg-gray-300'}`}
+                    >
+                      <div className={`absolute top-1 w-6 h-6 rounded-full bg-white shadow-md transition-all duration-300 ${config.modo_mantenimiento ? 'left-9' : 'left-1'}`} />
+                    </button>
+                  </div>
+                </div>
+
+                {config.modo_mantenimiento && (
+                  <div className="space-y-5 mt-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="rounded-2xl border border-red-200 bg-red-50 p-4 flex items-start gap-3">
+                      <ShieldAlert className="text-red-500 w-5 h-5 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="font-semibold text-red-800">⚠️ Sitio en mantenimiento</p>
+                        <p className="text-sm text-red-700 mt-1">Los visitantes verán la página de mantenimiento. Solo administradores podrán acceder al sitio.</p>
+                      </div>
+                    </div>
+
+                    <TextareaField 
+                      label="Mensaje de mantenimiento" 
+                      value={config.mensaje_mantenimiento} 
+                      onChange={(value) => updateField('mensaje_mantenimiento', value)} 
+                      placeholder="Estamos realizando mejoras para brindarte un mejor servicio. Volveremos pronto." 
+                      rows={4} 
+                    />
+
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <InputField 
+                        label="Fecha y hora de reanudación" 
+                        type="datetime-local" 
+                        value={config.fecha_reanudacion} 
+                        onChange={(value) => updateField('fecha_reanudacion', value)}
+                      />
+                      <div className="flex items-center gap-3 p-4 bg-white rounded-xl border border-gray-200">
+                        <input
+                          type="checkbox"
+                          checked={config.mostrar_contador}
+                          onChange={(e) => updateField('mostrar_contador', e.target.checked)}
+                          className="w-5 h-5 text-blue-600 rounded"
+                        />
+                        <div>
+                          <p className="font-semibold text-gray-900">Mostrar contador regresivo</p>
+                          <p className="text-xs text-gray-500">Muestra el tiempo restante para la reanudación</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 p-4 bg-white rounded-xl border border-gray-200">
+                      <input
+                        type="checkbox"
+                        checked={config.permitir_admin}
+                        onChange={(e) => updateField('permitir_admin', e.target.checked)}
+                        className="w-5 h-5 text-blue-600 rounded"
+                      />
+                      <div>
+                        <p className="font-semibold text-gray-900">Permitir acceso a administradores</p>
+                        <p className="text-xs text-gray-500">Los administradores podrán navegar el sitio normalmente</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : null}
           </div>
         </div>
 
@@ -419,6 +543,23 @@ export default function ConfiguracionPage() {
               <PreviewItem icon={Mail} label="Correos" value={[config.email, config.email_reservas].filter(Boolean).join(' / ') || 'Sin configurar'} />
               <PreviewItem icon={Globe} label="Sitio web" value={config.sitio_web || 'Sin configurar'} />
               <PreviewItem icon={Settings} label="Direccion" value={previewAddress || 'Sin configurar'} />
+            </div>
+            
+            {/* Estado Mantenimiento */}
+            <div className={`mt-4 p-4 rounded-2xl ${config.modo_mantenimiento ? 'bg-red-50 border border-red-200' : 'bg-emerald-50 border border-emerald-200'}`}>
+              <div className="flex items-center gap-3">
+                {config.modo_mantenimiento ? (
+                  <BellOff className="w-5 h-5 text-red-500" />
+                ) : (
+                  <Zap className="w-5 h-5 text-emerald-500" />
+                )}
+                <div>
+                  <p className="font-semibold text-gray-900">Estado del sitio</p>
+                  <p className={`text-sm ${config.modo_mantenimiento ? 'text-red-700' : 'text-emerald-700'}`}>
+                    {config.modo_mantenimiento ? '🔴 En Mantenimiento' : '🟢 Operativo Normal'}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 

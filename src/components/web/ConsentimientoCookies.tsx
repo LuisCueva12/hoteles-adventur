@@ -1,24 +1,49 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Cookie, X } from 'lucide-react'
 
-export function CookieConsent() {
-  const [isVisible, setIsVisible] = useState(() => {
-    if (typeof window === 'undefined') {
-      return false
+function safeGetConsent(): boolean {
+    if (typeof window === 'undefined') return false
+    try {
+        return localStorage.getItem('cookie-consent') !== null
+    } catch {
+        return false
     }
+}
 
-    return !localStorage.getItem('cookie-consent')
-  })
+function safeSetConsent(value: string): void {
+    if (typeof window === 'undefined') return
+    try {
+        localStorage.setItem('cookie-consent', value)
+    } catch {
+        // Silently fail
+    }
+}
+
+export function CookieConsent() {
+  const [isVisible, setIsVisible] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted) return
+    const hasConsent = safeGetConsent()
+    if (!hasConsent) {
+        setIsVisible(true)
+    }
+  }, [mounted])
 
   const updateConsent = (value: 'accepted' | 'rejected') => {
-    localStorage.setItem('cookie-consent', value)
+    safeSetConsent(value)
     setIsVisible(false)
   }
 
-  if (!isVisible) return null
+  if (!mounted || !isVisible) return null
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t-2 border-gray-200 shadow-2xl animate-slideInUp">

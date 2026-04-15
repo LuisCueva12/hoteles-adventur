@@ -51,8 +51,8 @@ export function PorQueElegirnosSeccion() {
                     
                     <div className="flex items-center justify-center gap-3 flex-wrap">
                         {FILTERS.map((f) => (
-                            <button key={f} onClick={() => setActive(f)}
-                                className={`px-6 py-2.5 text-xs font-semibold uppercase tracking-wider rounded-full border-2 transition-all duration-300 ${active === f
+                            <button key={f} type="button" onClick={() => setActive(f)}
+                                className={`min-h-[44px] px-6 py-2.5 text-xs font-semibold uppercase tracking-wider rounded-full border-2 transition-all duration-300 ${active === f
                                     ? 'bg-yellow-400 border-yellow-400 text-gray-900 shadow-lg shadow-red-600/30 scale-105'
                                     : 'border-gray-500 text-gray-300 hover:border-yellow-400 hover:text-yellow-400 hover:bg-yellow-400/5'
                                     }`}>
@@ -72,8 +72,7 @@ export function PorQueElegirnosSeccion() {
                                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                                 className="object-cover group-hover:scale-110 transition-transform duration-700"
                                 loading="lazy"
-                                quality={75}
-                            />
+                                />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent group-hover:from-black/90 transition-all" />
                             
                             {/* Contenido */}

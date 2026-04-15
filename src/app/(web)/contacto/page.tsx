@@ -252,7 +252,7 @@ export default function ContactoPage() {
   return (
     <div className="bg-[linear-gradient(180deg,#fffaf0_0%,#ffffff_35%,#f8fafc_100%)]">
       <section className="relative isolate overflow-hidden">
-        <Image src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1920&q=80" alt={`Contacto ${hotelName}`} fill sizes="100vw" className="object-cover" priority quality={85} />
+        <Image src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1920&q=80" alt={`Contacto ${hotelName}`} fill sizes="100vw" className="object-cover" priority />
         <div className="absolute inset-0 bg-[linear-gradient(110deg,rgba(15,23,42,0.92)_0%,rgba(15,23,42,0.72)_42%,rgba(15,23,42,0.46)_100%)]" />
         <div className="relative mx-auto max-w-7xl px-6 py-24 lg:px-8">
           <span className="inline-flex rounded-full border border-yellow-300/40 bg-yellow-300/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.32em] text-yellow-200">Contacto directo</span>

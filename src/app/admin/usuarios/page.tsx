@@ -389,9 +389,9 @@ export default function UsuariosAdminPage() {
             case 'admin_adventur':
                 return 'bg-purple-100 text-purple-700 border-purple-200'
             case 'propietario':
-                return 'bg-yellow-100 text-yellow-400 border-yellow-200'
+                return 'bg-blue-100 text-blue-700 border-blue-200'
             default:
-                return 'bg-yellow-100 text-yellow-400 border-yellow-200'
+                return 'bg-emerald-100 text-emerald-700 border-emerald-200'
         }
     }
 
@@ -601,50 +601,56 @@ export default function UsuariosAdminPage() {
                 size="lg"
             >
                 {selectedUsuario && (
-                    <div className="space-y-4">
-                        <div className="grid md:grid-cols-2 gap-4">
-                            <div className="p-4 bg-gray-50 rounded-xl">
-                                <p className="text-xs text-gray-500 mb-1">Nombre Completo</p>
-                                <p className="text-sm font-semibold text-gray-900">{selectedUsuario.nombre} {selectedUsuario.apellido}</p>
-                            </div>
-                            <div className="p-4 bg-gray-50 rounded-xl">
-                                <p className="text-xs text-gray-500 mb-1">Email</p>
-                                <p className="text-sm font-semibold text-gray-900">{selectedUsuario.email || 'N/A'}</p>
-                            </div>
-                            <div className="p-4 bg-gray-50 rounded-xl">
-                                <p className="text-xs text-gray-500 mb-1">Teléfono</p>
-                                <p className="text-sm font-semibold text-gray-900">{selectedUsuario.telefono || 'N/A'}</p>
-                            </div>
-                            <div className="p-4 bg-gray-50 rounded-xl">
-                                <p className="text-xs text-gray-500 mb-1">Documento</p>
-                                <p className="text-sm font-semibold text-gray-900">{selectedUsuario.documento_identidad || 'N/A'}</p>
-                                {selectedUsuario.tipo_documento && (
-                                    <p className="text-xs text-gray-500 mt-1">{selectedUsuario.tipo_documento}</p>
+                    <div className="space-y-6">
+                        {/* Header con Avatar */}
+                        <div className="flex flex-col items-center pb-6 border-b border-gray-100">
+                            <div className="w-24 h-24 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-4xl font-bold shadow-xl mb-4">
+                                {selectedUsuario.foto_perfil ? (
+                                    <img 
+                                        src={selectedUsuario.foto_perfil} 
+                                        alt={`${selectedUsuario.nombre} ${selectedUsuario.apellido}`}
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    <span>{selectedUsuario.nombre.charAt(0).toUpperCase()}{selectedUsuario.apellido.charAt(0).toUpperCase()}</span>
                                 )}
                             </div>
-                            <div className="p-4 bg-gray-50 rounded-xl">
-                                <p className="text-xs text-gray-500 mb-1">País</p>
-                                <p className="text-sm font-semibold text-gray-900">{selectedUsuario.pais || 'N/A'}</p>
-                            </div>
-                            <div className="p-4 bg-gray-50 rounded-xl">
-                                <p className="text-xs text-gray-500 mb-1">Rol</p>
-                                <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold border ${getRolBadgeColor(selectedUsuario.rol)}`}>
+                            <h3 className="text-xl font-bold text-gray-900">{selectedUsuario.nombre} {selectedUsuario.apellido}</h3>
+                            <p className="text-sm text-gray-500">{selectedUsuario.email}</p>
+                            <div className="flex items-center gap-2 mt-3">
+                                <span className={`inline-flex px-4 py-1.5 rounded-full text-xs font-bold border ${getRolBadgeColor(selectedUsuario.rol)}`}>
                                     {getRolLabel(selectedUsuario.rol)}
                                 </span>
-                            </div>
-                            <div className="p-4 bg-gray-50 rounded-xl">
-                                <p className="text-xs text-gray-500 mb-1">Estado</p>
-                                <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold border ${
+                                <span className={`inline-flex px-4 py-1.5 rounded-full text-xs font-bold border ${
                                     selectedUsuario.verificado 
-                                        ? 'bg-yellow-100 text-yellow-400 border-yellow-200' 
-                                        : 'bg-yellow-100 text-yellow-400 border-yellow-200'
+                                        ? 'bg-emerald-100 text-emerald-700 border-emerald-200' 
+                                        : 'bg-amber-100 text-amber-700 border-amber-200'
                                 }`}>
-                                    {selectedUsuario.verificado ? 'Verificado' : 'Pendiente'}
+                                    {selectedUsuario.verificado ? '✅ Verificado' : '⏳ Pendiente'}
                                 </span>
                             </div>
-                            <div className="p-4 bg-gray-50 rounded-xl">
-                                <p className="text-xs text-gray-500 mb-1">Fecha de Registro</p>
-                                <p className="text-sm font-semibold text-gray-900">
+                        </div>
+
+                        {/* Datos del usuario */}
+                        <div className="grid md:grid-cols-2 gap-4">
+                            <div className="p-5 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors">
+                                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Teléfono</p>
+                                <p className="text-base font-semibold text-gray-900">{selectedUsuario.telefono || 'No registrado'}</p>
+                            </div>
+                            <div className="p-5 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors">
+                                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Documento de Identidad</p>
+                                <p className="text-base font-semibold text-gray-900">
+                                    {selectedUsuario.documento_identidad || 'No registrado'}
+                                    {selectedUsuario.tipo_documento && <span className="text-xs text-gray-500 ml-2">({selectedUsuario.tipo_documento})</span>}
+                                </p>
+                            </div>
+                            <div className="p-5 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors">
+                                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">País</p>
+                                <p className="text-base font-semibold text-gray-900">{selectedUsuario.pais || 'No registrado'}</p>
+                            </div>
+                            <div className="p-5 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors">
+                                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Fecha de Registro</p>
+                                <p className="text-base font-semibold text-gray-900">
                                     {new Date(selectedUsuario.fecha_registro).toLocaleDateString('es-PE', {
                                         year: 'numeric',
                                         month: 'long',
@@ -652,6 +658,20 @@ export default function UsuariosAdminPage() {
                                     })}
                                 </p>
                             </div>
+                        </div>
+
+                        {/* Botones de acción */}
+                        <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                            <button
+                                onClick={() => {
+                                    setIsModalOpen(false)
+                                    handleEdit(selectedUsuario)
+                                }}
+                                className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all font-semibold"
+                            >
+                                <Edit size={18} />
+                                Editar Usuario
+                            </button>
                         </div>
                     </div>
                 )}
