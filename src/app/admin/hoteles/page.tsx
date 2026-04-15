@@ -670,6 +670,7 @@ export default function HotelesAdminPage() {
                             </select>
                         </div>
                     </div>
+                </div>
             </div>
 
             <div className="min-w-0 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
@@ -1000,7 +1001,6 @@ export default function HotelesAdminPage() {
                             )}
                         </button>
                     </div>
-                </div>
             </Modal>
 
             {/* Modal Ver Detalles */}
