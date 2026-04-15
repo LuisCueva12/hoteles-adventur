@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { StatCard } from '@/components/admin/TarjetaEstadistica'
 import { DollarSign, Calendar, Hotel, Users, FileText, Download, Loader2 } from 'lucide-react'
 import { exportIngresosPDF, exportReservasExcel, exportUsuariosCSV, type ReservaConRelaciones, type DatosReporte } from '@/utils/exportarReportes'
-import { adminService } from '@/services/admin.servicio'
+import { dashboardService } from '@/services/dashboard.service'
 import type { Usuario } from '@/types/basedatos'
 
 export default function ReportesAdminPage() {
@@ -33,12 +33,12 @@ export default function ReportesAdminPage() {
             setLoading(true)
             
             // Cargar estadísticas del dashboard
-            const dashboardStats = await adminService.getDashboardStats()
+            const dashboardStats = await dashboardService.getDashboardStats()
             
             // Cargar reservas para calcular estadísticas
-            const reservas = await adminService.getReservas()
-            const alojamientos = await adminService.getAlojamientos()
-            const usuarios = await adminService.getUsuarios()
+            const reservas = await dashboardService.getReservas()
+            const alojamientos = await dashboardService.getAlojamientos()
+            const usuarios = await dashboardService.getUsuarios()
 
             // Calcular ingresos totales
             const totalIngresos = reservas?.reduce((sum: number, r: { total?: number | null }) => sum + (r.total || 0), 0) || 0

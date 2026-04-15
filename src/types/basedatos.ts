@@ -1,4 +1,4 @@
-export type RolUsuario = 'turista' | 'propietario' | 'admin_adventur'
+export type RolUsuario = 'turista' | 'propietario' | 'Admin'
 export type CategoriaAlojamiento = 'Económico' | 'Familiar' | 'Parejas' | 'Premium' | 'Naturaleza'
 export type TipoAlojamiento = 'Cabaña' | 'EcoLodge' | 'Hotel' | 'Hostal' | 'Casa'
 export type EstadoReserva = 'pendiente' | 'confirmada' | 'cancelada'

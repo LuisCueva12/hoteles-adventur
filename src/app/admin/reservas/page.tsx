@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { DataTable } from '@/components/admin/TablasDatos'
 import { Modal } from '@/components/admin/Modal'
-import { adminService } from '@/services/admin.servicio'
+import { dashboardService } from '@/services/dashboard.service'
 import { notificationsService } from '@/services/notificaciones.servicio'
 import { RefreshCw, Loader2, Calendar, User, Home, CreditCard, Eye, Trash2 } from 'lucide-react'
 import Swal from 'sweetalert2'
@@ -49,7 +49,7 @@ export default function ReservasAdminPage() {
     const loadReservas = async () => {
         try {
             setLoading(true)
-            const data = await adminService.getReservas()
+            const data = await dashboardService.getReservas()
             
             if (!data || data.length === 0) {
                 console.log('No hay reservas en la base de datos')
@@ -95,7 +95,7 @@ export default function ReservasAdminPage() {
         if (selectedReserva) {
             try {
                 const oldStatus = selectedReserva.estado
-                await adminService.updateReserva(selectedReserva.id, { estado: newStatus })
+                await dashboardService.updateReserva(selectedReserva.id, { estado: newStatus })
                 setSelectedReserva({ ...selectedReserva, estado: newStatus })
                 await loadReservas()
                 
@@ -145,7 +145,7 @@ export default function ReservasAdminPage() {
 
         if (result.isConfirmed) {
             try {
-                await adminService.deleteReserva(reserva.id)
+                await dashboardService.deleteReserva(reserva.id)
                 await loadReservas()
                 await Swal.fire({
                     icon: 'success',
@@ -349,7 +349,7 @@ export default function ReservasAdminPage() {
                                                 const newStatus = e.target.value
                                                 const oldStatus = reserva.estado
                                                 try {
-                                                    await adminService.updateReserva(reserva.id, { estado: newStatus })
+                                                    await dashboardService.updateReserva(reserva.id, { estado: newStatus })
                                                     await loadReservas()
                                                     
                                                     // Crear notificación para todos los admins
