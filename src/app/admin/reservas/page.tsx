@@ -58,7 +58,7 @@ export default function ReservasAdminPage() {
             }
             
             // Limpiar y validar datos
-            const cleanData = data.map(reserva => ({
+            const cleanData = data.map((reserva: Reserva) => ({
                 ...reserva,
                 usuarios: reserva.usuarios || null,
                 alojamientos: reserva.alojamientos || null,

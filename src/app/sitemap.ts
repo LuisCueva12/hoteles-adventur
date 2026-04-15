@@ -1,10 +1,14 @@
 import { MetadataRoute } from 'next'
 import { createClient } from '@/utils/supabase/client'
 
+interface AlojamientoSitemap {
+    id: string
+    updated_at?: string | null
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://adventurhotels.com'
     
-    // Páginas estáticas
     const staticPages = [
         '',
         '/nosotros',
@@ -22,7 +26,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: route === '' ? 1 : 0.8
     }))
 
-    // Páginas dinámicas de hoteles
     try {
         const supabase = createClient()
         const { data: alojamientos } = await supabase
@@ -30,7 +33,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             .select('id, updated_at')
             .eq('activo', true)
 
-        const hotelPages = (alojamientos || []).map(aloj => ({
+        const hotelPages = (alojamientos || []).map((aloj: AlojamientoSitemap) => ({
             url: `${baseUrl}/hoteles/${aloj.id}`,
             lastModified: new Date(aloj.updated_at || Date.now()),
             changeFrequency: 'daily' as const,

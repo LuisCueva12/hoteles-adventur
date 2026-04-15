@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/utils/supabase/client'
 import { queryKeys } from '@/lib/cliente-consultas'
+import type { Alojamiento } from '@/types/basedatos'
 
 interface RoomFilters {
     tipo?: string
@@ -47,7 +48,7 @@ export function useRooms(filters?: RoomFilters) {
 
             if (error) throw error
 
-            return data?.map(aloj => {
+            return data?.map((aloj: Alojamiento & { fotos_alojamiento?: { url: string; es_principal: boolean }[] }) => {
                 const fotos = aloj.fotos_alojamiento || []
                 const fotosPrincipales = fotos.filter((f: any) => f.es_principal)
                 const fotosSecundarias = fotos.filter((f: any) => !f.es_principal)

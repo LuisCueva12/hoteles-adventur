@@ -113,7 +113,7 @@ export function SeccionResenas({ alojamientoId }: SeccionResenasProps) {
 
     // Detectar sesión activa
     useEffect(() => {
-        supabase.auth.getUser().then((result) => {
+        supabase.auth.getUser().then((result: { data: { user: { id: string } | null }; error: unknown }) => {
             setUsuarioId(result.data.user?.id ?? null)
         })
     }, [])

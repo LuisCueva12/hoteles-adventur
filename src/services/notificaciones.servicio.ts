@@ -200,7 +200,7 @@ export class NotificationsService {
           schema: 'public',
           table: 'notificaciones',
         },
-        (payload) => {
+        (payload: { new: Notification }) => {
           callback(payload.new as Notification)
         },
       )

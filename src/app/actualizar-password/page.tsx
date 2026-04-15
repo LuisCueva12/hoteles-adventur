@@ -8,6 +8,7 @@ import { Logo } from '@/components/web/Logo'
 import { useToast } from '@/hooks/useNotificacion'
 import { createClient } from '@/utils/supabase/client'
 import { obtenerFortalezaContrasena } from '@/lib/seguridad'
+import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) {
@@ -80,7 +81,7 @@ export default function ActualizarPasswordPage() {
           throw new Error('El enlace de recuperacion no es valido o ya expiro.')
         }
 
-        const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+        const { data: authListener } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
           if (active && session) {
             setSessionError(null)
             setSessionReady(true)

@@ -43,7 +43,7 @@ export function LiveChat() {
     const supabaseRef = useRef(createClient())
 
     useEffect(() => {
-        supabaseRef.current.from('configuracion').select('whatsapp').maybeSingle().then(({ data }) => {
+        supabaseRef.current.from('configuracion').select('whatsapp').maybeSingle().then(({ data }: { data: { whatsapp?: string } | null }) => {
             if (data?.whatsapp) setWhatsapp(data.whatsapp.replace(/\D/g, ''))
         })
     }, [])

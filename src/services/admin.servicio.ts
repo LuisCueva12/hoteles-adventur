@@ -49,7 +49,7 @@ export class AdminService {
         .eq('estado', 'aprobado')
         .gte('fecha_pago', primerDiaMes)
 
-      const ingresosMes = pagosData?.reduce((sum, pago) => sum + Number(pago.monto), 0) || 0
+      const ingresosMes = pagosData?.reduce((sum: number, pago: { monto: string | number }) => sum + Number(pago.monto), 0) || 0
 
       // Check-ins y check-outs de hoy
       const hoy = new Date().toISOString().split('T')[0]
@@ -79,7 +79,7 @@ export class AdminService {
         .lte('fecha_inicio', hoy)
         .gte('fecha_fin', hoy)
 
-      const habitacionesOcupadas = new Set(reservasHoy?.map(r => r.alojamiento_id)).size
+      const habitacionesOcupadas = new Set(reservasHoy?.map((r: { alojamiento_id: string }) => r.alojamiento_id)).size
       const ocupacionActual = totalHabitaciones ? Math.round((habitacionesOcupadas / totalHabitaciones) * 100) : 0
 
       return {
@@ -121,18 +121,18 @@ export class AdminService {
 
       const activities: ActivityLog[] = []
 
-      reservas?.forEach(reserva => {
+      reservas?.forEach((reserva: { usuarios?: any; alojamientos?: any; fecha_creacion: string; estado: string }) => {
         const usuario = reserva.usuarios as any
         activities.push({
           type: 'reserva',
           user: `${usuario?.nombre} ${usuario?.apellido}`,
-          action: `Nueva reserva - ${(reserva.alojamientos as any)?.nombre}`,
+          action: `Nueva reserva - ${reserva.alojamientos?.nombre}`,
           time: this.getTimeAgo(new Date(reserva.fecha_creacion)),
           status: reserva.estado === 'confirmada' ? 'success' : reserva.estado === 'cancelada' ? 'warning' : 'info'
         })
       })
 
-      pagos?.forEach(pago => {
+      pagos?.forEach((pago: { reservas?: any; fecha_pago: string; estado: string; monto: number }) => {
         const usuario = (pago.reservas as any)?.usuarios
         activities.push({
           type: 'pago',
@@ -189,7 +189,7 @@ export class AdminService {
       .order('fecha_creacion', { ascending: false })
 
     if (error) throw error
-    return data?.map(a => ({
+    return data?.map((a: any) => ({
       ...a,
       foto_principal: a.foto_principal || a.fotos_alojamiento?.find((f: any) => f.es_principal)?.url || a.fotos_alojamiento?.[0]?.url || null,
       slug: a.slug || a.id,
@@ -324,8 +324,8 @@ export class AdminService {
         return Math.round(((actual - pasado) / pasado) * 100)
       }
 
-      const ingActual = pagosActual.data?.reduce((s, p) => s + Number(p.monto), 0) || 0
-      const ingPasado = pagosPasado.data?.reduce((s, p) => s + Number(p.monto), 0) || 0
+      const ingActual = pagosActual.data?.reduce((s: number, p: { monto: string | number }) => s + Number(p.monto), 0) || 0
+      const ingPasado = pagosPasado.data?.reduce((s: number, p: { monto: string | number }) => s + Number(p.monto), 0) || 0
 
       return {
         usuarios: calcPct(usuariosActual.count || 0, usuariosPasado.count || 0),
@@ -351,7 +351,7 @@ export class AdminService {
       const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
       const totals = Array(12).fill(0)
 
-      data?.forEach(pago => {
+      data?.forEach((pago: { fecha_pago: string; monto: string | number }) => {
         const month = new Date(pago.fecha_pago).getMonth()
         totals[month] += Number(pago.monto)
       })

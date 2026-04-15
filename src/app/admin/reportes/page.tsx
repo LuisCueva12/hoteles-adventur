@@ -41,34 +41,34 @@ export default function ReportesAdminPage() {
             const usuarios = await adminService.getUsuarios()
 
             // Calcular ingresos totales
-            const totalIngresos = reservas?.reduce((sum, r) => sum + (r.total || 0), 0) || 0
+            const totalIngresos = reservas?.reduce((sum: number, r: { total?: number | null }) => sum + (r.total || 0), 0) || 0
             
             // Calcular reservas por estado
             const reservasPorEstadoData = [
                 { 
                     estado: 'Confirmadas', 
-                    cantidad: reservas?.filter(r => r.estado === 'confirmada').length || 0,
+                    cantidad: reservas?.filter((r: { estado?: string }) => r.estado === 'confirmada').length || 0,
                     porcentaje: 0
                 },
                 { 
                     estado: 'Pendientes', 
-                    cantidad: reservas?.filter(r => r.estado === 'pendiente').length || 0,
+                    cantidad: reservas?.filter((r: { estado?: string }) => r.estado === 'pendiente').length || 0,
                     porcentaje: 0
                 },
                 { 
                     estado: 'Completadas', 
-                    cantidad: reservas?.filter(r => r.estado === 'confirmada' && new Date(r.fecha_fin) < new Date()).length || 0,
+                    cantidad: reservas?.filter((r: { estado?: string; fecha_fin: string }) => r.estado === 'confirmada' && new Date(r.fecha_fin) < new Date()).length || 0,
                     porcentaje: 0
                 },
                 { 
                     estado: 'Canceladas', 
-                    cantidad: reservas?.filter(r => r.estado === 'cancelada').length || 0,
+                    cantidad: reservas?.filter((r: { estado?: string }) => r.estado === 'cancelada').length || 0,
                     porcentaje: 0
                 }
             ]
 
             // Calcular porcentajes
-            const totalReservasEstado = reservasPorEstadoData.reduce((sum, r) => sum + r.cantidad, 0)
+            const totalReservasEstado = reservasPorEstadoData.reduce((sum: number, r) => sum + r.cantidad, 0)
             reservasPorEstadoData.forEach(r => {
                 r.porcentaje = totalReservasEstado > 0 ? Math.round((r.cantidad / totalReservasEstado) * 100) : 0
             })
@@ -83,10 +83,10 @@ export default function ReportesAdminPage() {
                 const mesIndex = fecha.getMonth()
                 const año = fecha.getFullYear()
                 
-                const ingresosMes = reservas?.filter(r => {
+                const ingresosMes = reservas?.filter((r: { fecha_creacion: string }) => {
                     const fechaReserva = new Date(r.fecha_creacion)
                     return fechaReserva.getMonth() === mesIndex && fechaReserva.getFullYear() === año
-                }).reduce((sum, r) => sum + (r.total || 0), 0) || 0
+                }).reduce((sum: number, r: { total?: number | null }) => sum + (r.total || 0), 0) || 0
                 
                 ingresosMensualesData.push({
                     mes: meses[mesIndex],
@@ -97,7 +97,7 @@ export default function ReportesAdminPage() {
             // Top 5 habitaciones más reservadas
             const habitacionesReservas = new Map<string, { nombre: string; reservas: number; ingresos: number }>()
             
-            reservas?.forEach(reserva => {
+            reservas?.forEach((reserva: { alojamientos?: { nombre: string } | null; total?: number | null }) => {
                 if (reserva.alojamientos) {
                     const nombre = reserva.alojamientos.nombre
                     const current = habitacionesReservas.get(nombre) || { nombre, reservas: 0, ingresos: 0 }
@@ -116,7 +116,7 @@ export default function ReportesAdminPage() {
                 totalIngresos,
                 totalReservas: reservas?.length || 0,
                 tasaOcupacion: dashboardStats.ocupacionActual || 0,
-                nuevosClientes: usuarios?.filter(u => {
+                nuevosClientes: usuarios?.filter((u: { fecha_registro: string }) => {
                     const fechaRegistro = new Date(u.fecha_registro)
                     const hace30Dias = new Date()
                     hace30Dias.setDate(hace30Dias.getDate() - 30)
