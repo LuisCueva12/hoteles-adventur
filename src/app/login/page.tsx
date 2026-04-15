@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { ArrowLeft, Shield, Lock, Star } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Shield, Lock, Star, Home } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import { useToast } from '@/hooks/useNotificacion'
 import { type LoginInput } from '@/lib/validaciones'
@@ -255,9 +255,14 @@ export default function LoginPage() {
 
         <header className="relative z-10 flex items-center justify-between border-b border-slate-100 bg-white/80 p-3.5 backdrop-blur-sm sm:p-4 lg:hidden">
           <Logo className="h-6 w-auto sm:h-7" />
-          <Link href="/" className="rounded-lg p-2 transition-colors hover:bg-slate-50">
-            <ArrowLeft className="h-4 w-4 text-slate-600" />
-          </Link>
+          <div className="flex items-center gap-1">
+            <Link href="/" className="rounded-lg p-2 transition-colors hover:bg-slate-50" title="Ir al inicio">
+              <Home className="h-4 w-4 text-slate-600" />
+            </Link>
+            <Link href="/" className="rounded-lg p-2 transition-colors hover:bg-slate-50">
+              <ArrowLeft className="h-4 w-4 text-slate-600" />
+            </Link>
+          </div>
         </header>
 
         <div className="relative z-10 flex flex-1 items-center justify-center p-3 sm:p-4 md:p-5 lg:p-6">
@@ -268,8 +273,9 @@ export default function LoginPage() {
                   href="/"
                   className="group hidden items-center gap-1.5 text-xs text-slate-500 transition-all hover:text-orange-600 lg:inline-flex"
                 >
-                  <ArrowLeft className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-1" />
-                  Volver
+                  <Home className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-1" />
+                  <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+                  Inicio
                 </Link>
 
                 <div className="text-center lg:text-left">
