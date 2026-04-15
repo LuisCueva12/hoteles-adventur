@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { LayoutDashboard, Hotel, Calendar, Users, TrendingUp, Settings, Home, LogOut, Menu, X, Camera, Images, Star } from 'lucide-react'
@@ -46,46 +46,93 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
     })
     const [isEditing, setIsEditing] = useState(false)
     const [editForm, setEditForm] = useState(profileData)
+    const [sesionVerificada, setSesionVerificada] = useState(false)
+    const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false)
 
-    useEffect(() => {
+useEffect(() => {
         setMounted(true)
         checkAdminAccess()
 
-        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-            // Solo mostrar confirmación, NO cerrar sesión automáticamente
-            e.preventDefault()
+        let lastUrl = window.location.href
+
+        const verificarSesion = async () => {
+            const currentUrl = window.location.href
+            
+            if (currentUrl !== lastUrl) {
+                lastUrl = currentUrl
+                
+                const supabase = createClient()
+                const { data: { user } } = await supabase.auth.getUser()
+                
+                if (!user) {
+                    Swal.fire({
+                        title: 'Sesión expirada',
+                        text: 'Tu sesión ha expirado. Por favor, inicia sesión de nuevo.',
+                        icon: 'warning',
+                        confirmButtonText: 'Ir al login',
+                        confirmButtonColor: '#3B82F6',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                    }).then(() => {
+                        window.location.href = '/login'
+                    })
+                } else {
+                    const { data: perfil } = await supabase
+                        .from('perfiles')
+                        .select('rol')
+                        .eq('id', user.id)
+                        .single()
+                    
+                    if (!perfil || perfil.rol !== 'admin') {
+                        Swal.fire({
+                            title: 'Acceso denegado',
+                            text: 'No tienes permisos de administrador.',
+                            icon: 'error',
+                            confirmButtonText: 'Ir al inicio',
+                            confirmButtonColor: '#3B82F6',
+                        }).then(() => {
+                            window.location.href = '/'
+                        })
+                    }
+                }
+            }
         }
+
+        const intervalId = setInterval(verificarSesion, 1000)
 
         const handlePopState = async (event: PopStateEvent) => {
             event.preventDefault()
 
             const result = await Swal.fire({
-                title: '¿Quieres cerrar sesión?',
-                text: 'Si vuelves atrás se cerrará tu sesión y tendrás que iniciar sesión de nuevo.',
-                icon: 'warning',
+                title: '¿Seguridad de sesión',
+                text: '¿Deseas cerrar sesión para proteger tu cuenta?',
+                icon: 'question',
                 showCancelButton: true,
                 confirmButtonText: 'Sí, cerrar sesión',
-                cancelButtonText: 'No, quedarme aquí',
-                confirmButtonColor: '#ef4444',
-                cancelButtonColor: '#6b7280',
+                cancelButtonText: 'Permanecer conectado',
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#3b82f6',
+                customClass: {
+                    confirmButton: 'px-4 py-2 rounded-lg font-medium',
+                    cancelButton: 'px-4 py-2 rounded-lg font-medium',
+                }
             })
 
             if (result.isConfirmed) {
-                await supabase.auth.signOut().catch(() => {})
-                router.push('/login')
+                const supabase = createClient()
+                await supabase.auth.signOut()
+                window.location.href = '/login'
             } else {
                 window.history.pushState(null, '', window.location.href)
             }
         }
 
         window.history.pushState(null, '', window.location.href)
-        window.addEventListener('beforeunload', handleBeforeUnload)
         window.addEventListener('popstate', handlePopState)
 
         return () => {
-            window.removeEventListener('beforeunload', handleBeforeUnload)
+            clearInterval(intervalId)
             window.removeEventListener('popstate', handlePopState)
-            // NO cerrar sesión al desmontar — el usuario puede estar navegando entre páginas del admin
         }
     }, [])
 
