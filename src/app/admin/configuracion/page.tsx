@@ -44,7 +44,7 @@ const CONFIG_TABS: Array<{ id: ConfigTab; label: string; icon: typeof Settings }
 export default function ConfiguracionPage() {
   const supabase = createClient()
   const repository = useMemo(() => new SiteConfigRepository(supabase), [supabase])
-  const { overwriteConfig } = useSiteConfig()
+  const { refreshConfig } = useSiteConfig()
 
   const [config, setConfig] = useState<SiteConfig>(defaultSiteConfig)
   const [initialConfig, setInitialConfig] = useState<SiteConfig>(defaultSiteConfig)
@@ -70,7 +70,7 @@ export default function ConfiguracionPage() {
       const data = await repository.getConfig()
       setConfig(data)
       setInitialConfig(data)
-      overwriteConfig(data)
+      refreshConfig()
     } catch (error) {
       console.error('Error cargando configuracion:', error)
       setLoadIssue('No se pudo cargar la configuracion.')
@@ -129,7 +129,7 @@ export default function ConfiguracionPage() {
       setConfig(savedConfig)
       setInitialConfig(savedConfig)
       setErrors({})
-      overwriteConfig(savedConfig)
+      refreshConfig()
 
       await Swal.fire({
         icon: 'success',

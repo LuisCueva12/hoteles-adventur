@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, ArrowRight, Shield, Lock, Star, Home } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'

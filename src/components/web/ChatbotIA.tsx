@@ -97,10 +97,10 @@ function formatTime(value: string) {
 
 function sanitizeText(text: string) {
   return text
-    .replace(/\*\*(.*?)\*\*/gs, '$1')      // bold **texto**
-    .replace(/\*(.*?)\*/gs, '$1')           // italic *texto*
-    .replace(/_{2}(.*?)_{2}/gs, '$1')       // bold __texto__
-    .replace(/_(.*?)_/gs, '$1')             // italic _texto_
+    .replace(/\*\*([\s\S]*?)\*\*/g, '$1')      // bold **texto**
+    .replace(/\*([\s\S]*?)\*/g, '$1')           // italic *texto*
+    .replace(/_{2}([\s\S]*?)_{2}/g, '$1')       // bold __texto__
+    .replace(/_([\s\S]*?)_/g, '$1')             // italic _texto_
     .replace(/#{1,6}\s+/g, '')              // headers # ## ###
     .replace(/`{3}[\s\S]*?`{3}/g, '')       // code blocks ```
     .replace(/`([^`]+)`/g, '$1')            // inline code

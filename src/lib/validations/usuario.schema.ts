@@ -62,7 +62,7 @@ export class UsuarioValidator {
 
   private static formatErrors(error: z.ZodError): ValidationErrors {
     const errors: ValidationErrors = {}
-    error.errors.forEach((err) => {
+    error.issues.forEach((err) => {
       const path = err.path[0] as keyof UsuarioCreateInput
       if (path && !errors[path]) {
         errors[path] = err.message

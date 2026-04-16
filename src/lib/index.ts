@@ -1,4 +1,3 @@
-export * from './analiticas'
 export * from './errores'
 export * from './internacionalizacion'
 export * from './cliente-consultas'

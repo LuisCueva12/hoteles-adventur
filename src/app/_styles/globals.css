@@ -1,33 +1,31 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+
+  --color-brand: #FACC15;
+  --color-brand-hover: #EAB308;
+  --color-brand-light: #FEF9C3;
+  --color-brand-dark: #CA8A04;
+
+  --color-admin-primary: #001F3F;
+  --color-admin-primary-hover: #003366;
+  --color-admin-primary-light: #E6EEF5;
+  --color-admin-primary-dark: #001529;
+
+  --color-admin-accent: #FACC15;
+  --color-admin-accent-hover: #EAB308;
+  --color-admin-accent-light: #FEF9C3;
+
+  --color-admin-success: #10B981;
+  --color-admin-warning: #F59E0B;
+  --color-admin-error: #EF4444;
+  --color-admin-info: #3B82F6;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
-  
-  --admin-primary: #001F3F;
-  --admin-primary-hover: #003366;
-  --admin-primary-light: #E6EEF5;
-  --admin-primary-dark: #001529;
-  
-  --admin-accent: #FACC15;
-  --admin-accent-hover: #EAB308;
-  --admin-accent-light: #FEF9C3;
-  
-  --admin-success: #10B981;
-  --admin-warning: #F59E0B;
-  --admin-error: #EF4444;
-  --admin-info: #3B82F6;
-  
-  --admin-gray-50: #F9FAFB;
-  --admin-gray-100: #F3F4F6;
-  --admin-gray-200: #E5E7EB;
-  --admin-gray-300: #D1D5DB;
-  --admin-gray-400: #9CA3AF;
-  --admin-gray-500: #6B7280;
-  --admin-gray-600: #4B5563;
-  --admin-gray-700: #374151;
-  --admin-gray-800: #1F2937;
-  --admin-gray-900: #111827;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -50,8 +48,8 @@ body {
 }
 
 .loading-spinner {
-  border: 3px solid var(--admin-primary-light);
-  border-top-color: var(--admin-primary);
+  border: 3px solid var(--color-admin-primary-light);
+  border-top-color: var(--color-admin-primary);
   border-radius: 50%;
   width: 40px;
   height: 40px;

@@ -34,11 +34,17 @@ export class AuthService {
     return session
   }
 
-  async validateAdminSession(): Promise<AdminProfile | null> {
-    const session = await this.getSession()
-    if (!session?.user) return null
+  async getUser() {
+    const { data: { user }, error } = await this.supabase.auth.getUser()
+    if (error) throw error
+    return user
+  }
 
-    const profile = await this.usuarioRepo.getAdminProfile(session.user.id)
+  async validateAdminSession(): Promise<AdminProfile | null> {
+    const user = await this.getUser()
+    if (!user) return null
+
+    const profile = await this.usuarioRepo.getAdminProfile(user.id)
     if (!profile || !validateAdminAccess(profile)) return null
 
     return profile

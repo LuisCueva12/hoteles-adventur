@@ -44,6 +44,7 @@ export function useAuth() {
       const message = err instanceof Error ? err.message : 'Error al iniciar sesión'
       Registrador.error(err as Error, { action: 'login' })
       setError(message)
+    } finally {
       setLoading(false)
     }
   }, [router])

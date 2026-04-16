@@ -21,7 +21,7 @@ export class UsuarioAdminService {
     const result = usuarioCreateSchema.safeParse(input)
     
     if (!result.success) {
-      throw new Error(result.error.errors[0].message)
+      throw new Error(result.error.issues[0].message)
     }
 
     const emailExists = await this.repository.exists(input.email)
@@ -36,7 +36,7 @@ export class UsuarioAdminService {
     const result = usuarioUpdateSchema.safeParse(input)
     
     if (!result.success) {
-      throw new Error(result.error.errors[0].message)
+      throw new Error(result.error.issues[0].message)
     }
 
     return this.repository.update(id, input)

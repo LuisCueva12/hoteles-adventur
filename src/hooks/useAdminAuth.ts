@@ -33,16 +33,14 @@ export function useAdminAuth() {
 
   const checkAccess = async () => {
     try {
-      const session = await authService.getSession()
+      const user = await authService.getUser()
 
-      if (!session?.user) {
+      if (!user) {
         router.replace(`${AUTH_ROUTES.LOGIN}?redirect=${AUTH_ROUTES.ADMIN}`)
         return
       }
 
       const profile = await authService.validateAdminSession()
-
-      console.log('Admin profile loaded:', profile)
 
       if (!profile) {
         setState(prev => ({ ...prev, accessDenied: true, loading: false }))
@@ -50,7 +48,7 @@ export function useAdminAuth() {
       }
 
       setState({
-        user: session.user,
+        user,
         profile,
         loading: false,
         accessDenied: false,
