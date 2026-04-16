@@ -1,10 +1,11 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { AuthService } from '@/lib/services/auth.service'
 import { AUTH_ROUTES } from '@/lib/auth/constants'
 
 export async function updateSession(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request })
+  let supabaseResponse = NextResponse.next({
+    request,
+  })
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,7 +17,9 @@ export async function updateSession(request: NextRequest) {
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({ request })
+          supabaseResponse = NextResponse.next({
+            request,
+          })
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
           )
@@ -25,16 +28,18 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  const authService = new AuthService(supabase)
+  // Validador rápido de sesión (ideal para el middleware)
+  const { data: { user } } = await supabase.auth.getUser()
 
   if (request.nextUrl.pathname.startsWith(AUTH_ROUTES.ADMIN)) {
-    const profile = await authService.validateAdminSession()
-
-    if (!profile) {
+    if (!user) {
       const redirectUrl = request.nextUrl.clone()
-      redirectUrl.pathname = AUTH_ROUTES.ACCESS_DENIED
+      redirectUrl.pathname = AUTH_ROUTES.LOGIN
+      // Mantenemos a donde intentaba ir
+      redirectUrl.searchParams.set('redirect', request.nextUrl.pathname)
       return NextResponse.redirect(redirectUrl)
     }
+    // NOTA: La validación fuerte de roles se delega a `useAdminAuth` en el AdminLayout.
   }
 
   return supabaseResponse

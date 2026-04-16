@@ -24,20 +24,29 @@ export function useAuth() {
       const authService = new AuthService(supabase)
       
       const authData = await authService.login(data.email, data.password)
-      const rol = await authService.getUserRole(authData.user.id)
+      const userId = authData.user.id
+      const rol = await authService.getUserRole(userId)
+      
+      if (rol === ADMIN_ROLE) {
+        const adminProfile = await authService.validateAdminSession()
+        if (!adminProfile) {
+          throw new Error('Sesión de administrador no válida o acceso denegado')
+        }
+      }
+
       const destination = redirectTo || (rol === ADMIN_ROLE ? AUTH_ROUTES.ADMIN : AUTH_ROUTES.HOME)
 
-      Registrador.info('Login exitoso', { userId: authData.user.id, rol, destination })
+      Registrador.info('Login exitoso y validado', { userId, rol, destination })
 
-      router.push(destination)
       router.refresh()
+      await router.replace(destination)
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error al iniciar sesión'
       Registrador.error(err as Error, { action: 'login' })
       setError(message)
       setLoading(false)
     }
-  }, [])
+  }, [router])
 
   return { loading, error, login, clearError }
 }

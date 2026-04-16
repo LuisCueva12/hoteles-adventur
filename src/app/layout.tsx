@@ -6,7 +6,6 @@ import { ErrorBoundary } from '@/components/ui/LimiteErrores'
 import { QueryProvider } from '@/components/providers/ProveedorConsultas'
 import { SiteConfigProvider } from '@/components/providers/ProveedorConfiguracionSitio'
 import { TranslationProvider } from '@/hooks/useTraduccion'
-import { Analytics } from '@/components/web/Analiticas'
 import { generarSEO } from '@/lib/seo'
 import { createClient } from '@/utils/supabase/server'
 import { SiteConfigRepository } from '@/lib/repositories/site-config.repository'
@@ -49,7 +48,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </QueryProvider>
           </ErrorBoundary>
         </SiteConfigProvider>
-        <Analytics />
       </body>
     </html>
   )
