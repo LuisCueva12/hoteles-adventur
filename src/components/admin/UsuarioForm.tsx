@@ -1,211 +1,303 @@
 'use client'
 
-import { useForm } from '@/hooks/useForm'
-import type { UsuarioForm } from '@/hooks/useUsuarios'
+import { useState } from 'react'
+import { 
+  UsuarioValidator, 
+  ROLES, 
+  TIPOS_DOCUMENTO, 
+  PAISES,
+  type UsuarioFormData,
+  type ValidationErrors,
+  type UsuarioCreateInput, 
+  type UsuarioUpdateInput
+} from '@/lib/validations/usuario.schema'
 
 interface UsuarioFormProps {
-  initialValues?: Partial<UsuarioForm>
-  onSubmit: (data: UsuarioForm) => Promise<void>
+  initialValues?: Partial<UsuarioFormData>
+  onSubmit: (data: UsuarioCreateInput | UsuarioUpdateInput) => Promise<void>
   onCancel: () => void
   loading?: boolean
+  isEdit?: boolean
 }
 
-const validateUsuarioForm = (data: UsuarioForm) => {
-  const errors: Partial<Record<keyof UsuarioForm, string>> = {}
-
-  if (!data.nombre?.trim()) {
-    errors.nombre = 'El nombre es requerido'
-  }
-
-  if (!data.apellido?.trim()) {
-    errors.apellido = 'El apellido es requerido'
-  }
-
-  if (!data.email?.trim()) {
-    errors.email = 'El email es requerido'
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
-    errors.email = 'El email no es válido'
-  }
-
-  if (!data.telefono?.trim()) {
-    errors.telefono = 'El teléfono es requerido'
-  }
-
-  if (!data.documento_identidad?.trim()) {
-    errors.documento_identidad = 'El documento de identidad es requerido'
-  }
-
-  if (!data.tipo_documento?.trim()) {
-    errors.tipo_documento = 'El tipo de documento es requerido'
-  }
-
-  if (!data.pais?.trim()) {
-    errors.pais = 'El país es requerido'
-  }
-
-  if (!data.rol?.trim()) {
-    errors.rol = 'El rol es requerido'
-  }
-
-  return errors
-}
-
-const initialFormValues: UsuarioForm = {
+const defaultValues: UsuarioFormData = {
   nombre: '',
   apellido: '',
   email: '',
   telefono: '',
   documento_identidad: '',
   tipo_documento: 'DNI',
-  pais: '',
+  pais: 'Perú',
   rol: 'turista',
   verificado: false
 }
 
-export function UsuarioFormComponent({ initialValues = {}, onSubmit, onCancel, loading = false }: UsuarioFormProps) {
-  const form = useForm({
-    initialValues: { ...initialFormValues, ...initialValues },
-    validation: validateUsuarioForm,
-    onSubmit
+export function UsuarioFormComponent({ 
+  initialValues = {}, 
+  onSubmit, 
+  onCancel, 
+  loading = false,
+  isEdit = false 
+}: UsuarioFormProps) {
+  const [formData, setFormData] = useState<UsuarioFormData>({
+    ...defaultValues,
+    ...initialValues
   })
+  const [errors, setErrors] = useState<ValidationErrors>({})
+  const [touched, setTouched] = useState<Record<string, boolean>>({})
 
-  const roles = ['turista', 'propietario', 'Admin']
-  const tiposDocumento = ['DNI', 'Pasaporte', 'Carnet de Extranjería']
-  const paises = ['Perú', 'Argentina', 'Bolivia', 'Chile', 'Colombia', 'Ecuador', 'México', 'Venezuela']
+  const handleChange = (field: keyof UsuarioFormData, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+    
+    if (errors[field]) {
+      setErrors(prev => {
+        const newErrors = { ...prev }
+        delete newErrors[field]
+        return newErrors
+      })
+    }
+  }
+
+  const handleBlur = (field: keyof UsuarioFormData) => {
+    setTouched(prev => ({ ...prev, [field]: true }))
+  }
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+
+    const validationErrors = isEdit 
+      ? UsuarioValidator.validateUpdate(formData)
+      : UsuarioValidator.validateCreate(formData)
+
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors)
+      const allTouched = Object.keys(formData).reduce((acc, key) => ({
+        ...acc,
+        [key]: true
+      }), {})
+      setTouched(allTouched)
+      return
+    }
+
+    try {
+      await onSubmit(formData)
+    } catch (error) {
+      console.error('Error en submit:', error)
+    }
+  }
+
+  const showError = (field: keyof UsuarioFormData) => {
+    return touched[field] && errors[field]
+  }
 
   return (
-    <form onSubmit={form.handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Header del formulario */}
+      <div className="bg-gradient-to-r from-admin-primary to-admin-primary-dark -m-6 mb-6 p-6 rounded-t-xl">
+        <h3 className="text-xl font-bold text-white">
+          {isEdit ? 'Editar Usuario' : 'Nuevo Usuario'}
+        </h3>
+        <p className="text-white/80 text-sm mt-1">
+          {isEdit ? 'Actualiza la información del usuario' : 'Completa los datos del nuevo usuario'}
+        </p>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Nombre */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Nombre</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Nombre <span className="text-admin-error">*</span>
+          </label>
           <input
-            {...form.getFieldProps('nombre')}
             type="text"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            value={formData.nombre}
+            onChange={(e) => handleChange('nombre', e.target.value)}
+            onBlur={() => handleBlur('nombre')}
+            className={`w-full px-4 py-2.5 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-admin-primary transition-all ${
+              showError('nombre') ? 'border-admin-error' : 'border-gray-200 hover:border-admin-primary/30'
+            }`}
             placeholder="Nombre del usuario"
+            disabled={loading}
           />
-          {form.getFieldProps('nombre').error && (
-            <p className="text-red-500 text-sm mt-1">{form.getFieldProps('nombre').error}</p>
+          {showError('nombre') && (
+            <p className="text-admin-error text-sm mt-1 flex items-center gap-1">
+              <span>⚠</span> {errors.nombre}
+            </p>
           )}
         </div>
 
+        {/* Apellido */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Apellido</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Apellido <span className="text-admin-error">*</span>
+          </label>
           <input
-            {...form.getFieldProps('apellido')}
             type="text"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            value={formData.apellido}
+            onChange={(e) => handleChange('apellido', e.target.value)}
+            onBlur={() => handleBlur('apellido')}
+            className={`w-full px-4 py-2.5 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-admin-primary transition-all ${
+              showError('apellido') ? 'border-admin-error' : 'border-gray-200 hover:border-admin-primary/30'
+            }`}
             placeholder="Apellido del usuario"
+            disabled={loading}
           />
-          {form.getFieldProps('apellido').error && (
-            <p className="text-red-500 text-sm mt-1">{form.getFieldProps('apellido').error}</p>
+          {showError('apellido') && (
+            <p className="text-admin-error text-sm mt-1 flex items-center gap-1">
+              <span>⚠</span> {errors.apellido}
+            </p>
           )}
         </div>
 
+        {/* Email */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Email <span className="text-admin-error">*</span>
+          </label>
           <input
-            {...form.getFieldProps('email')}
             type="email"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            value={formData.email}
+            onChange={(e) => handleChange('email', e.target.value)}
+            onBlur={() => handleBlur('email')}
+            className={`w-full px-4 py-2.5 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-admin-primary transition-all ${
+              showError('email') ? 'border-admin-error' : 'border-gray-200 hover:border-admin-primary/30'
+            }`}
             placeholder="email@ejemplo.com"
+            disabled={loading}
           />
-          {form.getFieldProps('email').error && (
-            <p className="text-red-500 text-sm mt-1">{form.getFieldProps('email').error}</p>
+          {showError('email') && (
+            <p className="text-admin-error text-sm mt-1 flex items-center gap-1">
+              <span>⚠</span> {errors.email}
+            </p>
           )}
         </div>
 
+        {/* Teléfono */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Teléfono
+          </label>
           <input
-            {...form.getFieldProps('telefono')}
             type="tel"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            value={formData.telefono}
+            onChange={(e) => handleChange('telefono', e.target.value)}
+            onBlur={() => handleBlur('telefono')}
+            className={`w-full px-4 py-2.5 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-admin-primary transition-all ${
+              showError('telefono') ? 'border-admin-error' : 'border-gray-200 hover:border-admin-primary/30'
+            }`}
             placeholder="+51 999 999 999"
+            disabled={loading}
           />
-          {form.getFieldProps('telefono').error && (
-            <p className="text-red-500 text-sm mt-1">{form.getFieldProps('telefono').error}</p>
+          {showError('telefono') && (
+            <p className="text-admin-error text-sm mt-1 flex items-center gap-1">
+              <span>⚠</span> {errors.telefono}
+            </p>
           )}
         </div>
 
+        {/* Documento */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Documento de Identidad</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Documento de Identidad
+          </label>
           <input
-            {...form.getFieldProps('documento_identidad')}
             type="text"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            value={formData.documento_identidad}
+            onChange={(e) => handleChange('documento_identidad', e.target.value)}
+            className="w-full px-4 py-2.5 border-2 border-gray-200 hover:border-admin-primary/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-admin-primary transition-all"
             placeholder="12345678"
+            disabled={loading}
           />
-          {form.getFieldProps('documento_identidad').error && (
-            <p className="text-red-500 text-sm mt-1">{form.getFieldProps('documento_identidad').error}</p>
-          )}
         </div>
 
+        {/* Tipo Documento */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de Documento</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Tipo de Documento
+          </label>
           <select
-            {...form.getFieldProps('tipo_documento')}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            value={formData.tipo_documento}
+            onChange={(e) => handleChange('tipo_documento', e.target.value)}
+            className="w-full px-4 py-2.5 border-2 border-gray-200 hover:border-admin-primary/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-admin-primary transition-all bg-white"
+            disabled={loading}
           >
-            {tiposDocumento.map(tipo => (
-              <option key={tipo} value={tipo}>{tipo}</option>
+            {TIPOS_DOCUMENTO.map(tipo => (
+              <option key={tipo.value} value={tipo.value}>{tipo.label}</option>
             ))}
           </select>
         </div>
 
+        {/* País */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">País</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            País
+          </label>
           <select
-            {...form.getFieldProps('pais')}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            value={formData.pais}
+            onChange={(e) => handleChange('pais', e.target.value)}
+            className="w-full px-4 py-2.5 border-2 border-gray-200 hover:border-admin-primary/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-admin-primary transition-all bg-white"
+            disabled={loading}
           >
-            <option value="">Seleccionar país</option>
-            {paises.map(pais => (
+            {PAISES.map(pais => (
               <option key={pais} value={pais}>{pais}</option>
             ))}
           </select>
         </div>
 
+        {/* Rol */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Rol</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Rol <span className="text-admin-error">*</span>
+          </label>
           <select
-            {...form.getFieldProps('rol')}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            value={formData.rol}
+            onChange={(e) => handleChange('rol', e.target.value as any)}
+            className="w-full px-4 py-2.5 border-2 border-gray-200 hover:border-admin-primary/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-admin-primary transition-all bg-white"
+            disabled={loading}
           >
-            {roles.map(rol => (
-              <option key={rol} value={rol}>{rol === 'Admin' ? 'Administrador' : rol.charAt(0).toUpperCase() + rol.slice(1)}</option>
+            {ROLES.map(rol => (
+              <option key={rol.value} value={rol.value}>{rol.label}</option>
             ))}
           </select>
         </div>
-
-        <div className="flex items-center">
-          <input
-            {...form.getFieldProps('verificado')}
-            type="checkbox"
-            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-          />
-          <label className="ml-2 text-sm text-gray-700">Usuario Verificado</label>
-        </div>
       </div>
 
-      <div className="flex justify-end gap-3 pt-6 border-t border-gray-200">
+      {/* Verificado */}
+      <div className="bg-admin-primary-light rounded-lg p-4 border-2 border-admin-primary/20">
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={formData.verificado}
+            onChange={(e) => handleChange('verificado', e.target.checked)}
+            className="w-5 h-5 rounded border-2 border-admin-primary text-admin-primary focus:ring-admin-primary focus:ring-2 cursor-pointer"
+            disabled={loading}
+          />
+          <div>
+            <span className="text-sm font-semibold text-admin-primary-dark">Usuario Verificado</span>
+            <p className="text-xs text-gray-600 mt-0.5">El usuario tendrá acceso completo al sistema</p>
+          </div>
+        </label>
+      </div>
+
+      {/* Botones */}
+      <div className="flex justify-end gap-3 pt-6 border-t-2 border-gray-100">
         <button
           type="button"
           onClick={onCancel}
           disabled={loading}
-          className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+          className="px-6 py-2.5 border-2 border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-all font-medium"
         >
           Cancelar
         </button>
         <button
           type="submit"
           disabled={loading}
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+          className="px-6 py-2.5 bg-admin-primary text-white rounded-lg hover:bg-admin-primary-hover disabled:opacity-50 flex items-center gap-2 transition-all shadow-lg font-semibold"
         >
           {loading && (
             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
           )}
-          {initialValues.nombre ? 'Actualizar' : 'Crear'}
+          {isEdit ? 'Actualizar Usuario' : 'Crear Usuario'}
         </button>
       </div>
     </form>

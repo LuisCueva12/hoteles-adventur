@@ -11,7 +11,7 @@ interface CreateUserBody {
   documento_identidad?: string
   tipo_documento?: string
   pais?: string
-  rol: 'turista' | 'propietario' | 'admin_adventur'
+  rol: 'turista' | 'propietario' | 'admin'
 }
 
 function isValidBody(body: unknown): body is CreateUserBody {

@@ -1,92 +1,43 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { authService, type AuthState, type UserProfile } from '@/services/auth.service'
+import { createClient } from '@/utils/supabase/client'
+import { AuthService } from '@/lib/services/auth.service'
+import { AUTH_ROUTES, ADMIN_ROLE } from '@/lib/auth/constants'
+import { Registrador } from '@/lib/errores'
+import type { LoginInput } from '@/lib/validations'
 
 export function useAuth() {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
-  const [authState, setAuthState] = useState<AuthState>({
-    user: null,
-    profile: null,
-    loading: true,
-    accessDenied: false
-  })
 
-  const checkAdminAccess = async (): Promise<void> => {
+  const clearError = useCallback(() => setError(null), [])
+
+  const login = useCallback(async (data: LoginInput, redirectTo: string | null) => {
+    setLoading(true)
+    setError(null)
+
     try {
-      setAuthState(prev => ({ ...prev, loading: true }))
-
-      const user = await authService.getCurrentUser()
-      if (!user) {
-        router.replace('/login?redirect=/admin')
-        return
-      }
-
-      const profile = await authService.getUserProfile(user.id)
+      const supabase = createClient()
+      const authService = new AuthService(supabase)
       
-      if (!profile) {
-        await authService.createUserProfile(user.id, user.email || '')
-        setAuthState(prev => ({ 
-          ...prev, 
-          loading: false, 
-          accessDenied: true 
-        }))
-        return
-      }
+      const authData = await authService.login(data.email, data.password)
+      const rol = await authService.getUserRole(authData.user.id)
+      const destination = redirectTo || (rol === ADMIN_ROLE ? AUTH_ROUTES.ADMIN : AUTH_ROUTES.HOME)
 
-      if (!authService.isAdmin(profile)) {
-        setAuthState(prev => ({ 
-          ...prev, 
-          loading: false, 
-          accessDenied: true 
-        }))
-        return
-      }
+      Registrador.info('Login exitoso', { userId: authData.user.id, rol, destination })
 
-      setAuthState({
-        user,
-        profile,
-        loading: false,
-        accessDenied: false
-      })
-    } catch (error) {
-      console.error('Error en checkAdminAccess:', error)
-      router.replace('/login?redirect=/admin')
+      router.push(destination)
+      router.refresh()
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Error al iniciar sesión'
+      Registrador.error(err as Error, { action: 'login' })
+      setError(message)
+      setLoading(false)
     }
-  }
-
-  const updateProfile = async (profileData: Partial<UserProfile>): Promise<boolean> => {
-    if (!authState.user) return false
-
-    const success = await authService.updateUserProfile(
-      authState.user.id, 
-      profileData
-    )
-
-    if (success && authState.profile) {
-      setAuthState(prev => ({
-        ...prev,
-        profile: { ...prev.profile!, ...profileData }
-      }))
-    }
-
-    return success
-  }
-
-  const signOut = async (): Promise<void> => {
-    await authService.signOut()
-    router.push('/login')
-  }
-
-  useEffect(() => {
-    checkAdminAccess()
   }, [])
 
-  return {
-    ...authState,
-    checkAdminAccess,
-    updateProfile,
-    signOut
-  }
+  return { loading, error, login, clearError }
 }

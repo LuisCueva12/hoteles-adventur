@@ -19,7 +19,7 @@ import {
 } from 'lucide-react'
 import { useSiteConfig } from '@/components/providers/ProveedorConfiguracionSitio'
 import { useToast } from '@/hooks/useNotificacion'
-import { defaultSiteConfig, getFullAddress, getWhatsappPhone } from '@/lib/site-config'
+import { SiteConfigRepository } from '@/lib/repositories/site-config.repository'
 
 const SUBJECTS = ['reserva', 'cotizacion', 'evento', 'servicio', 'reclamo', 'otro'] as const
 const PREFERENCES = ['email', 'telefono', 'whatsapp'] as const
@@ -141,24 +141,19 @@ export default function ContactoPage() {
   const [feedback, setFeedback] = useState<Feedback>(null)
   const { success, error, info } = useToast()
 
-  const hotelName = siteConfig.nombre_hotel || defaultSiteConfig.nombre_hotel
-  const generalEmail = siteConfig.email || defaultSiteConfig.email
-  const reservationsEmail = siteConfig.email_reservas || generalEmail
-  const mainPhone = siteConfig.telefono || defaultSiteConfig.telefono
-  const secondaryPhone = siteConfig.telefono_secundario || defaultSiteConfig.telefono_secundario
-  const whatsappPhone = getWhatsappPhone({
-    telefono: siteConfig.telefono || process.env.NEXT_PUBLIC_WHATSAPP_PHONE || defaultSiteConfig.telefono,
-  })
+  const hotelName = siteConfig.identity.nombre
+  const generalEmail = siteConfig.contact.email
+  const reservationsEmail = siteConfig.contact.email_reservas || generalEmail
+  const mainPhone = siteConfig.contact.telefono
+  const secondaryPhone = siteConfig.contact.telefono_secundario
+  const whatsappPhone = SiteConfigRepository.getWhatsappPhone(siteConfig)
+  
   const subjectMeta = buildSubjectMeta({
     generalEmail,
     reservationsEmail,
   })
-  const hotelAddress = getFullAddress({
-    direccion: siteConfig.direccion || defaultSiteConfig.direccion,
-    ciudad: siteConfig.ciudad || defaultSiteConfig.ciudad,
-    pais: siteConfig.pais || defaultSiteConfig.pais,
-  })
-  const contactPolicy = siteConfig.politica_checkin || defaultSiteConfig.politica_checkin
+  const hotelAddress = SiteConfigRepository.getFullAddress(siteConfig)
+  const contactPolicy = siteConfig.policies.checkinout
 
   const selectedSubject = formData.asunto ? subjectMeta[formData.asunto] : null
   const selectedPreference = PREFERENCE_META[formData.preferencia]
@@ -373,7 +368,7 @@ export default function ContactoPage() {
               <div className="mt-8 grid gap-4 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-1">
                 <InfoCard icon={MapPin} title="Direccion">{hotelAddress}</InfoCard>
                 <InfoCard icon={Phone} title="Telefonos">{mainPhone}<br />{secondaryPhone}<br />WhatsApp: {mainPhone}</InfoCard>
-                <InfoCard icon={Mail} title="Correos">{generalEmail}<br />{reservationsEmail}{siteConfig.sitio_web ? <><br />{siteConfig.sitio_web}</> : null}</InfoCard>
+                <InfoCard icon={Mail} title="Correos">{generalEmail}<br />{reservationsEmail}{siteConfig.contact.redes_sociales.sitio_web ? <><br />{siteConfig.contact.redes_sociales.sitio_web}</> : null}</InfoCard>
                 <InfoCard icon={Clock3} title="Horario">{contactPolicy}<br /><span className="font-semibold text-amber-600">Recepcion 24/7</span></InfoCard>
               </div>
             </div>

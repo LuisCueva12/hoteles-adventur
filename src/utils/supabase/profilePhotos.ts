@@ -1,61 +1,46 @@
-import type { SupabaseClient } from '@supabase/supabase-js'
+import { createClient } from './client'
 
-const PROFILE_BUCKETS = ['profile-photos', 'public'] as const
-const MAX_PROFILE_PHOTO_SIZE = 5 * 1024 * 1024
-
-type UploadProfilePhotoParams = {
-  supabase: SupabaseClient
-  file: File
-  ownerUserId: string
-  targetUserId?: string
+export function validateProfilePhotoFile(file: File): boolean {
+  const validTypes = ['image/jpeg', 'image/png', 'image/webp']
+  const maxSize = 5 * 1024 * 1024
+  
+  return validTypes.includes(file.type) && file.size <= maxSize
 }
 
-export function validateProfilePhotoFile(file: File): string | null {
-  if (!file.type.startsWith('image/')) {
-    return 'Por favor selecciona una imagen valida.'
+export async function uploadProfilePhoto(file: File, userId: string): Promise<string> {
+  const supabase = createClient()
+  
+  if (!validateProfilePhotoFile(file)) {
+    throw new Error('Archivo inválido. Debe ser JPEG, PNG o WebP y no superar 5MB')
   }
-
-  if (file.size > MAX_PROFILE_PHOTO_SIZE) {
-    return 'La imagen no debe superar los 5 MB.'
-  }
-
-  return null
+  
+  const fileExt = file.name.split('.').pop()
+  const fileName = `${userId}/profile.${fileExt}`
+  
+  const { data, error } = await supabase.storage
+    .from('profile-photos')
+    .upload(fileName, file, { upsert: true })
+  
+  if (error) throw error
+  
+  const { data: { publicUrl } } = supabase.storage
+    .from('profile-photos')
+    .getPublicUrl(fileName)
+  
+  return publicUrl
 }
 
-export async function uploadProfilePhoto({
-  supabase,
-  file,
-  ownerUserId,
-  targetUserId,
-}: UploadProfilePhotoParams) {
-  const normalizedExtension = (file.name.split('.').pop() || 'jpg').toLowerCase()
-  const safeExtension = normalizedExtension.replace(/[^a-z0-9]/g, '') || 'jpg'
-  const entityId = targetUserId || ownerUserId
-  const filePath = `${ownerUserId}/${entityId}-${Date.now()}.${safeExtension}`
-  const uploadErrors: string[] = []
-
-  for (const bucket of PROFILE_BUCKETS) {
-    const { error } = await supabase.storage
-      .from(bucket)
-      .upload(filePath, file, {
-        upsert: true,
-        cacheControl: '3600',
-      })
-
-    if (!error) {
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from(bucket).getPublicUrl(filePath)
-
-      return {
-        bucket,
-        filePath,
-        publicUrl,
-      }
-    }
-
-    uploadErrors.push(`${bucket}: ${error.message}`)
+export async function deleteProfilePhoto(userId: string): Promise<void> {
+  const supabase = createClient()
+  
+  const { data: files } = await supabase.storage
+    .from('profile-photos')
+    .list(userId)
+  
+  if (files && files.length > 0) {
+    const filePaths = files.map(file => `${userId}/${file.name}`)
+    await supabase.storage
+      .from('profile-photos')
+      .remove(filePaths)
   }
-
-  throw new Error(uploadErrors.join(' | '))
 }

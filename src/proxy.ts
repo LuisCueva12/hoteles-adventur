@@ -17,7 +17,7 @@ const PUBLIC_ROUTES = [
 
 const USER_ROUTES = ['/reservas', '/pagos']
 const ADMIN_ROUTES = ['/admin']
-const API_PROTECTED_ROUTES = ['/api/nubefact', '/api/admin']
+const API_PROTECTED_ROUTES = ['/api/admin']
 
 const SECURITY_HEADERS = {
   'X-Frame-Options': 'DENY',
@@ -91,7 +91,7 @@ export async function proxy(request: NextRequest) {
       .eq('id', user.id)
       .maybeSingle()
 
-    if (error || !userData || userData.rol !== 'admin_adventur') {
+    if (error || !userData || userData.rol !== 'admin') {
       const denied = NextResponse.redirect(new URL('/acceso-denegado', request.url))
       setSecurityHeaders(denied)
       return denied

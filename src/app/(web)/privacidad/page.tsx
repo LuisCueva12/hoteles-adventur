@@ -1,10 +1,13 @@
-import { getSiteConfig } from '@/lib/site-config.server'
-import { getFullAddress, getWhatsappPhone } from '@/lib/site-config'
+import { createClient } from '@/utils/supabase/server'
+import { SiteConfigRepository } from '@/lib/repositories/site-config.repository'
 
 export default async function PrivacidadPage() {
-  const config = await getSiteConfig()
-  const whatsappPhone = getWhatsappPhone(config)
-  const address = getFullAddress(config)
+  const supabase = await createClient()
+  const repository = new SiteConfigRepository(supabase)
+  const config = await repository.getConfig()
+  
+  const whatsappPhone = SiteConfigRepository.getWhatsappPhone(config)
+  const address = SiteConfigRepository.getFullAddress(config)
 
   return (
     <div className="bg-white">
@@ -26,7 +29,7 @@ export default async function PrivacidadPage() {
 
           <h2 className="mb-4 font-serif text-2xl font-bold text-gray-900">1. Informacion que Recopilamos</h2>
           <p className="mb-4 text-gray-600">
-            En {config.nombre_hotel}, recopilamos la informacion necesaria para operar reservas, pagos y atencion al cliente.
+            En {config.identity.nombre}, recopilamos la informacion necesaria para operar reservas, pagos y atencion al cliente.
           </p>
           <ul className="mb-6 list-inside list-disc space-y-2 text-gray-600">
             <li>Nombre completo y datos de contacto</li>
@@ -68,9 +71,9 @@ export default async function PrivacidadPage() {
           <h2 className="mb-4 font-serif text-2xl font-bold text-gray-900">6. Contacto</h2>
           <p className="mb-2 text-gray-600">Para ejercer sus derechos o hacer consultas sobre privacidad:</p>
           <ul className="list-none space-y-1 text-gray-600">
-            <li>Email: {config.email || 'info@adventurhotels.com'}</li>
-            <li>Reservas: {config.email_reservas || config.email || 'reservas@adventurhotels.com'}</li>
-            <li>Telefono: {config.telefono}</li>
+            <li>Email: {config.contact.email}</li>
+            <li>Reservas: {config.contact.email_reservas || config.contact.email}</li>
+            <li>Telefono: {config.contact.telefono}</li>
             <li>WhatsApp: +{whatsappPhone}</li>
             <li>Direccion: {address}</li>
           </ul>

@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     const { data: admins, error: adminsError } = await admin
       .from('usuarios')
       .select('id')
-      .eq('rol', 'admin_adventur')
+      .eq('rol', 'admin')
 
     if (adminsError) {
       // Fallo silencioso — no bloquear el flujo principal

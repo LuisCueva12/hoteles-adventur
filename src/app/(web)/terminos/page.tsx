@@ -1,10 +1,13 @@
-import { getSiteConfig } from '@/lib/site-config.server'
-import { getFullAddress, getWhatsappPhone } from '@/lib/site-config'
+import { createClient } from '@/utils/supabase/server'
+import { SiteConfigRepository } from '@/lib/repositories/site-config.repository'
 
 export default async function TerminosPage() {
-  const config = await getSiteConfig()
-  const whatsappPhone = getWhatsappPhone(config)
-  const address = getFullAddress(config)
+  const supabase = await createClient()
+  const repository = new SiteConfigRepository(supabase)
+  const config = await repository.getConfig()
+  
+  const whatsappPhone = SiteConfigRepository.getWhatsappPhone(config)
+  const address = SiteConfigRepository.getFullAddress(config)
 
   return (
     <div className="bg-white">
@@ -26,27 +29,27 @@ export default async function TerminosPage() {
 
           <h2 className="mb-4 font-serif text-2xl font-bold text-gray-900">1. Aceptacion de los Terminos</h2>
           <p className="mb-6 text-gray-600">
-            Al acceder y utilizar el sitio web de {config.nombre_hotel}, usted acepta estos terminos y condiciones.
+            Al acceder y utilizar el sitio web de {config.identity.nombre}, usted acepta estos terminos y condiciones.
           </p>
 
           <h2 className="mb-4 font-serif text-2xl font-bold text-gray-900">2. Reservas y Pagos</h2>
           <p className="mb-4 text-gray-600">
-            Todas las reservas estan sujetas a disponibilidad. Los precios se muestran en {config.moneda} y pueden incluir impuestos segun la operacion.
+            Todas las reservas estan sujetas a disponibilidad. Los precios se muestran en {config.policies.moneda} y pueden incluir impuestos segun la operacion.
           </p>
           <ul className="mb-6 list-inside list-disc space-y-2 text-gray-600">
-            <li>Se requiere un adelanto del {config.porcentaje_adelanto}% para confirmar la reserva</li>
+            <li>Se requiere un adelanto del {config.policies.porcentaje_adelanto}% para confirmar la reserva</li>
             <li>El saldo restante se paga al momento del check-in, salvo pacto distinto</li>
             <li>Aceptamos medios de pago habilitados en la plataforma</li>
           </ul>
 
           <h2 className="mb-4 font-serif text-2xl font-bold text-gray-900">3. Politica de Cancelacion</h2>
           <p className="mb-6 text-gray-600">
-            {config.politica_cancelacion || 'Las cancelaciones se rigen por la politica vigente del hotel y la tarifa reservada.'}
+            {config.policies.cancelacion || 'Las cancelaciones se rigen por la politica vigente del hotel y la tarifa reservada.'}
           </p>
 
           <h2 className="mb-4 font-serif text-2xl font-bold text-gray-900">4. Check-in y Check-out</h2>
           <p className="mb-6 text-gray-600">
-            {config.politica_checkin || `El check-in inicia a las ${config.hora_checkin} y el check-out finaliza a las ${config.hora_checkout}.`}
+            {config.policies.checkinout || `El check-in inicia a las ${config.policies.hora_checkin} y el check-out finaliza a las ${config.policies.hora_checkout}.`}
           </p>
 
           <h2 className="mb-4 font-serif text-2xl font-bold text-gray-900">5. Responsabilidad del Huesped</h2>
@@ -57,9 +60,9 @@ export default async function TerminosPage() {
           <h2 className="mb-4 font-serif text-2xl font-bold text-gray-900">6. Contacto</h2>
           <p className="mb-2 text-gray-600">Si tiene preguntas sobre estos terminos, puede contactarnos:</p>
           <ul className="list-none space-y-1 text-gray-600">
-            <li>Email: {config.email || 'info@adventurhotels.com'}</li>
-            <li>Reservas: {config.email_reservas || config.email || 'reservas@adventurhotels.com'}</li>
-            <li>Telefono: {config.telefono}</li>
+            <li>Email: {config.contact.email}</li>
+            <li>Reservas: {config.contact.email_reservas || config.contact.email}</li>
+            <li>Telefono: {config.contact.telefono}</li>
             <li>WhatsApp: +{whatsappPhone}</li>
             <li>Direccion: {address}</li>
           </ul>

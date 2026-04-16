@@ -5,17 +5,19 @@ import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, CheckCircle2 } from 'lucide-react'
-import { loginSchema, type LoginInput } from '@/lib/validaciones'
+import { loginSchema, type LoginInput } from '@/lib/validations'
 
 interface LoginFormProps {
   onSubmit: (data: LoginInput) => Promise<void>
   loading: boolean
+  error?: string | null
+  onClearError?: () => void
 }
 
 const REMEMBER_EMAIL_KEY = 'adventur.login.email'
 const REMEMBER_ENABLED_KEY = 'adventur.login.remember'
 
-export function LoginForm({ onSubmit, loading }: LoginFormProps) {
+export function LoginForm({ onSubmit, loading, error, onClearError }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
 
@@ -51,6 +53,12 @@ export function LoginForm({ onSubmit, loading }: LoginFormProps) {
   const email = watch('email')
   const password = watch('password')
 
+  useEffect(() => {
+    if (error && onClearError) {
+      onClearError()
+    }
+  }, [email, password, error, onClearError])
+
   const isEmailValid = !!email && !errors.email
   const isPasswordValid = !!password && !errors.password
 
@@ -79,6 +87,12 @@ export function LoginForm({ onSubmit, loading }: LoginFormProps) {
       <div className="rounded-xl border border-orange-100 bg-orange-50 px-3 py-2.5 text-xs text-slate-700">
         Acceso restringido al sistema. Solo personal autorizado puede ingresar.
       </div>
+
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+          {error}
+        </div>
+      )}
 
       <form onSubmit={submitForm} className="space-y-3.5 sm:space-y-4">
         <div className="space-y-1">

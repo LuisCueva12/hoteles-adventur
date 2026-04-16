@@ -1,48 +1,22 @@
-/**
- * Utilidades de seguridad
- */
-
-/**
- * Sanitizar input del usuario para prevenir XSS
- */
 export function limpiarEntrada(input: string): string {
   return input
-    .replace(/[<>]/g, '') // Remover < y >
-    .replace(/javascript:/gi, '') // Remover javascript:
-    .replace(/on\w+=/gi, '') // Remover event handlers
+    .replace(/[<>]/g, '')
+    .replace(/javascript:/gi, '')
+    .replace(/on\w+=/gi, '')
     .trim()
 }
 
-/**
- * Sanitizar HTML permitiendo solo tags seguros
- */
 export function limpiarHtml(html: string): string {
-  const allowedTags = ['p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li']
-  const allowedAttributes = ['href', 'title']
-  
-  // Implementación básica - en producción usar DOMPurify
-  let sanitized = html
-  
-  // Remover scripts
-  sanitized = sanitized.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-  
-  // Remover event handlers
-  sanitized = sanitized.replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
-  
-  // Remover javascript: en hrefs
-  sanitized = sanitized.replace(/href\s*=\s*["']javascript:[^"']*["']/gi, '')
-  
-  return sanitized
+  return html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
+    .replace(/href\s*=\s*["']javascript:[^"']*["']/gi, '')
 }
 
-/**
- * Validar y sanitizar URL
- */
 export function limpiarUrl(url: string): string | null {
   try {
     const parsed = new URL(url)
     
-    // Solo permitir http y https
     if (!['http:', 'https:'].includes(parsed.protocol)) {
       return null
     }
@@ -53,25 +27,14 @@ export function limpiarUrl(url: string): string | null {
   }
 }
 
-/**
- * Generar token CSRF
- */
 export function generarTokenCsrf(): string {
   const array = new Uint8Array(32)
   crypto.getRandomValues(array)
   return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('')
 }
 
-/**
- * Validar token CSRF
- */
 export function validarTokenCsrf(token: string, expectedToken: string): boolean {
-  if (!token || !expectedToken) {
-    return false
-  }
-  
-  // Comparación de tiempo constante para prevenir timing attacks
-  if (token.length !== expectedToken.length) {
+  if (!token || !expectedToken || token.length !== expectedToken.length) {
     return false
   }
   
@@ -83,9 +46,6 @@ export function validarTokenCsrf(token: string, expectedToken: string): boolean 
   return result === 0
 }
 
-/**
- * Hash de contraseña (para verificación adicional, Supabase ya maneja esto)
- */
 export async function hashearContrasena(password: string): Promise<string> {
   const encoder = new TextEncoder()
   const data = encoder.encode(password)
@@ -95,63 +55,37 @@ export async function hashearContrasena(password: string): Promise<string> {
     .join('')
 }
 
-/**
- * Generar ID único seguro
- */
 export function generarIdSeguro(length: number = 32): string {
   const array = new Uint8Array(length)
   crypto.getRandomValues(array)
   return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('')
 }
 
-/**
- * Validar que un string es un UUID válido
- */
 export function esUuidValido(uuid: string): boolean {
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-  return uuidRegex.test(uuid)
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(uuid)
 }
 
-/**
- * Escapar caracteres especiales para SQL (prevención adicional)
- */
 export function escaparSql(value: string): string {
   return value.replace(/'/g, "''")
 }
 
-/**
- * Validar email con regex robusto
- */
 export function esEmailValido(email: string): boolean {
-  const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
-  return emailRegex.test(email)
+  return /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/.test(email)
 }
 
-/**
- * Validar teléfono peruano
- */
 export function esTelefonoPeruanoValido(phone: string): boolean {
-  // Formato: +51 9XX XXX XXX o 9XX XXX XXX
-  const phoneRegex = /^(\+51)?9\d{8}$/
-  return phoneRegex.test(phone.replace(/\s/g, ''))
+  return /^(\+51)?9\d{8}$/.test(phone.replace(/\s/g, ''))
 }
 
-/**
- * Validar DNI peruano
- */
 export function esDniValido(dni: string): boolean {
   return /^\d{8}$/.test(dni)
 }
 
-/**
- * Validar RUC peruano
- */
 export function esRucValido(ruc: string): boolean {
   if (!/^\d{11}$/.test(ruc)) {
     return false
   }
   
-  // Validación de dígito verificador
   const weights = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2]
   let sum = 0
   
@@ -165,9 +99,6 @@ export function esRucValido(ruc: string): boolean {
   return checkDigit === parseInt(ruc[10])
 }
 
-/**
- * Ofuscar información sensible para logs
- */
 export function enmascararDatosSensibles(data: string, visibleChars: number = 4): string {
   if (data.length <= visibleChars) {
     return '*'.repeat(data.length)
@@ -179,22 +110,17 @@ export function enmascararDatosSensibles(data: string, visibleChars: number = 4)
   return masked + visible
 }
 
-/**
- * Validar fuerza de contraseña
- */
 export function obtenerFortalezaContrasena(password: string): {
-  score: number // 0-4
+  score: number
   feedback: string[]
 } {
   const feedback: string[] = []
   let score = 0
   
-  // Longitud
   if (password.length >= 8) score++
   if (password.length >= 12) score++
   else feedback.push('Usa al menos 12 caracteres')
   
-  // Complejidad
   if (/[a-z]/.test(password) && /[A-Z]/.test(password)) {
     score++
   } else {
@@ -213,7 +139,6 @@ export function obtenerFortalezaContrasena(password: string): {
     feedback.push('Incluye caracteres especiales')
   }
   
-  // Patrones comunes
   const commonPatterns = ['123456', 'password', 'qwerty', 'abc123']
   if (commonPatterns.some(pattern => password.toLowerCase().includes(pattern))) {
     score = Math.max(0, score - 2)
@@ -226,9 +151,6 @@ export function obtenerFortalezaContrasena(password: string): {
   }
 }
 
-/**
- * Headers de seguridad recomendados
- */
 export const SECURITY_HEADERS = {
   'X-Frame-Options': 'DENY',
   'X-Content-Type-Options': 'nosniff',
@@ -238,9 +160,6 @@ export const SECURITY_HEADERS = {
   'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
 }
 
-/**
- * Aplicar headers de seguridad a una respuesta
- */
 export function aplicarCabecerasSeguridad(headers: Headers): Headers {
   Object.entries(SECURITY_HEADERS).forEach(([key, value]) => {
     headers.set(key, value)

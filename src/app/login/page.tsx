@@ -1,51 +1,23 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
-import Link from 'next/link'
+import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { ArrowLeft, ArrowRight, Shield, Lock, Star, Home } from 'lucide-react'
-import { createClient } from '@/utils/supabase/client'
-import { useToast } from '@/hooks/useNotificacion'
-import { type LoginInput } from '@/lib/validaciones'
-import { Registrador } from '@/lib/errores'
+import { useAuth } from '@/hooks/useAuth'
 import { Logo } from '@/components/web/Logo'
 import { LoginForm } from '@/components/auth/FormularioLogin'
 
-const ERROR_MESSAGES: Record<string, string> = {
-  'Invalid login credentials': 'Email o contrasena incorrectos.',
-  'Email not confirmed': 'Confirma tu email antes de iniciar sesion.',
-  'Email rate limit exceeded': 'Demasiados intentos. Espera unos minutos.',
-}
-
-function parseAuthError(message: string): string {
-  for (const [key, value] of Object.entries(ERROR_MESSAGES)) {
-    if (message.includes(key)) return value
-  }
-
-  const waitMatch = message.match(/after (\d+) seconds/)
-  if (waitMatch) {
-    return `Espera ${waitMatch[1]} segundos antes de intentar nuevamente.`
-  }
-
-  return message || 'Ocurrio un error inesperado.'
-}
-
 export default function LoginPage() {
-  const [loading, setLoading] = useState(false)
+  const { loading, error, login, clearError } = useAuth()
   const [currentTestimonial, setCurrentTestimonial] = useState(0)
-  const redirectingRef = useRef(false)
-
-  const searchParams = useSearchParams()
-  const supabase = useMemo(() => createClient(), [])
-  const { success, error, info } = useToast()
-
-  const redirectTo = useMemo(() => {
-    const requested = searchParams.get('redirect')
-    if (!requested || !requested.startsWith('/') || requested === '/login') {
-      return null
-    }
-    return requested
-  }, [searchParams])
+  
+  const [redirectTo] = useState(() => {
+    if (typeof window === 'undefined') return null
+    const params = new URLSearchParams(window.location.search)
+    const r = params.get('redirect')
+    return r && r.startsWith('/') && r !== '/login' ? r : null
+  })
 
   const testimonials = [
     {
@@ -73,88 +45,6 @@ export default function LoginPage() {
     return () => clearInterval(interval)
   }, [testimonials.length])
 
-  useEffect(() => {
-    const redirectIfAlreadySignedIn = async () => {
-      if (redirectingRef.current) return
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-
-      redirectingRef.current = true
-      const { data: usuario } = await supabase
-        .from('usuarios')
-        .select('rol')
-        .eq('id', user.id)
-        .maybeSingle()
-
-      const destination = usuario?.rol === 'admin_adventur' ? '/admin' : '/'
-      window.location.replace(redirectTo || destination)
-    }
-
-    redirectIfAlreadySignedIn()
-  }, [redirectTo, supabase])
-
-  const handleSignIn = async (data: LoginInput) => {
-    try {
-      const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
-        email: data.email,
-        password: data.password,
-      })
-
-      if (signInError) {
-        if (signInError.message.includes('Email not confirmed')) {
-          info('Confirma tu email antes de iniciar sesion. Revisa tu bandeja.')
-          return
-        }
-        throw signInError
-      }
-
-      if (authData.user) {
-        let rol = 'turista'
-        let nombre = ''
-
-        try {
-          const { data: usuario, error: rolError } = await supabase
-            .from('usuarios')
-            .select('nombre, rol')
-            .eq('id', authData.user.id)
-            .maybeSingle()
-
-          if (!rolError && usuario) {
-            rol = usuario.rol ?? 'turista'
-            nombre = usuario.nombre ?? ''
-          }
-        } catch {
-          // Si falla la lectura del rol, no bloqueamos el login
-        }
-
-        Registrador.info('User logged in', { userId: authData.user.id })
-        success(`Bienvenido${nombre ? `, ${nombre}` : ''}.`)
-
-        const defaultDestination = rol === 'admin_adventur' ? '/admin' : '/'
-        const destination = redirectTo || defaultDestination
-
-        await new Promise((resolve) => setTimeout(resolve, 500))
-        window.location.href = destination
-      }
-    } catch (err) {
-      Registrador.error(err as Error, { action: 'signin' })
-      throw err
-    }
-  }
-
-  const handleAuth = async (data: LoginInput) => {
-    if (loading) return
-
-    setLoading(true)
-    try {
-      await handleSignIn(data)
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error desconocido'
-      error(parseAuthError(message))
-    } finally {
-      setLoading(false)
-    }
-  }
 
   return (
     <div className="relative flex min-h-screen flex-col overflow-hidden bg-white lg:flex-row">
@@ -291,7 +181,12 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <LoginForm onSubmit={handleAuth} loading={loading} />
+              <LoginForm 
+                onSubmit={(data) => login(data, redirectTo)} 
+                loading={loading} 
+                error={error} 
+                onClearError={clearError} 
+              />
             </div>
 
             <div className="mt-3 space-y-2.5 sm:mt-4 sm:space-y-3">

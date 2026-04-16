@@ -5,8 +5,8 @@ import { useAlojamientos, type AlojamientoForm } from '@/hooks/useAlojamientos'
 import { DataTableEnhanced } from '@/components/admin/DataTableEnhanced'
 import { AlojamientoFormComponent } from '@/components/admin/AlojamientoForm'
 import { Modal } from '@/components/admin/Modal'
-import { Plus, Edit, Trash2, Eye, ToggleLeft, ToggleRight, RefreshCw, Loader2 } from 'lucide-react'
-import Swal from 'sweetalert2'
+import { AlertService } from '@/lib/ui/alert.service'
+import { Plus, Edit, Trash2, ToggleLeft, ToggleRight, RefreshCw } from 'lucide-react'
 
 export default function HotelesAdminPage() {
   const {
@@ -29,8 +29,10 @@ export default function HotelesAdminPage() {
 
   const handleCreate = async (data: AlojamientoForm) => {
     const result = await createAlojamiento(data)
-    if (!result.success) {
-      throw new Error('Error al crear alojamiento')
+    if (result.success) {
+      await AlertService.success('¡Creado!', 'Alojamiento creado correctamente')
+    } else {
+      await AlertService.error('Error', 'No se pudo crear el alojamiento')
     }
   }
 
@@ -38,33 +40,25 @@ export default function HotelesAdminPage() {
     if (!selectedAlojamiento) return
     
     const result = await updateAlojamiento(selectedAlojamiento.id, data)
-    if (!result.success) {
-      throw new Error('Error al actualizar alojamiento')
+    if (result.success) {
+      await AlertService.success('¡Actualizado!', 'Alojamiento actualizado correctamente')
+    } else {
+      await AlertService.error('Error', 'No se pudo actualizar el alojamiento')
     }
   }
 
   const handleDelete = async (alojamiento: any) => {
-    const result = await Swal.fire({
+    const confirmed = await AlertService.confirmDanger({
       title: '¿Estás seguro?',
       text: `Eliminarás el alojamiento "${alojamiento.nombre}"`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#EF4444',
-      cancelButtonColor: '#6B7280',
       confirmButtonText: 'Sí, eliminar',
       cancelButtonText: 'Cancelar'
     })
 
-    if (result.isConfirmed) {
-      const deleteResult = await deleteAlojamiento(alojamiento.id)
-      if (deleteResult.success) {
-        await Swal.fire({
-          icon: 'success',
-          title: '¡Eliminado!',
-          text: 'Alojamiento eliminado correctamente',
-          timer: 2000,
-          showConfirmButton: false
-        })
+    if (confirmed) {
+      const result = await deleteAlojamiento(alojamiento.id)
+      if (result.success) {
+        await AlertService.success('¡Eliminado!', 'Alojamiento eliminado correctamente')
       }
     }
   }
@@ -72,13 +66,11 @@ export default function HotelesAdminPage() {
   const handleToggleActivo = async (alojamiento: any) => {
     const result = await toggleActivo(alojamiento)
     if (result.success) {
-      await Swal.fire({
-        icon: 'success',
-        title: 'Actualizado',
-        text: `Alojamiento ${alojamiento.activo ? 'desactivado' : 'activado'} correctamente`,
-        timer: 1500,
-        showConfirmButton: false
-      })
+      await AlertService.success(
+        'Actualizado',
+        `Alojamiento ${alojamiento.activo ? 'desactivado' : 'activado'} correctamente`,
+        1500
+      )
     }
   }
 
@@ -112,22 +104,22 @@ export default function HotelesAdminPage() {
     {
       key: 'activo' as const,
       label: 'Estado',
-      render: (value: boolean, item: any) => (
+      render: (_value: boolean, item: any) => (
         <button
           onClick={() => handleToggleActivo(item)}
           className={`p-1 rounded-lg transition-colors ${
-            value ? 'text-green-600 hover:bg-green-50' : 'text-gray-400 hover:bg-gray-50'
+            item.activo ? 'text-green-600 hover:bg-green-50' : 'text-gray-400 hover:bg-gray-50'
           }`}
-          title={value ? 'Desactivar' : 'Activar'}
+          title={item.activo ? 'Desactivar' : 'Activar'}
         >
-          {value ? <ToggleRight size={20} /> : <ToggleLeft size={20} />}
+          {item.activo ? <ToggleRight size={20} /> : <ToggleLeft size={20} />}
         </button>
       )
     },
     {
       key: 'actions' as const,
       label: 'Acciones',
-      render: (value: any, item: any) => (
+      render: (_value: any, item: any) => (
         <div className="flex items-center gap-2">
           <button
             onClick={() => openEditModal(item)}
@@ -166,7 +158,7 @@ export default function HotelesAdminPage() {
           </button>
           <button
             onClick={openCreateModal}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="flex items-center gap-2 px-4 py-2 bg-admin-primary text-white rounded-lg hover:bg-admin-primary-hover shadow-lg transition-all"
           >
             <Plus size={20} />
             Nuevo Alojamiento

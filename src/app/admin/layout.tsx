@@ -3,17 +3,16 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LogOut, Menu } from 'lucide-react'
 import { AdminSidebar, AdminHeader } from '@/components/admin/AdminLayout'
 import { ProfileModal } from '@/components/admin/ProfileModal'
-import { useAuth } from '@/hooks/useAuth'
+import { useAdminAuth } from '@/hooks/useAdminAuth'
 import Swal from 'sweetalert2'
 
 export const dynamic = 'force-dynamic'
 
 export default function AdminLayoutClient({ children }: { children: React.ReactNode }) {
     const pathname = usePathname()
-    const { user, profile, loading, accessDenied, signOut } = useAuth()
+    const { profile, loading, accessDenied, signOut } = useAdminAuth()
     const [isSidebarOpen, setIsSidebarOpen] = useState(true)
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
@@ -24,7 +23,6 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
 
         const handlePopState = async (event: PopStateEvent) => {
             event.preventDefault()
-
             const result = await Swal.fire({
                 title: '¿Seguridad de sesión',
                 text: '¿Deseas cerrar sesión para proteger tu cuenta?',
@@ -49,16 +47,10 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
 
         window.history.pushState(null, '', window.location.href)
         window.addEventListener('popstate', handlePopState)
-
-        return () => {
-            window.removeEventListener('popstate', handlePopState)
-        }
+        return () => window.removeEventListener('popstate', handlePopState)
     }, [signOut])
 
-    // Evitar errores de hidratación
-    if (!mounted) {
-        return null
-    }
+    if (!mounted) return null
 
     if (accessDenied) {
         return (
@@ -80,13 +72,13 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
                         <div className="flex flex-col sm:flex-row gap-3 justify-center">
                             <Link
                                 href="/"
-                                className="px-6 py-3 bg-yellow-400 hover:bg-yellow-400 text-gray-900 font-semibold rounded-lg transition-colors inline-block"
+                                className="px-6 py-3 bg-admin-accent hover:bg-admin-accent-hover text-admin-primary-dark font-semibold rounded-lg transition-colors inline-block shadow-lg"
                             >
                                 Ir al inicio
                             </Link>
                             <Link
                                 href="/login"
-                                className="px-6 py-3 border-2 border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-gray-900 font-semibold rounded-lg transition-colors inline-block"
+                                className="px-6 py-3 border-2 border-admin-accent text-admin-accent hover:bg-admin-accent hover:text-admin-primary-dark font-semibold rounded-lg transition-colors inline-block"
                             >
                                 Cambiar de cuenta
                             </Link>
@@ -104,7 +96,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
                 <div className="text-center">
-                    <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                    <div className="loading-spinner mx-auto mb-4" />
                     <p className="text-gray-700 font-medium">Verificando acceso...</p>
                 </div>
             </div>
@@ -117,6 +109,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
                 isOpen={isSidebarOpen}
                 onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
                 pathname={pathname}
+                onSignOut={signOut}
             />
 
             <div className="flex-1 min-w-0 flex flex-col h-full overflow-hidden">
@@ -125,6 +118,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
                     onMobileMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                     isMobileMenuOpen={isMobileMenuOpen}
                     onProfileClick={() => setIsProfileModalOpen(true)}
+                    onSignOut={signOut}
                     profile={profile}
                     loading={loading}
                 />

@@ -12,8 +12,8 @@ export function Logo({
   const { config } = useOptionalSiteConfig()
   const textColor = variant === 'footer' ? '#ffffff' : '#0A2540'
   const accentColor = '#FDB913'
-  const hotelName = config.nombre_hotel || 'Hotel Adventur'
-  const slogan = config.slogan || 'Tu viaje, tu hogar'
+  const hotelName = config.identity.nombre || 'Hotel Adventur'
+  const slogan = config.identity.slogan || 'Tu viaje, tu hogar'
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>
