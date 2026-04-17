@@ -3,11 +3,6 @@
 @theme {
   --font-sans: var(--font-geist-sans), system-ui, sans-serif;
 
-  --color-brand: #FACC15;
-  --color-brand-hover: #EAB308;
-  --color-brand-light: #FEF9C3;
-  --color-brand-dark: #CA8A04;
-
   --color-admin-primary: #001F3F;
   --color-admin-primary-hover: #003366;
   --color-admin-primary-light: #E6EEF5;
@@ -23,102 +18,88 @@
   --color-admin-info: #3B82F6;
 }
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #ffffff;
+    --foreground: #171717;
+
+    /* CSS variables para compatibilidad con componentes que usan var() */
+    --admin-primary: #001F3F;
+    --admin-primary-hover: #003366;
+    --admin-primary-light: #E6EEF5;
+    --admin-primary-dark: #001529;
+    --admin-accent: #FACC15;
+    --admin-accent-hover: #EAB308;
+    --admin-accent-light: #FEF9C3;
+    --admin-success: #10B981;
+    --admin-warning: #F59E0B;
+    --admin-error: #EF4444;
+    --admin-info: #3B82F6;
+  }
+
+  html {
+    @apply antialiased bg-slate-50;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: var(--font-geist-sans), system-ui, sans-serif;
+    color: #001F3F;
   }
 }
 
-body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+@layer utilities {
+  .btn-admin-primary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#001F3F] hover:bg-[#003366] text-white rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1 active:scale-95 font-black text-sm disabled:opacity-50;
+  }
 
-* {
-  font-family: inherit;
-}
+  .btn-admin-accent {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#FACC15] hover:bg-[#EAB308] text-[#001F3F] rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1 active:scale-95 font-black text-sm disabled:opacity-50;
+  }
 
-.loading-spinner {
-  border: 3px solid var(--color-admin-primary-light);
-  border-top-color: var(--color-admin-primary);
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 0.8s linear infinite;
-}
+  .admin-card-glass {
+    @apply bg-white/80 backdrop-blur-xl border border-white/40 shadow-2xl shadow-slate-200/50 rounded-[2.5rem] overflow-hidden;
+  }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+  .admin-header-glass {
+    background-color: rgba(0, 31, 63, 0.95);
+    @apply backdrop-blur-md border-b border-white/10 sticky top-0 z-50 h-24;
+  }
 
-@keyframes blob {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(30px, -50px) scale(1.1); }
-  66% { transform: translate(-20px, 20px) scale(0.9); }
-}
+  /* Colores admin como clases directas para compatibilidad */
+  .text-admin-primary { color: #001F3F; }
+  .text-admin-primary-hover { color: #003366; }
+  .text-admin-accent { color: #FACC15; }
+  .text-admin-accent-hover { color: #EAB308; }
+  .text-admin-success { color: #10B981; }
+  .text-admin-warning { color: #F59E0B; }
+  .text-admin-error { color: #EF4444; }
 
-.animate-blob {
-  animation: blob 10s infinite ease-in-out;
-}
+  .bg-admin-primary { background-color: #001F3F; }
+  .bg-admin-primary-hover { background-color: #003366; }
+  .bg-admin-primary-light { background-color: #E6EEF5; }
+  .bg-admin-primary-dark { background-color: #001529; }
+  .bg-admin-accent { background-color: #FACC15; }
+  .bg-admin-accent-hover { background-color: #EAB308; }
+  .bg-admin-accent-light { background-color: #FEF9C3; }
+  .bg-admin-success { background-color: #10B981; }
+  .bg-admin-warning { background-color: #F59E0B; }
+  .bg-admin-error { background-color: #EF4444; }
 
-.animation-delay-2000 { animation-delay: 2s; }
-.animation-delay-4000 { animation-delay: 4s; }
+  .border-admin-primary { border-color: #001F3F; }
+  .border-admin-primary-light { border-color: #E6EEF5; }
+  .border-admin-accent { border-color: #FACC15; }
 
-@keyframes gradient {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
+  .shadow-admin-primary { --tw-shadow-color: #001F3F; }
+  .shadow-admin-accent { --tw-shadow-color: #FACC15; }
 
-.animate-gradient {
-  background-size: 200% 200%;
-  animation: gradient 3s ease infinite;
-}
+  .hover\:bg-admin-primary:hover { background-color: #001F3F; }
+  .hover\:bg-admin-primary-hover:hover { background-color: #003366; }
+  .hover\:bg-admin-accent:hover { background-color: #FACC15; }
+  .hover\:bg-admin-accent-hover:hover { background-color: #EAB308; }
+  .hover\:text-admin-primary:hover { color: #001F3F; }
+  .hover\:text-admin-accent:hover { color: #FACC15; }
 
-.bg-grid-pattern {
-  background-image: 
-    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-  background-size: 20px 20px;
-}
-
-@keyframes slide-in-from-top {
-  from { transform: translateY(-10px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-
-.animate-in,
-.slide-in-from-top-2 {
-  animation: slide-in-from-top 0.3s ease-out;
-}
-
-.scrollbar-thin::-webkit-scrollbar {
-  width: 6px;
-}
-
-.scrollbar-thin::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.scrollbar-thin::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 3px;
-}
-
-.scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-/* Firefox scrollbar */
-.scrollbar-thin {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  .focus\:ring-admin-accent:focus { --tw-ring-color: #FACC15; }
+  .focus\:border-admin-accent:focus { border-color: #FACC15; }
 }
