@@ -60,6 +60,14 @@ export async function POST(request: NextRequest) {
     }
 
     const admin = createAdminClient()
+    
+    // Test connectivity/key validity
+    const { error: testError } = await admin.from('usuarios').select('id').limit(1)
+    if (testError && testError.message.includes('Invalid API key')) {
+        console.error('[API Create User] Key test failed:', testError.message)
+        return NextResponse.json({ error: 'La clave de rol de servicio (SERVICE_ROLE_KEY) es inválida o ha expirado.' }, { status: 401 })
+    }
+
     const { data: authData, error: authError } = await admin.auth.admin.createUser({
       email: payload.email,
       password: payload.password,

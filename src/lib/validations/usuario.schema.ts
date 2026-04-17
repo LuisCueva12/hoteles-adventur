@@ -37,7 +37,7 @@ export const usuarioSchema = z.object({
 })
 
 export const usuarioCreateSchema = usuarioSchema.extend({
-  password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres').optional(),
+  password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres'),
 })
 
 export const usuarioUpdateSchema = usuarioSchema.partial()

@@ -24,12 +24,19 @@ export class UsuarioAdminService {
       throw new Error(result.error.issues[0].message)
     }
 
-    const emailExists = await this.repository.exists(input.email)
-    if (emailExists) {
-      throw new Error('Ya existe un usuario con este email')
+    const response = await fetch('/api/admin/usuarios/crear', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(input)
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Error al crear el usuario')
     }
 
-    return this.repository.create(input)
+    return data.user
   }
 
   async updateUsuario(id: string, input: UsuarioUpdateInput): Promise<Usuario> {

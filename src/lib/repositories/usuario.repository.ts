@@ -76,9 +76,10 @@ export class UsuarioRepository extends BaseRepository {
   }
 
   async create(input: UsuarioCreateInput): Promise<Usuario> {
+    const { password, ...userData } = input
     const { data, error } = await this.supabase
       .from('usuarios')
-      .insert({ ...input, verificado: input.verificado ?? false })
+      .insert({ ...userData, verificado: input.verificado ?? false })
       .select()
       .single()
 

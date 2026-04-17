@@ -71,9 +71,9 @@ export function useUsuarios() {
       await refreshUsuarios()
       closeModals()
       return { success: true }
-    } catch (error) {
-      console.error('Error creando usuario:', error)
-      return { success: false, error }
+    } catch (error: any) {
+      console.error('Error creando usuario:', error.message || error)
+      return { success: false, error: error.message || 'Error desconocido' }
     } finally {
       setSaving(false)
     }
@@ -86,9 +86,9 @@ export function useUsuarios() {
       await refreshUsuarios()
       closeModals()
       return { success: true }
-    } catch (error) {
-      console.error('Error actualizando usuario:', error)
-      return { success: false, error }
+    } catch (error: any) {
+      console.error('Error actualizando usuario:', error.message || error)
+      return { success: false, error: error.message || 'Error desconocido' }
     } finally {
       setSaving(false)
     }

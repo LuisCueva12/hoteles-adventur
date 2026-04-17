@@ -34,7 +34,7 @@ export default function UsuariosAdminPage() {
     if (result.success) {
       await AlertService.success('¡Creado!', 'Usuario creado correctamente')
     } else {
-      await AlertService.error('Error', 'No se pudo crear el usuario')
+      await AlertService.error('Error', (result as any).error || 'No se pudo crear el usuario')
     }
   }
 
@@ -45,7 +45,7 @@ export default function UsuariosAdminPage() {
     if (result.success) {
       await AlertService.success('¡Actualizado!', 'Usuario actualizado correctamente')
     } else {
-      await AlertService.error('Error', 'No se pudo actualizar el usuario')
+      await AlertService.error('Error', (result as any).error || 'No se pudo actualizar el usuario')
     }
   }
 
