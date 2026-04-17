@@ -10,13 +10,13 @@ import {
   type ReactNode,
 } from 'react'
 import { createClient } from '@/utils/supabase/client'
-import { defaultSiteConfig, normalizeSiteConfig, type SiteConfig } from '@/lib/site-config'
+import { SiteConfigRepository } from '@/lib/repositories/site-config.repository'
+import { defaultSiteConfig, type SiteConfig } from '@/lib/validations/site-config.schema'
 
 type SiteConfigContextValue = {
   config: SiteConfig
   loading: boolean
   refreshConfig: () => Promise<SiteConfig>
-  overwriteConfig: (config: Partial<SiteConfig>) => void
 }
 
 const SiteConfigContext = createContext<SiteConfigContextValue | null>(null)
@@ -26,78 +26,40 @@ export function SiteConfigProvider({
   initialConfig,
 }: {
   children: ReactNode
-  initialConfig?: Partial<SiteConfig> | null
+  initialConfig?: SiteConfig
 }) {
-  const [config, setConfig] = useState<SiteConfig>(() => normalizeSiteConfig(initialConfig))
+  const [config, setConfig] = useState<SiteConfig>(initialConfig || defaultSiteConfig)
   const [loading, setLoading] = useState(false)
-  const [initialFetchDone, setInitialFetchDone] = useState(false)
-
-  useEffect(() => {
-    if (initialFetchDone) return
-    setInitialFetchDone(true)
-    
-    const fetchConfig = async () => {
-      try {
-        const supabase = createClient()
-        const { data, error } = await supabase
-          .from('configuracion')
-          .select('*')
-          .order('created_at', { ascending: true })
-          .limit(1)
-          .maybeSingle()
-
-        if (!error && data) {
-          const normalized = normalizeSiteConfig(data)
-          setConfig(normalized)
-        }
-      } catch (err) {
-        console.warn('Error fetching site config:', err)
-      }
-    }
-
-    fetchConfig()
-  }, [initialFetchDone])
 
   const refreshConfig = useCallback(async () => {
     setLoading(true)
-
     try {
       const supabase = createClient()
-      const { data, error } = await supabase
-        .from('configuracion')
-        .select('*')
-        .order('created_at', { ascending: true })
-        .limit(1)
-        .maybeSingle()
-
-      if (error) {
-        console.error('Error refreshing site config:', error)
-        return config
-      }
-
-      const normalized = normalizeSiteConfig(data)
-      setConfig(normalized)
-      return normalized
+      const repository = new SiteConfigRepository(supabase)
+      const newConfig = await repository.getConfig()
+      setConfig(newConfig)
+      return newConfig
     } catch (error) {
-      console.error('Unexpected error refreshing site config:', error)
+      console.error('Error refreshing site config:', error)
       return config
     } finally {
       setLoading(false)
     }
   }, [config])
 
-  const overwriteConfig = useCallback((nextConfig: Partial<SiteConfig>) => {
-    setConfig((prev) => normalizeSiteConfig({ ...prev, ...nextConfig }))
-  }, [])
+  useEffect(() => {
+    if (!initialConfig) {
+      refreshConfig()
+    }
+  }, [initialConfig, refreshConfig])
 
   const value = useMemo(
     () => ({
       config,
       loading,
       refreshConfig,
-      overwriteConfig,
     }),
-    [config, loading, overwriteConfig, refreshConfig],
+    [config, loading, refreshConfig],
   )
 
   return <SiteConfigContext.Provider value={value}>{children}</SiteConfigContext.Provider>
@@ -105,19 +67,17 @@ export function SiteConfigProvider({
 
 export function useSiteConfig() {
   const context = useContext(SiteConfigContext)
-
   if (!context) {
     throw new Error('useSiteConfig must be used inside <SiteConfigProvider>')
   }
-
   return context
 }
 
 export function useOptionalSiteConfig() {
-  return useContext(SiteConfigContext) ?? {
+  const context = useContext(SiteConfigContext)
+  return context ?? {
     config: defaultSiteConfig,
     loading: false,
     refreshConfig: async () => defaultSiteConfig,
-    overwriteConfig: () => undefined,
   }
 }

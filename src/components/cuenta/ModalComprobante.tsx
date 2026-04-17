@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { X, FileText, Loader2, CheckCircle, AlertCircle } from 'lucide-react'
-import Swal from 'sweetalert2'
+import { AlertService } from '@/lib/ui/alert.service'
 
 interface ModalComprobanteProps {
   isOpen: boolean
@@ -29,56 +29,14 @@ export default function ModalComprobante({ isOpen, onClose, reserva, onSuccess }
     setLoading(true)
 
     try {
-      const response = await fetch('/api/nubefact/generar', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          tipo_comprobante: tipoComprobante,
-          reserva_id: reserva.id,
-          cliente_tipo_documento: formData.tipo_documento,
-          cliente_numero_documento: formData.numero_documento,
-          cliente_denominacion: formData.denominacion,
-          cliente_direccion: formData.direccion,
-          cliente_email: formData.email
-        })
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Error generando comprobante')
-      }
-
-      await Swal.fire({
-        icon: 'success',
-        title: '¡Comprobante Generado!',
-        html: `
-          <p class="mb-4">El ${tipoComprobante} ha sido generado exitosamente.</p>
-          ${data.nubefact.enlace_del_pdf ? `
-            <a href="${data.nubefact.enlace_del_pdf}" target="_blank" 
-               class="inline-flex items-center gap-2 px-6 py-3 bg-yellow-400 text-gray-900 rounded-lg hover:bg-yellow-400 transition-all">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              Descargar PDF
-            </a>
-          ` : ''}
-        `,
-        confirmButtonColor: '#dc2626',
-        timer: 5000
-      })
-
-      onSuccess?.()
+      await AlertService.info(
+        'Funcionalidad no disponible',
+        'La generación de comprobantes electrónicos no está disponible actualmente.'
+      )
+      
       onClose()
     } catch (error: any) {
-      await Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: error.message || 'No se pudo generar el comprobante',
-        confirmButtonColor: '#dc2626'
-      })
+      await AlertService.error('Error', error.message || 'No se pudo generar el comprobante')
     } finally {
       setLoading(false)
     }

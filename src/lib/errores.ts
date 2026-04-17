@@ -83,9 +83,9 @@ export class Registrador {
 
     if (this.esDesarrollo) {
       console.error('❌ Error:', datosError)
-    } else {
-      console.error(JSON.stringify(datosError))
+      return
     }
+    console.error(JSON.stringify(datosError))
   }
 
   static advertencia(mensaje: string, contexto?: Record<string, any>) {
@@ -98,9 +98,9 @@ export class Registrador {
 
     if (this.esDesarrollo) {
       console.warn('⚠️ Advertencia:', datosLog)
-    } else {
-      console.warn(JSON.stringify(datosLog))
+      return
     }
+    console.warn(JSON.stringify(datosLog))
   }
 
   static info(mensaje: string, contexto?: Record<string, any>) {
@@ -113,19 +113,19 @@ export class Registrador {
 
     if (this.esDesarrollo) {
       console.info('ℹ️ Info:', datosLog)
-    } else {
-      console.info(JSON.stringify(datosLog))
+      return
     }
+    console.info(JSON.stringify(datosLog))
   }
 
   static depurar(mensaje: string, contexto?: Record<string, any>) {
-    if (this.esDesarrollo) {
-      console.debug('🐛 Debug:', {
-        mensaje,
-        marcaTiempo: new Date().toISOString(),
-        ...contexto,
-      })
-    }
+    if (!this.esDesarrollo) return
+
+    console.debug('🐛 Debug:', {
+      mensaje,
+      marcaTiempo: new Date().toISOString(),
+      ...contexto,
+    })
   }
 }
 

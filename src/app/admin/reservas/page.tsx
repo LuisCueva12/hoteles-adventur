@@ -1,12 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { DataTable } from '@/components/admin/TablasDatos'
 import { Modal } from '@/components/admin/Modal'
 import { dashboardService } from '@/services/dashboard.service'
 import { notificationsService } from '@/services/notificaciones.servicio'
+import { AlertService } from '@/lib/ui/alert.service'
 import { RefreshCw, Loader2, Calendar, User, Home, CreditCard, Eye, Trash2 } from 'lucide-react'
-import Swal from 'sweetalert2'
 
 interface Reserva {
     id: string
@@ -68,12 +67,10 @@ export default function ReservasAdminPage() {
             setReservas(cleanData)
         } catch (error) {
             console.error('Error loading reservas:', error)
-            await Swal.fire({
-                icon: 'error',
-                title: 'Error al cargar reservas',
-                text: 'No se pudieron cargar las reservas. Verifica tu conexión con Supabase.',
-                confirmButtonColor: '#3B82F6'
-            })
+            await AlertService.error(
+                'Error al cargar reservas',
+                'No se pudieron cargar las reservas. Verifica tu conexión con Supabase.'
+            )
             setReservas([])
         } finally {
             setLoading(false)
@@ -111,58 +108,44 @@ export default function ReservasAdminPage() {
                     { reservaId: selectedReserva.id, oldStatus, newStatus }
                 )
                 
-                await Swal.fire({
-                    icon: 'success',
-                    title: '¡Actualizado!',
-                    text: 'Estado de la reserva actualizado correctamente',
-                    confirmButtonColor: '#3B82F6',
-                    timer: 2000,
-                    showConfirmButton: false
-                })
+                await AlertService.success(
+                    '¡Actualizado!',
+                    'Estado de la reserva actualizado correctamente',
+                    2000
+                )
             } catch (error) {
                 console.error('Error updating reserva:', error)
-                await Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Error al actualizar el estado de la reserva',
-                    confirmButtonColor: '#3B82F6'
-                })
+                await AlertService.error(
+                    'Error',
+                    'Error al actualizar el estado de la reserva'
+                )
             }
         }
     }
 
     const handleDelete = async (reserva: Reserva) => {
-        const result = await Swal.fire({
+        const confirmed = await AlertService.confirmDanger({
             title: '¿Estás seguro?',
             text: `¿Deseas eliminar la reserva ${reserva.codigo_reserva}? Esta acción no se puede deshacer.`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#EF4444',
-            cancelButtonColor: '#6B7280',
             confirmButtonText: 'Sí, eliminar',
             cancelButtonText: 'Cancelar'
         })
 
-        if (result.isConfirmed) {
+        if (confirmed) {
             try {
                 await dashboardService.deleteReserva(reserva.id)
                 await loadReservas()
-                await Swal.fire({
-                    icon: 'success',
-                    title: '¡Eliminado!',
-                    text: 'Reserva eliminada correctamente',
-                    confirmButtonColor: '#3B82F6',
-                    timer: 2000,
-                    showConfirmButton: false
-                })
+                await AlertService.success(
+                    '¡Eliminado!',
+                    'Reserva eliminada correctamente',
+                    2000
+                )
             } catch (error) {
                 console.error('Error deleting reserva:', error)
-                await Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Error al eliminar la reserva',
-                    confirmButtonColor: '#3B82F6'
-                })
+                await AlertService.error(
+                    'Error',
+                    'Error al eliminar la reserva'
+                )
             }
         }
     }
@@ -364,22 +347,17 @@ export default function ReservasAdminPage() {
                                                         { reservaId: reserva.id, oldStatus, newStatus }
                                                     )
                                                     
-                                                    await Swal.fire({
-                                                        icon: 'success',
-                                                        title: '¡Actualizado!',
-                                                        text: 'Estado actualizado correctamente',
-                                                        confirmButtonColor: '#3B82F6',
-                                                        timer: 1500,
-                                                        showConfirmButton: false
-                                                    })
+                                                    await AlertService.success(
+                                                        '¡Actualizado!',
+                                                        'Estado actualizado correctamente',
+                                                        1500
+                                                    )
                                                 } catch (error) {
                                                     console.error('Error:', error)
-                                                    await Swal.fire({
-                                                        icon: 'error',
-                                                        title: 'Error',
-                                                        text: 'No se pudo actualizar el estado',
-                                                        confirmButtonColor: '#3B82F6'
-                                                    })
+                                                    await AlertService.error(
+                                                        'Error',
+                                                        'No se pudo actualizar el estado'
+                                                    )
                                                 }
                                             }}
                                             className={`px-3 py-1.5 rounded-full text-xs font-semibold border cursor-pointer transition-all hover:shadow-md ${

@@ -2,9 +2,7 @@ import { createClient } from '@/utils/supabase/server'
 
 export async function requireAdminUser() {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
     return { error: 'No autorizado', status: 401 as const, user: null, supabase }
@@ -12,11 +10,11 @@ export async function requireAdminUser() {
 
   const { data: profile, error } = await supabase
     .from('usuarios')
-    .select('id, rol')
+    .select('rol')
     .eq('id', user.id)
     .maybeSingle()
 
-  if (error || !profile || profile.rol !== 'admin_adventur') {
+  if (error || !profile || profile.rol !== 'admin') {
     return { error: 'Acceso denegado', status: 403 as const, user: null, supabase }
   }
 

@@ -2,7 +2,7 @@
 
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { registerSchema, type RegisterInput } from '@/lib/validaciones'
+import { registerSchema, type RegisterInput } from '@/lib/validations'
 import { obtenerFortalezaContrasena } from '@/lib/seguridad'
 import { Eye, EyeOff, ArrowRight, Loader2, CheckCircle } from 'lucide-react'
 import { useState, useEffect } from 'react'

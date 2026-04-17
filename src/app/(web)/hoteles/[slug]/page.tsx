@@ -14,7 +14,7 @@ import { SeccionResenas } from '@/components/web/SeccionResenas'
 import { useFavorites } from '@/hooks/useFavoritos'
 import { createClient } from '@/utils/supabase/client'
 import { useSiteConfig } from '@/components/providers/ProveedorConfiguracionSitio'
-import { getWhatsappPhone } from '@/lib/site-config'
+import { SiteConfigRepository } from '@/lib/repositories/site-config.repository'
 
 // Datos de respaldo para habitaciones (si no hay en BD)
 const ROOMS_DATA_FALLBACK = {
@@ -367,6 +367,7 @@ export default function HabitacionDetailPage() {
 
     const handleEnviarWhatsApp = (e: React.FormEvent) => {
         e.preventDefault()
+        const whatsappPhone = SiteConfigRepository.getWhatsappPhone(config)
         const noches = calcularNoches()
         const totalNum = room.price * noches * form.huespedes
         const total = noches > 0 ? `S/. ${totalNum.toLocaleString()}` : 'Por confirmar'
@@ -401,7 +402,7 @@ export default function HabitacionDetailPage() {
             `_hoteles.adventur.pe_`,
         ].filter(Boolean).join('\n')
 
-        window.open(`https://wa.me/51918146783?text=${encodeURIComponent(msg)}`, '_blank')
+        window.open(`https://wa.me/${whatsappPhone}?text=${encodeURIComponent(msg)}`, '_blank')
         setShowModal(false)
         setForm({ nombre: '', telefono: '', email: '', checkIn: '', checkOut: '', huespedes: 1, comentario: '' })
     }

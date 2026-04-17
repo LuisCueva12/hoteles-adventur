@@ -6,9 +6,9 @@ import { ErrorBoundary } from '@/components/ui/LimiteErrores'
 import { QueryProvider } from '@/components/providers/ProveedorConsultas'
 import { SiteConfigProvider } from '@/components/providers/ProveedorConfiguracionSitio'
 import { TranslationProvider } from '@/hooks/useTraduccion'
-import { Analytics } from '@/components/web/Analiticas'
 import { generarSEO } from '@/lib/seo'
-import { getSiteConfig } from '@/lib/site-config.server'
+import { createClient } from '@/utils/supabase/server'
+import { SiteConfigRepository } from '@/lib/repositories/site-config.repository'
 import './_styles/globals.css'
 import './_styles/animations.css'
 
@@ -22,7 +22,9 @@ export const metadata: Metadata = generarSEO({
 })
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const siteConfig = await getSiteConfig()
+  const supabase = await createClient()
+  const repository = new SiteConfigRepository(supabase)
+  const siteConfig = await repository.getConfig()
 
   return (
     <html lang="es" suppressHydrationWarning data-scroll-behavior="smooth">
@@ -46,7 +48,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </QueryProvider>
           </ErrorBoundary>
         </SiteConfigProvider>
-        <Analytics />
       </body>
     </html>
   )

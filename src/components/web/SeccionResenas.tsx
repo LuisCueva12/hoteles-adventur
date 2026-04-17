@@ -132,7 +132,7 @@ export function SeccionResenas({ alojamientoId }: SeccionResenasProps) {
                 console.error('Error cargando opiniones:', error.message)
                 throw new Error(error.message)
             }
-            return (data ?? []) as Opinion[]
+            return (data ?? []) as unknown as Opinion[]
         },
         staleTime: 0,
         retry: 1,
@@ -156,7 +156,7 @@ export function SeccionResenas({ alojamientoId }: SeccionResenasProps) {
                 .single()
 
             if (error) throw new Error(error.message)
-            return data as Opinion
+            return data ? [data] : []
         },
         onSuccess: (nuevaOpinion) => {
             // Agregar la opinión inmediatamente al estado local

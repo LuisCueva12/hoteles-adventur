@@ -1,7 +1,5 @@
 import type { Reserva, Usuario } from '@/types/basedatos'
 
-// ─── TIPOS DE DATOS REALES ───────────────────────────────────────────────────
-
 export interface ReservaConRelaciones extends Reserva {
     usuarios?: { nombre: string; apellido: string; email: string } | null
     alojamientos?: { nombre: string; tipo: string } | null
@@ -15,8 +13,6 @@ export interface DatosReporte {
     totalIngresos: number
     tasaOcupacion: number
 }
-
-// ─── HELPERS ────────────────────────────────────────────────────────────────
 
 async function loadImageAsBase64(path: string): Promise<string> {
     return new Promise((resolve) => {
@@ -50,7 +46,6 @@ function calcNochesDiff(inicio: string, fin: string) {
     return Math.round(ms / 86_400_000)
 }
 
-/** Dibuja la cabecera premium Adventur */
 function drawHeader(
     doc: import('jspdf').jsPDF,
     logoBase64: string,
@@ -98,7 +93,6 @@ function drawHeader(
     doc.text(fecha, W - 12, 31, { align: 'right' })
 }
 
-/** Dibuja el pie de página en todas las páginas */
 function drawFooter(doc: import('jspdf').jsPDF) {
     const W = doc.internal.pageSize.getWidth()
     const H = doc.internal.pageSize.getHeight()
@@ -116,7 +110,6 @@ function drawFooter(doc: import('jspdf').jsPDF) {
     }
 }
 
-/** Dibuja una tarjeta KPI */
 function drawKpi(
     doc: import('jspdf').jsPDF,
     x: number, y: number, w: number, h: number,
@@ -154,8 +147,6 @@ function sectionTitle(doc: import('jspdf').jsPDF, text: string, y: number) {
     doc.line(14, y + 2, 14 + text.length * 2.1, y + 2)
 }
 
-// ─── REPORTE DE INGRESOS (PDF) ───────────────────────────────────────────────
-
 export const exportIngresosPDF = async (datos: DatosReporte) => {
     const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
         import('jspdf'),
@@ -171,7 +162,6 @@ export const exportIngresosPDF = async (datos: DatosReporte) => {
     const logoBase64 = await loadImageAsBase64('/logoadventure.png')
     drawHeader(doc, logoBase64, 'Reporte de Ingresos')
 
-    // ── KPIs
     let y = 62
     sectionTitle(doc, 'RESUMEN EJECUTIVO', y)
 
@@ -190,7 +180,6 @@ export const exportIngresosPDF = async (datos: DatosReporte) => {
     const kw = (W - 28 - 9) / 4
     kpis.forEach((k, i) => drawKpi(doc, 14 + i * (kw + 3), y, kw, 22, k.label, k.value, k.accent))
 
-    // ── Ingresos mensuales
     y += 30
     sectionTitle(doc, 'INGRESOS MENSUALES', y)
 
@@ -235,7 +224,6 @@ export const exportIngresosPDF = async (datos: DatosReporte) => {
         tableLineWidth: 0.2,
     })
 
-    // ── Top habitaciones más rentables
     const habitMap = new Map<string, { nombre: string; tipo: string; reservas: number; ingresos: number }>()
     datos.reservas.forEach(r => {
         if (r.alojamientos) {
@@ -275,12 +263,9 @@ export const exportIngresosPDF = async (datos: DatosReporte) => {
     doc.save(`Reporte_Ingresos_${new Date().toISOString().split('T')[0]}.pdf`)
 }
 
-// ─── REPORTE DE RESERVAS (Excel) ─────────────────────────────────────────────
-
 export const exportReservasExcel = async (reservas: ReservaConRelaciones[]) => {
     const XLSX = await import('xlsx')
 
-    // Hoja 1: Detalle de reservas
     const detalle = reservas.map((r, i) => ({
         '#': i + 1,
         'Código': r.codigo_reserva || r.id.substring(0, 8).toUpperCase(),
@@ -308,7 +293,6 @@ export const exportReservasExcel = async (reservas: ReservaConRelaciones[]) => {
     ]
     XLSX.utils.book_append_sheet(wb, ws1, 'Reservas Detalladas')
 
-    // Hoja 2: Resumen por estado
     const estados = ['pendiente', 'confirmada', 'cancelada']
     const resumenEstado = estados.map(estado => {
         const filtradas = reservas.filter(r => r.estado === estado)
@@ -331,7 +315,6 @@ export const exportReservasExcel = async (reservas: ReservaConRelaciones[]) => {
     ws2['!cols'] = [{ wch: 16 }, { wch: 11 }, { wch: 13 }, { wch: 16 }]
     XLSX.utils.book_append_sheet(wb, ws2, 'Resumen por Estado')
 
-    // Hoja 3: Estadísticas generales
     const totalIngresos = reservas.reduce((s, r) => s + (r.total || 0), 0)
     const totalConfirmadas = reservas.filter(r => r.estado === 'confirmada').length
     const promedio = reservas.length > 0 ? (totalIngresos / reservas.length) : 0
@@ -354,8 +337,6 @@ export const exportReservasExcel = async (reservas: ReservaConRelaciones[]) => {
 
     XLSX.writeFile(wb, `Reporte_Reservas_${new Date().toISOString().split('T')[0]}.xlsx`)
 }
-
-// ─── REPORTE DE USUARIOS (CSV) ───────────────────────────────────────────────
 
 export const exportUsuariosCSV = async (usuarios: Usuario[]) => {
     const fecha = new Date().toLocaleDateString('es-PE', {
@@ -398,7 +379,7 @@ export const exportUsuariosCSV = async (usuarios: Usuario[]) => {
         ['Total de Usuarios', String(usuarios.length)],
         ['Usuarios Verificados', String(verificados)],
         ['Usuarios No Verificados', String(noVerificados)],
-        ['Administradores', String(usuarios.filter(u => u.rol === 'admin_adventur').length)],
+        ['Administradores', String(usuarios.filter(u => u.rol === 'admin').length)],
         ['Propietarios', String(usuarios.filter(u => u.rol === 'propietario').length)],
         ['Turistas', String(usuarios.filter(u => u.rol === 'turista').length)],
     ]

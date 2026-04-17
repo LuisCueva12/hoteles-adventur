@@ -1,6 +1,28 @@
 @import "tailwindcss";
 
-/* Variables de color */
+@theme {
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+
+  --color-brand: #FACC15;
+  --color-brand-hover: #EAB308;
+  --color-brand-light: #FEF9C3;
+  --color-brand-dark: #CA8A04;
+
+  --color-admin-primary: #001F3F;
+  --color-admin-primary-hover: #003366;
+  --color-admin-primary-light: #E6EEF5;
+  --color-admin-primary-dark: #001529;
+
+  --color-admin-accent: #FACC15;
+  --color-admin-accent-hover: #EAB308;
+  --color-admin-accent-light: #FEF9C3;
+
+  --color-admin-success: #10B981;
+  --color-admin-warning: #F59E0B;
+  --color-admin-error: #EF4444;
+  --color-admin-info: #3B82F6;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -13,7 +35,6 @@
   }
 }
 
-/* Estilos base */
 body {
   background-color: var(--background);
   color: var(--foreground);
@@ -26,7 +47,19 @@ body {
   font-family: inherit;
 }
 
-/* Animación blob */
+.loading-spinner {
+  border: 3px solid var(--color-admin-primary-light);
+  border-top-color: var(--color-admin-primary);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 @keyframes blob {
   0%, 100% { transform: translate(0, 0) scale(1); }
   33% { transform: translate(30px, -50px) scale(1.1); }
@@ -40,7 +73,6 @@ body {
 .animation-delay-2000 { animation-delay: 2s; }
 .animation-delay-4000 { animation-delay: 4s; }
 
-/* Animación gradiente */
 @keyframes gradient {
   0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
@@ -51,7 +83,6 @@ body {
   animation: gradient 3s ease infinite;
 }
 
-/* Patrón de cuadrícula */
 .bg-grid-pattern {
   background-image: 
     linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
@@ -59,7 +90,6 @@ body {
   background-size: 20px 20px;
 }
 
-/* Animación de entrada */
 @keyframes slide-in-from-top {
   from { transform: translateY(-10px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
@@ -70,7 +100,6 @@ body {
   animation: slide-in-from-top 0.3s ease-out;
 }
 
-/* Scrollbar personalizado */
 .scrollbar-thin::-webkit-scrollbar {
   width: 6px;
 }

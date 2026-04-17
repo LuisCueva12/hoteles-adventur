@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Facebook, Instagram, MessageCircle, Twitter } from 'lucide-react'
 import { useSiteConfig } from '@/components/providers/ProveedorConfiguracionSitio'
-import { getFullAddress, getWhatsappPhone } from '@/lib/site-config'
+import { SiteConfigRepository } from '@/lib/repositories/site-config.repository'
 import { Logo } from './Logo'
 
 const FOOTER_LINKS = {
@@ -25,8 +25,8 @@ export function Footer() {
   const [message, setMessage] = useState('')
   const { config } = useSiteConfig()
 
-  const whatsappPhone = getWhatsappPhone(config)
-  const address = getFullAddress(config)
+  const whatsappPhone = SiteConfigRepository.getWhatsappPhone(config)
+  const address = SiteConfigRepository.getFullAddress(config)
   const currentYear = new Date().getFullYear()
 
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
@@ -44,20 +44,20 @@ export function Footer() {
             <Logo className="h-10" variant="footer" />
           </div>
           <h2 className="mb-4 text-sm font-semibold uppercase tracking-widest text-white">Contacto</h2>
-          <p className="text-sm leading-relaxed">{config.direccion}</p>
-          <p className="mt-1 text-sm">{config.ciudad}, {config.pais}</p>
-          <p className="mt-3 text-sm">{config.telefono}</p>
-          {config.telefono_secundario ? <p className="mt-1 text-sm">{config.telefono_secundario}</p> : null}
-          <p className="mt-3 text-sm">{config.email}</p>
-          {config.email_reservas ? <p className="text-sm">{config.email_reservas}</p> : null}
-          {config.sitio_web ? (
+          <p className="text-sm leading-relaxed">{config.contact.direccion}</p>
+          <p className="mt-1 text-sm">{config.contact.ciudad}, {config.contact.pais}</p>
+          <p className="mt-3 text-sm">{config.contact.telefono}</p>
+          {config.contact.telefono_secundario ? <p className="mt-1 text-sm">{config.contact.telefono_secundario}</p> : null}
+          <p className="mt-3 text-sm">{config.contact.email}</p>
+          {config.contact.email_reservas ? <p className="text-sm">{config.contact.email_reservas}</p> : null}
+          {config.contact.redes_sociales.sitio_web ? (
             <a
-              href={config.sitio_web}
+              href={config.contact.redes_sociales.sitio_web}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-3 inline-block text-sm text-yellow-400 transition hover:text-yellow-300"
             >
-              {config.sitio_web}
+              {config.contact.redes_sociales.sitio_web}
             </a>
           ) : null}
         </div>
@@ -100,9 +100,9 @@ export function Footer() {
           </form>
           {message ? <p className="mt-2 text-sm text-green-400">{message}</p> : null}
           <div className="mt-4 flex items-center gap-3">
-            {config.facebook ? (
+            {config.contact.redes_sociales.facebook ? (
               <a
-                href={config.facebook}
+                href={config.contact.redes_sociales.facebook}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-800 text-gray-300 transition-all duration-300 hover:scale-110 hover:bg-yellow-400 hover:text-gray-900"
@@ -112,9 +112,9 @@ export function Footer() {
                 <Facebook className="h-4 w-4" />
               </a>
             ) : null}
-            {config.instagram ? (
+            {config.contact.redes_sociales.instagram ? (
               <a
-                href={config.instagram}
+                href={config.contact.redes_sociales.instagram}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-800 text-gray-300 transition-all duration-300 hover:scale-110 hover:bg-yellow-400 hover:text-gray-900"
@@ -124,9 +124,9 @@ export function Footer() {
                 <Instagram className="h-4 w-4" />
               </a>
             ) : null}
-            {config.twitter ? (
+            {config.contact.redes_sociales.twitter ? (
               <a
-                href={config.twitter}
+                href={config.contact.redes_sociales.twitter}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-800 text-gray-300 transition-all duration-300 hover:scale-110 hover:bg-yellow-400 hover:text-gray-900"
@@ -152,7 +152,7 @@ export function Footer() {
       </div>
 
       <div className="border-t border-gray-800 py-5 text-center text-xs text-gray-600">
-        &copy; {currentYear} {config.nombre_hotel}. Todos los derechos reservados.
+        &copy; {currentYear} {config.identity.nombre}. Todos los derechos reservados.
       </div>
     </footer>
   )

@@ -54,12 +54,22 @@ export default function ActualizarPasswordPage() {
 
         const code = searchParams.get('code')
         const flow = searchParams.get('flow')
+        const accessToken = searchParams.get('access_token')
+        const refreshToken = searchParams.get('refresh_token')
         const hasHashToken =
           typeof window !== 'undefined' && window.location.hash.includes('access_token')
 
         if (code) {
           const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
           if (exchangeError) throw exchangeError
+        }
+
+        if (accessToken && refreshToken) {
+          const { error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          })
+          if (sessionError) throw sessionError
         }
 
         const readSession = async () => {
@@ -76,7 +86,7 @@ export default function ActualizarPasswordPage() {
           return
         }
 
-        const expectsRecoverySession = Boolean(code) || hasHashToken || flow === 'recovery'
+        const expectsRecoverySession = Boolean(code) || hasHashToken || flow === 'recovery' || (accessToken && refreshToken)
         if (!expectsRecoverySession) {
           throw new Error('El enlace de recuperacion no es valido o ya expiro.')
         }
