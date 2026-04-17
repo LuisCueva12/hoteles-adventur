@@ -5,7 +5,21 @@ import { Modal } from '@/components/admin/Modal'
 import { dashboardService } from '@/services/dashboard.service'
 import { notificationsService } from '@/services/notificaciones.servicio'
 import { AlertService } from '@/lib/ui/alert.service'
-import { RefreshCw, Loader2, Calendar, User, Home, CreditCard, Eye, Trash2 } from 'lucide-react'
+import { 
+    RefreshCw, 
+    Loader2, 
+    Calendar, 
+    User, 
+    Home, 
+    CreditCard, 
+    Eye, 
+    Trash2,
+    CheckCircle,
+    Clock,
+    XCircle,
+    TrendingUp
+} from 'lucide-react'
+import { DataTableEnhanced } from '@/components/admin/DataTableEnhanced'
 
 interface Reserva {
     id: string
@@ -33,6 +47,116 @@ interface Reserva {
     }> | null
 }
 
+const COLUMNS = [
+    {
+        key: 'codigo_reserva' as const,
+        label: 'CÓDIGO',
+        sortable: true,
+        render: (value: string) => (
+            <span className="text-[10px] font-black tracking-widest bg-blue-50 px-3 py-1.5 rounded-xl text-blue-700 border border-blue-100 uppercase">
+                {value}
+            </span>
+        )
+    },
+    {
+        key: 'usuarios' as const,
+        label: 'HUÉSPED',
+        sortable: true,
+        render: (_value: any, row: Reserva) => (
+            <div className="flex flex-col">
+                <span className="text-sm font-bold text-gray-800 uppercase tracking-tight">
+                    {row.usuarios ? `${row.usuarios.nombre} ${row.usuarios.apellido}` : 'Huésped General'}
+                </span>
+                <span className="text-[11px] text-gray-400 font-medium">{row.usuarios?.email || 'Sin contacto'}</span>
+            </div>
+        )
+    },
+    {
+        key: 'alojamientos' as const,
+        label: 'ALOJAMIENTO',
+        sortable: true,
+        render: (_value: any, row: Reserva) => (
+            <div className="flex flex-col">
+                <span className="text-sm text-gray-800 font-bold uppercase tracking-tight">{row.alojamientos?.nombre || 'General'}</span>
+                <span className="text-[11px] text-gray-400 uppercase tracking-[0.15em] font-medium">{row.alojamientos?.tipo || 'Unidad'}</span>
+            </div>
+        )
+    },
+    {
+        key: 'fecha_inicio' as const,
+        label: 'ESTADÍA',
+        sortable: true,
+        render: (_value: any, row: Reserva) => (
+            <div className="flex items-center gap-2">
+                <div className="flex flex-col bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100 min-w-17.5 items-center">
+                    <span className="text-[9px] font-black text-blue-600 uppercase">In</span>
+                    <span className="text-xs font-bold text-gray-900">{new Date(row.fecha_inicio).toLocaleDateString('es-PE', { day: '2-digit', month: 'short' })}</span>
+                </div>
+                <div className="w-2 h-0.5 bg-gray-200"></div>
+                <div className="flex flex-col bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100 min-w-17.5 items-center">
+                    <span className="text-[9px] font-black text-purple-600 uppercase">Out</span>
+                    <span className="text-xs font-bold text-gray-900">{new Date(row.fecha_fin).toLocaleDateString('es-PE', { day: '2-digit', month: 'short' })}</span>
+                </div>
+            </div>
+        )
+    },
+    {
+        key: 'total' as const,
+        label: 'TOTAL',
+        sortable: true,
+        render: (value: number, row: Reserva) => (
+            <div className="flex flex-col text-right">
+                <span className="text-base font-black text-gray-900 leading-none mb-1">S/. {value.toLocaleString()}</span>
+                {row.adelanto > 0 && (
+                    <span className="text-[10px] text-emerald-600 font-black uppercase tracking-tighter">Adelanto: S/. {row.adelanto.toLocaleString()}</span>
+                )}
+            </div>
+        )
+    },
+    {
+        key: 'estado' as const,
+        label: 'ESTADO',
+        sortable: true,
+        render: (value: string, row: Reserva) => {
+            const colors = {
+                confirmada: 'bg-green-50 text-green-600 border-green-200',
+                pendiente: 'bg-amber-50 text-amber-600 border-amber-200',
+                cancelada: 'bg-red-50 text-red-600 border-red-200'
+            }
+            return (
+                <div className="flex justify-center">
+                    <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all ${colors[value as keyof typeof colors] || 'bg-gray-50 text-gray-600'}`}>
+                        {value === 'confirmada' ? '✓ ' : value === 'pendiente' ? '⏱ ' : '✕ '}
+                        {value}
+                    </span>
+                </div>
+            )
+        }
+    },
+    {
+        key: 'actions' as const,
+        label: 'ACCIONES',
+        render: (_value: any, row: Reserva) => (
+            <div className="flex items-center justify-center gap-2">
+                <button
+                    onClick={(e) => { e.stopPropagation(); (window as any).onViewReserva(row) }}
+                    className="p-2.5 text-blue-600 hover:bg-blue-50 rounded-xl transition-all border border-transparent hover:border-blue-100"
+                    title="Ver detalles"
+                >
+                    <Eye size={18} />
+                </button>
+                <button
+                    onClick={(e) => { e.stopPropagation(); (window as any).onDeleteReserva(row) }}
+                    className="p-2.5 text-red-500 hover:bg-red-50 rounded-xl transition-all border border-transparent hover:border-red-100"
+                    title="Eliminar"
+                >
+                    <Trash2 size={18} />
+                </button>
+            </div>
+        )
+    }
+]
+
 export default function ReservasAdminPage() {
     const [reservas, setReservas] = useState<Reserva[]>([])
     const [loading, setLoading] = useState(true)
@@ -43,35 +167,31 @@ export default function ReservasAdminPage() {
 
     useEffect(() => {
         loadReservas()
+        
+        // Global focus for action buttons
+        (window as any).onViewReserva = handleView;
+        (window as any).onDeleteReserva = handleDelete;
+        
+        return () => {
+            delete (window as any).onViewReserva;
+            delete (window as any).onDeleteReserva;
+        }
     }, [])
 
     const loadReservas = async () => {
         try {
             setLoading(true)
             const data = await dashboardService.getReservas()
-            
-            if (!data || data.length === 0) {
-                console.log('No hay reservas en la base de datos')
-                setReservas([])
-                return
-            }
-            
-            // Limpiar y validar datos
-            const cleanData = data.map((reserva: Reserva) => ({
+            const cleanData = (data || []).map((reserva: Reserva) => ({
                 ...reserva,
                 usuarios: reserva.usuarios || null,
                 alojamientos: reserva.alojamientos || null,
-                pagos: Array.isArray(reserva.pagos) ? reserva.pagos : []
+                pagos: reserva.pagos || []
             }))
-            
             setReservas(cleanData)
         } catch (error) {
             console.error('Error loading reservas:', error)
-            await AlertService.error(
-                'Error al cargar reservas',
-                'No se pudieron cargar las reservas. Verifica tu conexión con Supabase.'
-            )
-            setReservas([])
+            await AlertService.error('Error', 'No se pudieron cargar las reservas.')
         } finally {
             setLoading(false)
         }
@@ -88,45 +208,10 @@ export default function ReservasAdminPage() {
         setIsModalOpen(true)
     }
 
-    const handleChangeStatus = async (newStatus: string) => {
-        if (selectedReserva) {
-            try {
-                const oldStatus = selectedReserva.estado
-                await dashboardService.updateReserva(selectedReserva.id, { estado: newStatus })
-                setSelectedReserva({ ...selectedReserva, estado: newStatus })
-                await loadReservas()
-                
-                // Crear notificación para todos los admins
-                const statusEmoji = newStatus === 'confirmada' ? '✓' : newStatus === 'pendiente' ? '⏱' : '✕'
-                const statusColor = newStatus === 'confirmada' ? 'success' : newStatus === 'pendiente' ? 'warning' : 'error'
-                
-                await notificationsService.notifyAdmins(
-                    statusColor,
-                    `${statusEmoji} Reserva ${newStatus}`,
-                    `La reserva ${selectedReserva.codigo_reserva} cambió de "${oldStatus}" a "${newStatus}"`,
-                    '/admin/reservas',
-                    { reservaId: selectedReserva.id, oldStatus, newStatus }
-                )
-                
-                await AlertService.success(
-                    '¡Actualizado!',
-                    'Estado de la reserva actualizado correctamente',
-                    2000
-                )
-            } catch (error) {
-                console.error('Error updating reserva:', error)
-                await AlertService.error(
-                    'Error',
-                    'Error al actualizar el estado de la reserva'
-                )
-            }
-        }
-    }
-
     const handleDelete = async (reserva: Reserva) => {
         const confirmed = await AlertService.confirmDanger({
-            title: '¿Estás seguro?',
-            text: `¿Deseas eliminar la reserva ${reserva.codigo_reserva}? Esta acción no se puede deshacer.`,
+            title: '¿Eliminar reserva?',
+            text: `Esta acción borrará el código ${reserva.codigo_reserva} permanentemente.`,
             confirmButtonText: 'Sí, eliminar',
             cancelButtonText: 'Cancelar'
         })
@@ -135,18 +220,31 @@ export default function ReservasAdminPage() {
             try {
                 await dashboardService.deleteReserva(reserva.id)
                 await loadReservas()
-                await AlertService.success(
-                    '¡Eliminado!',
-                    'Reserva eliminada correctamente',
-                    2000
-                )
+                await AlertService.success('¡Eliminado!', 'Reserva eliminada con éxito')
             } catch (error) {
-                console.error('Error deleting reserva:', error)
-                await AlertService.error(
-                    'Error',
-                    'Error al eliminar la reserva'
-                )
+                await AlertService.error('Error', 'No se pudo eliminar')
             }
+        }
+    }
+
+    const handleChangeStatus = async (newStatus: string) => {
+        if (!selectedReserva) return
+        try {
+            await dashboardService.updateReserva(selectedReserva.id, { estado: newStatus })
+            await loadReservas()
+            
+            // Notify if needed
+            await notificationsService.notifyAdmins(
+                'info',
+                'Status Actualizado',
+                `Reserva ${selectedReserva.codigo_reserva} pasó a ${newStatus}`,
+                '/admin/reservas'
+            )
+            
+            await AlertService.success('¡Hecho!', `Estado cambiado a ${newStatus}`)
+            setIsModalOpen(false)
+        } catch (error) {
+            await AlertService.error('Error', 'No se pudo cambiar el estado')
         }
     }
 
@@ -156,451 +254,201 @@ export default function ReservasAdminPage() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center h-96">
-                <div className="text-center">
-                    <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
-                    <p className="text-gray-700 font-medium">Cargando reservas...</p>
-                </div>
+            <div className="min-h-[60vh] flex flex-col items-center justify-center space-y-6">
+                <div className="w-20 h-20 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin"></div>
+                <p className="text-gray-400 font-black uppercase tracking-[0.4em] animate-pulse">Sincronizando Reservas...</p>
             </div>
         )
     }
 
-    const calcularNoches = (inicio: string, fin: string) => {
-        const diff = new Date(fin).getTime() - new Date(inicio).getTime()
-        return Math.ceil(diff / (1000 * 60 * 60 * 24))
-    }
-
     return (
-        <div>
-            <div className="mb-8 flex items-center justify-between">
-                <div>
-                    <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                        Gestión de Reservas
-                    </h1>
-                    <p className="text-gray-600 text-lg">Administra todas las reservas del hotel</p>
-                </div>
-                <button
-                    onClick={handleRefresh}
-                    disabled={isRefreshing}
-                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all disabled:opacity-50 shadow-lg hover:shadow-xl"
-                >
-                    <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
-                    <span className="font-semibold">Actualizar</span>
-                </button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-1 cursor-pointer">
-                    <div className="flex items-center justify-between mb-3">
-                        <p className="text-blue-100 text-sm font-semibold uppercase tracking-wide">Total Reservas</p>
-                        <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                            <Calendar className="w-6 h-6 text-white" />
-                        </div>
+        <div className="space-y-10 pb-16">
+            {/* Premium Header - Matching Users Design */}
+            <div className="bg-[#0d1b2a] rounded-[2.5rem] p-10 shadow-2xl relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl transition-all duration-1000 group-hover:bg-blue-500/20"></div>
+                
+                <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
+                    <div>
+                        <h1 className="text-4xl font-black text-white tracking-tight mb-2 uppercase">
+                            Gestión de <span className="text-blue-400">Reservas</span>
+                        </h1>
+                        <p className="text-gray-400 text-lg font-medium">
+                            Administra ingresos, estadías y estados en tiempo real.
+                        </p>
                     </div>
-                    <p className="text-5xl font-bold mb-1">{reservas.length}</p>
-                    <p className="text-blue-100 text-xs">Todas las reservas registradas</p>
-                </div>
-                <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-1 cursor-pointer">
-                    <div className="flex items-center justify-between mb-3">
-                        <p className="text-yellow-100 text-sm font-semibold uppercase tracking-wide">Confirmadas</p>
-                        <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                            <Calendar className="w-6 h-6 text-white" />
-                        </div>
-                    </div>
-                    <p className="text-5xl font-bold mb-1">{reservas.filter(r => r.estado === 'confirmada').length}</p>
-                    <p className="text-yellow-100 text-xs">Reservas activas confirmadas</p>
-                </div>
-                <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-2xl p-6 text-white shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-1 cursor-pointer">
-                    <div className="flex items-center justify-between mb-3">
-                        <p className="text-yellow-100 text-sm font-semibold uppercase tracking-wide">Pendientes</p>
-                        <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                            <Calendar className="w-6 h-6 text-white" />
-                        </div>
-                    </div>
-                    <p className="text-5xl font-bold mb-1">{reservas.filter(r => r.estado === 'pendiente').length}</p>
-                    <p className="text-yellow-100 text-xs">Esperando confirmación</p>
-                </div>
-                <div className="bg-gradient-to-br from-yellow-300 to-yellow-400 rounded-2xl p-6 text-white shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-1 cursor-pointer">
-                    <div className="flex items-center justify-between mb-3">
-                        <p className="text-yellow-100 text-sm font-semibold uppercase tracking-wide">Canceladas</p>
-                        <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                            <Calendar className="w-6 h-6 text-white" />
-                        </div>
-                    </div>
-                    <p className="text-5xl font-bold mb-1">{reservas.filter(r => r.estado === 'cancelada').length}</p>
-                    <p className="text-yellow-100 text-xs">Reservas canceladas</p>
+                    <button
+                        onClick={handleRefresh}
+                        disabled={isRefreshing}
+                        className="flex items-center gap-3 px-8 py-4 bg-white/5 hover:bg-white/10 text-white border border-white/20 rounded-2xl transition-all backdrop-blur-md disabled:opacity-50 font-black uppercase tracking-widest text-sm"
+                    >
+                        <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+                        Sincronizar
+                    </button>
                 </div>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-                <div className="p-6 border-b border-gray-200">
-                    <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-                        <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-sm text-gray-600 font-medium">Filtrar por estado:</span>
-                            {['todas', 'pendiente', 'confirmada', 'cancelada'].map((estado) => (
+            {/* Colorful Stats Cards - Matching Shared Image */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {[
+                    { label: 'Total Reservas', value: reservas.length, icon: Calendar, color: 'from-blue-600 to-indigo-600', sub: 'Todas las estadías' },
+                    { label: 'Confirmadas', value: reservas.filter(r => r.estado === 'confirmada').length, icon: CheckCircle, color: 'from-emerald-500 to-teal-400', sub: 'Listas para ingreso' },
+                    { label: 'Pendientes', value: reservas.filter(r => r.estado === 'pendiente').length, icon: Clock, color: 'from-amber-400 to-orange-400', sub: 'Esperando validación' },
+                    { label: 'Canceladas', value: reservas.filter(r => r.estado === 'cancelada').length, icon: XCircle, color: 'from-rose-500 to-pink-500', sub: 'Fuera de sistema' }
+                ].map((stat, i) => (
+                    <div key={i} className={`bg-linear-to-br ${stat.color} rounded-4xl p-8 text-white shadow-xl shadow-blue-900/10 transition-all transform hover:scale-[1.03] cursor-default group relative overflow-hidden`}>
+                        <div className="relative z-10">
+                            <div className="flex items-center justify-between mb-6">
+                                <span className="text-xs font-black uppercase tracking-[0.2em] opacity-80">{stat.label}</span>
+                                <div className="p-3 bg-white/20 rounded-[1.25rem]">
+                                    <stat.icon size={24} />
+                                </div>
+                            </div>
+                            <h3 className="text-5xl font-black mb-1">{stat.value}</h3>
+                            <p className="text-xs mt-3 font-medium opacity-80 uppercase tracking-widest">{stat.sub}</p>
+                        </div>
+                        <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform duration-500">
+                            <stat.icon size={120} />
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* New Table Container with Filter Tabs */}
+            <div className="bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,123,255,0.05)] border border-gray-100 overflow-hidden">
+                <div className="p-8 border-b border-gray-50 flex items-center justify-between bg-gray-50/20">
+                    <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mr-4">Filtro Estado:</span>
+                        <div className="flex bg-white/50 p-1.5 rounded-2xl border border-gray-100">
+                            {['todas', 'pendiente', 'confirmada', 'cancelada'].map((est) => (
                                 <button
-                                    key={estado}
-                                    onClick={() => setFilterEstado(estado)}
-                                    className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-                                        filterEstado === estado
-                                            ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md'
-                                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                    key={est}
+                                    onClick={() => setFilterEstado(est)}
+                                    className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                                        filterEstado === est 
+                                        ? 'bg-[#0d1b2a] text-white shadow-lg' 
+                                        : 'text-gray-400 hover:text-gray-600'
                                     }`}
                                 >
-                                    {estado.charAt(0).toUpperCase() + estado.slice(1)}
+                                    {est}
                                 </button>
                             ))}
                         </div>
                     </div>
+                    <div className="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2">
+                        <TrendingUp size={14} />
+                        Total: {filteredReservas.length} registros
+                    </div>
                 </div>
-
-                <div className="overflow-x-auto">
-                    <table className="w-full">
-                        <thead className="bg-gray-50 border-b border-gray-200">
-                            <tr>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Código</th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Usuario</th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Habitación</th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Check-in</th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Check-out</th>
-                                <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Huéspedes</th>
-                                <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Total</th>
-                                <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Estado</th>
-                                <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200">
-                            {filteredReservas.length === 0 ? (
-                                <tr>
-                                    <td colSpan={9} className="px-6 py-12 text-center">
-                                        <div className="flex flex-col items-center justify-center">
-                                            <Calendar className="w-16 h-16 text-gray-300 mb-4" />
-                                            <p className="text-gray-500 font-medium text-lg mb-2">No hay reservas disponibles</p>
-                                            <p className="text-gray-400 text-sm">
-                                                {filterEstado === 'todas' 
-                                                    ? 'Aún no se han registrado reservas en el sistema'
-                                                    : `No hay reservas con estado "${filterEstado}"`
-                                                }
-                                            </p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ) : (
-                                filteredReservas.map((reserva) => (
-                                <tr key={reserva.id} className="hover:bg-gray-50 transition-colors">
-                                    <td className="px-6 py-4">
-                                        <span className="text-xs font-mono bg-gray-100 px-2 py-1 rounded text-gray-700">{reserva.codigo_reserva}</span>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <p className="text-sm font-semibold text-gray-900">
-                                            {reserva.usuarios 
-                                                ? `${reserva.usuarios.nombre || ''} ${reserva.usuarios.apellido || ''}`
-                                                : 'Sin usuario'}
-                                        </p>
-                                        <p className="text-xs text-gray-500">{reserva.usuarios?.email || ''}</p>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <p className="text-sm text-gray-900">
-                                            {reserva.alojamientos?.nombre || 'Sin alojamiento'}
-                                        </p>
-                                        <p className="text-xs text-gray-500">{reserva.alojamientos?.tipo || ''}</p>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <p className="text-sm text-gray-900">{new Date(reserva.fecha_inicio).toLocaleDateString('es-PE', {
-                                            day: '2-digit',
-                                            month: 'short',
-                                            year: 'numeric'
-                                        })}</p>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <p className="text-sm text-gray-900">{new Date(reserva.fecha_fin).toLocaleDateString('es-PE', {
-                                            day: '2-digit',
-                                            month: 'short',
-                                            year: 'numeric'
-                                        })}</p>
-                                    </td>
-                                    <td className="px-6 py-4 text-center">
-                                        <span className="text-sm font-semibold text-gray-900">{reserva.personas}</span>
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
-                                        <span className="text-sm font-bold text-yellow-400">S/. {reserva.total.toLocaleString()}</span>
-                                    </td>
-                                    <td className="px-6 py-4 text-center">
-                                        <select
-                                            value={reserva.estado}
-                                            onChange={async (e) => {
-                                                const newStatus = e.target.value
-                                                const oldStatus = reserva.estado
-                                                try {
-                                                    await dashboardService.updateReserva(reserva.id, { estado: newStatus })
-                                                    await loadReservas()
-                                                    
-                                                    // Crear notificación para todos los admins
-                                                    const statusEmoji = newStatus === 'confirmada' ? '✓' : newStatus === 'pendiente' ? '⏱' : '✕'
-                                                    const statusColor = newStatus === 'confirmada' ? 'success' : newStatus === 'pendiente' ? 'warning' : 'error'
-                                                    
-                                                    await notificationsService.notifyAdmins(
-                                                        statusColor,
-                                                        `${statusEmoji} Reserva ${newStatus}`,
-                                                        `La reserva ${reserva.codigo_reserva} cambió de "${oldStatus}" a "${newStatus}"`,
-                                                        '/admin/reservas',
-                                                        { reservaId: reserva.id, oldStatus, newStatus }
-                                                    )
-                                                    
-                                                    await AlertService.success(
-                                                        '¡Actualizado!',
-                                                        'Estado actualizado correctamente',
-                                                        1500
-                                                    )
-                                                } catch (error) {
-                                                    console.error('Error:', error)
-                                                    await AlertService.error(
-                                                        'Error',
-                                                        'No se pudo actualizar el estado'
-                                                    )
-                                                }
-                                            }}
-                                            className={`px-3 py-1.5 rounded-full text-xs font-semibold border cursor-pointer transition-all hover:shadow-md ${
-                                                reserva.estado === 'confirmada' ? 'bg-yellow-100 text-yellow-400 border-yellow-300 hover:bg-yellow-100' :
-                                                reserva.estado === 'pendiente' ? 'bg-yellow-100 text-yellow-400 border-yellow-300 hover:bg-yellow-100' :
-                                                'bg-yellow-100 text-yellow-400 border-yellow-300 hover:bg-yellow-100'
-                                            }`}
-                                        >
-                                            <option value="pendiente">⏱ Pendiente</option>
-                                            <option value="confirmada">✓ Confirmada</option>
-                                            <option value="cancelada">✕ Cancelada</option>
-                                        </select>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center justify-center gap-2">
-                                            <button
-                                                onClick={() => handleView(reserva)}
-                                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                                                title="Ver detalles"
-                                            >
-                                                <Eye size={16} />
-                                            </button>
-                                            <button
-                                                onClick={() => handleDelete(reserva)}
-                                                className="p-2 text-yellow-400 hover:bg-yellow-50 rounded-lg transition-all"
-                                                title="Eliminar"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            )))}
-                        </tbody>
-                    </table>
+                
+                <div className="p-4">
+                    <DataTableEnhanced
+                        data={filteredReservas}
+                        columns={COLUMNS}
+                        searchable={true}
+                        onRefresh={handleRefresh}
+                    />
                 </div>
             </div>
 
+            {/* Premium Details Modal */}
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                title={`Reserva ${selectedReserva?.codigo_reserva}`}
+                title={`Detalles Reserva ${selectedReserva?.codigo_reserva}`}
                 size="lg"
             >
                 {selectedReserva && (
-                    <div className="space-y-6">
-                        {/* Header con código de reserva */}
-                        <div className="bg-gradient-to-r from-blue-600 to-purple-600 -m-6 mb-6 p-6 rounded-t-xl">
-                            <div className="flex items-center justify-between text-white">
+                    <div className="space-y-8 py-2">
+                        {/* Guest Hero Section */}
+                        <div className="flex items-start justify-between bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100">
+                            <div className="flex items-center gap-6">
+                                <div className="w-20 h-20 bg-[#0d1b2a] rounded-4xl flex items-center justify-center text-white text-3xl font-black">
+                                    {selectedReserva.usuarios?.nombre?.charAt(0) || 'U'}
+                                </div>
                                 <div>
-                                    <p className="text-sm opacity-90 mb-1">Código de Reserva</p>
-                                    <p className="text-2xl font-bold font-mono">{selectedReserva.codigo_reserva}</p>
+                                    <h4 className="text-2xl font-black text-gray-900 uppercase">
+                                        {selectedReserva.usuarios ? `${selectedReserva.usuarios.nombre} ${selectedReserva.usuarios.apellido}` : 'Invitado'}
+                                    </h4>
+                                    <p className="text-blue-600 font-bold">{selectedReserva.usuarios?.email}</p>
+                                    <div className="flex items-center gap-2 mt-2">
+                                        <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-white border ${
+                                            selectedReserva.estado === 'confirmada' ? 'text-green-600 border-green-200' : 
+                                            selectedReserva.estado === 'pendiente' ? 'text-amber-600 border-amber-200' : 'text-red-600 border-red-200'
+                                        }`}>
+                                            Estado Actual: {selectedReserva.estado}
+                                        </span>
+                                    </div>
                                 </div>
-                                <div className="text-right">
-                                    <p className="text-sm opacity-90 mb-1">Estado</p>
-                                    <span className={`inline-flex px-4 py-2 rounded-full text-sm font-bold ${
-                                        selectedReserva.estado === 'confirmada' ? 'bg-yellow-400' :
-                                        selectedReserva.estado === 'pendiente' ? 'bg-yellow-400' :
-                                        'bg-yellow-300'
-                                    }`}>
-                                        {selectedReserva.estado.charAt(0).toUpperCase() + selectedReserva.estado.slice(1)}
-                                    </span>
-                                </div>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Reserva</p>
+                                <p className="text-4xl font-black text-[#0d1b2a]">S/. {selectedReserva.total.toLocaleString()}</p>
                             </div>
                         </div>
 
-                        {/* Información principal en tarjetas */}
-                        <div className="grid md:grid-cols-2 gap-4">
-                            {/* Cliente */}
-                            <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-5 rounded-xl border-2 border-blue-200 shadow-sm">
-                                <div className="flex items-start gap-4">
-                                    <div className="w-14 h-14 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
-                                        <User className="w-7 h-7 text-white" />
-                                    </div>
-                                    <div className="flex-1">
-                                        <p className="text-xs text-blue-700 font-semibold uppercase tracking-wide mb-1">Cliente</p>
-                                        <p className="text-gray-900 font-bold text-lg mb-1">
-                                            {selectedReserva.usuarios 
-                                                ? `${selectedReserva.usuarios.nombre || ''} ${selectedReserva.usuarios.apellido || ''}`
-                                                : 'Sin información'}
-                                        </p>
-                                        <p className="text-sm text-gray-600 flex items-center gap-1">
-                                            <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                                            {selectedReserva.usuarios?.email || 'Sin email'}
-                                        </p>
-                                    </div>
+                        {/* Information Grid */}
+                        <div className="grid grid-cols-2 gap-8">
+                            <div className="space-y-4">
+                                <h5 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] px-2 flex items-center gap-2">
+                                    <Home size={14} className="text-blue-500" /> Detalle Alojamiento
+                                </h5>
+                                <div className="bg-white border border-gray-100 p-6 rounded-4xl shadow-sm">
+                                    <p className="text-lg font-black text-gray-800 uppercase leading-none">{selectedReserva.alojamientos?.nombre}</p>
+                                    <p className="text-sm text-gray-400 mt-2 font-medium uppercase tracking-widest">{selectedReserva.alojamientos?.tipo}</p>
                                 </div>
                             </div>
 
-                            {/* Alojamiento */}
-                            <div className="bg-gradient-to-br from-green-50 to-green-100 p-5 rounded-xl border-2 border-yellow-200 shadow-sm">
-                                <div className="flex items-start gap-4">
-                                    <div className="w-14 h-14 bg-yellow-400 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
-                                        <Home className="w-7 h-7 text-white" />
+                            <div className="space-y-4">
+                                <h5 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] px-2 flex items-center gap-2">
+                                    <Calendar size={14} className="text-purple-500" /> Período Estadía
+                                </h5>
+                                <div className="bg-white border border-gray-100 p-6 rounded-4xl shadow-sm flex items-center justify-between">
+                                    <div>
+                                        <p className="text-[10px] font-black text-blue-600 uppercase mb-1">Check-In</p>
+                                        <p className="text-xl font-black text-gray-800">{new Date(selectedReserva.fecha_inicio).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
                                     </div>
-                                    <div className="flex-1">
-                                        <p className="text-xs text-yellow-400 font-semibold uppercase tracking-wide mb-1">Alojamiento</p>
-                                        <p className="text-gray-900 font-bold text-lg mb-1">
-                                            {selectedReserva.alojamientos?.nombre || 'Sin información'}
-                                        </p>
-                                        <p className="text-sm text-gray-600 flex items-center gap-1">
-                                            <span className="w-2 h-2 bg-yellow-400 rounded-full"></span>
-                                            {selectedReserva.alojamientos?.tipo || 'Sin tipo'}
-                                        </p>
+                                    <div className="w-10 h-0.5 bg-gray-100"></div>
+                                    <div className="text-right">
+                                        <p className="text-[10px] font-black text-purple-600 uppercase mb-1">Check-Out</p>
+                                        <p className="text-xl font-black text-gray-800">{new Date(selectedReserva.fecha_fin).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Fechas y detalles */}
-                        <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-6 rounded-xl border-2 border-purple-200 shadow-sm">
-                            <div className="flex items-center gap-3 mb-4">
-                                <Calendar className="w-6 h-6 text-purple-600" />
-                                <h3 className="text-lg font-bold text-gray-900">Detalles de la Estadía</h3>
+                        {/* Payment Summary */}
+                        <div className="bg-white border border-gray-100 rounded-[2.5rem] p-8">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="p-2.5 bg-amber-50 rounded-xl text-amber-500"><CreditCard size={20} /></div>
+                                <h5 className="text-lg font-black text-gray-800 uppercase tracking-tight">Registro de Pagos</h5>
                             </div>
-                            <div className="grid md:grid-cols-3 gap-4">
-                                <div className="bg-white/70 backdrop-blur-sm p-4 rounded-lg">
-                                    <p className="text-xs text-purple-700 font-semibold mb-2">CHECK-IN</p>
-                                    <p className="text-xl font-bold text-gray-900">
-                                        {new Date(selectedReserva.fecha_inicio).toLocaleDateString('es-PE', {
-                                            day: '2-digit',
-                                            month: 'short'
-                                        })}
-                                    </p>
-                                    <p className="text-xs text-gray-600">
-                                        {new Date(selectedReserva.fecha_inicio).toLocaleDateString('es-PE', {
-                                            year: 'numeric'
-                                        })}
-                                    </p>
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-center p-4 bg-gray-50 rounded-2xl">
+                                    <span className="text-sm font-bold text-gray-600 uppercase tracking-widest">Adelanto abonado:</span>
+                                    <span className="text-xl font-black text-emerald-600 italic">S/. {selectedReserva.adelanto.toLocaleString()}</span>
                                 </div>
-                                <div className="bg-white/70 backdrop-blur-sm p-4 rounded-lg">
-                                    <p className="text-xs text-purple-700 font-semibold mb-2">CHECK-OUT</p>
-                                    <p className="text-xl font-bold text-gray-900">
-                                        {new Date(selectedReserva.fecha_fin).toLocaleDateString('es-PE', {
-                                            day: '2-digit',
-                                            month: 'short'
-                                        })}
-                                    </p>
-                                    <p className="text-xs text-gray-600">
-                                        {new Date(selectedReserva.fecha_fin).toLocaleDateString('es-PE', {
-                                            year: 'numeric'
-                                        })}
-                                    </p>
-                                </div>
-                                <div className="bg-white/70 backdrop-blur-sm p-4 rounded-lg">
-                                    <p className="text-xs text-purple-700 font-semibold mb-2">DURACIÓN</p>
-                                    <p className="text-xl font-bold text-gray-900">
-                                        {calcularNoches(selectedReserva.fecha_inicio, selectedReserva.fecha_fin)}
-                                    </p>
-                                    <p className="text-xs text-gray-600">
-                                        {calcularNoches(selectedReserva.fecha_inicio, selectedReserva.fecha_fin) === 1 ? 'noche' : 'noches'}
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="mt-4 bg-white/70 backdrop-blur-sm p-4 rounded-lg">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <User className="w-5 h-5 text-purple-600" />
-                                        <span className="text-sm font-semibold text-gray-700">Huéspedes</span>
-                                    </div>
-                                    <span className="text-2xl font-bold text-purple-600">{selectedReserva.personas}</span>
+                                <div className="flex justify-between items-center p-4 bg-[#0d1b2a] text-white rounded-2xl shadow-xl">
+                                    <span className="text-sm font-bold opacity-70 uppercase tracking-widest">Saldo Pendiente:</span>
+                                    <span className="text-2xl font-black text-amber-400 italic">S/. {(selectedReserva.total - selectedReserva.adelanto).toLocaleString()}</span>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Información de pagos */}
-                        <div className="bg-gradient-to-br from-yellow-50 to-orange-50 p-6 rounded-xl border-2 border-yellow-200 shadow-sm">
-                            <div className="flex items-center gap-3 mb-4">
-                                <CreditCard className="w-6 h-6 text-yellow-400" />
-                                <h3 className="text-lg font-bold text-gray-900">Información de Pago</h3>
-                            </div>
-                            <div className="space-y-3">
-                                <div className="flex justify-between items-center bg-white/70 backdrop-blur-sm p-4 rounded-lg">
-                                    <span className="text-gray-700 font-medium">Adelanto pagado</span>
-                                    <span className="text-xl font-bold text-yellow-400">S/. {selectedReserva.adelanto?.toLocaleString() || '0'}</span>
-                                </div>
-                                <div className="flex justify-between items-center bg-white/70 backdrop-blur-sm p-4 rounded-lg">
-                                    <span className="text-gray-700 font-medium">Saldo pendiente</span>
-                                    <span className="text-xl font-bold text-orange-600">
-                                        S/. {(selectedReserva.total - (selectedReserva.adelanto || 0)).toLocaleString()}
-                                    </span>
-                                </div>
-                                {selectedReserva.pagos && Array.isArray(selectedReserva.pagos) && selectedReserva.pagos.length > 0 && (
-                                    <div className="bg-white/70 backdrop-blur-sm p-4 rounded-lg">
-                                        <p className="text-xs text-gray-600 mb-2">Pagos registrados: {selectedReserva.pagos.length}</p>
-                                        <div className="space-y-2">
-                                            {selectedReserva.pagos.map((pago, idx) => (
-                                                <div key={idx} className="flex justify-between text-sm">
-                                                    <span className="text-gray-600">{pago.metodo}</span>
-                                                    <span className={`font-semibold ${
-                                                        pago.estado === 'aprobado' ? 'text-yellow-400' : 'text-gray-600'
-                                                    }`}>
-                                                        S/. {pago.monto.toLocaleString()}
-                                                    </span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Total destacado */}
-                        <div className="bg-gradient-to-r from-green-600 to-emerald-600 p-6 rounded-xl shadow-lg">
-                            <div className="flex items-center justify-between text-white">
-                                <div>
-                                    <p className="text-sm opacity-90 mb-1">Total de la Reserva</p>
-                                    <p className="text-4xl font-bold">S/. {selectedReserva.total.toLocaleString()}</p>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-xs opacity-75 mb-1">Reservado el</p>
-                                    <p className="text-sm font-semibold">
-                                        {new Date(selectedReserva.fecha_creacion).toLocaleDateString('es-PE', { 
-                                            year: 'numeric', 
-                                            month: 'long', 
-                                            day: 'numeric' 
-                                        })}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Cambiar estado */}
-                        <div className="bg-gray-50 p-6 rounded-xl border-2 border-gray-200">
-                            <h3 className="text-sm font-bold text-gray-700 mb-4 uppercase tracking-wide">Cambiar Estado de la Reserva</h3>
-                            <div className="grid grid-cols-3 gap-3">
-                                <button
-                                    onClick={() => handleChangeStatus('confirmada')}
-                                    className="px-4 py-3 bg-yellow-400 hover:bg-green-600 text-gray-900 rounded-xl transition-all font-bold shadow-md hover:shadow-lg transform hover:scale-105"
-                                >
-                                    ✓ Confirmar
+                        {/* Action Command Section */}
+                        <div className="pt-4 border-t border-gray-50">
+                            <p className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 text-center">Cambiar Estado Operativo</p>
+                            <div className="grid grid-cols-3 gap-4">
+                                <button onClick={() => handleChangeStatus('confirmada')} className="group p-5 bg-emerald-50 hover:bg-emerald-600 border border-emerald-100 rounded-4xl transition-all flex flex-col items-center gap-2">
+                                    <div className="p-3 bg-white text-emerald-600 rounded-2xl shadow-sm group-hover:bg-[#0d1b2a] group-hover:text-white transition-all"><CheckCircle size={24} /></div>
+                                    <span className="text-xs font-black text-emerald-700 uppercase tracking-widest group-hover:text-white">Confirmar</span>
                                 </button>
-                                <button
-                                    onClick={() => handleChangeStatus('pendiente')}
-                                    className="px-4 py-3 bg-yellow-400 hover:bg-yellow-400 text-gray-900 rounded-xl transition-all font-bold shadow-md hover:shadow-lg transform hover:scale-105"
-                                >
-                                    ⏱ Pendiente
+                                <button onClick={() => handleChangeStatus('pendiente')} className="group p-5 bg-amber-50 hover:bg-amber-500 border border-amber-100 rounded-4xl transition-all flex flex-col items-center gap-2">
+                                    <div className="p-3 bg-white text-amber-500 rounded-2xl shadow-sm group-hover:bg-[#0d1b2a] group-hover:text-white transition-all"><Clock size={24} /></div>
+                                    <span className="text-xs font-black text-amber-700 uppercase tracking-widest group-hover:text-white">Pendiente</span>
                                 </button>
-                                <button
-                                    onClick={() => handleChangeStatus('cancelada')}
-                                    className="px-4 py-3 bg-yellow-300 hover:bg-yellow-400 text-gray-900 rounded-xl transition-all font-bold shadow-md hover:shadow-lg transform hover:scale-105"
-                                >
-                                    ✕ Cancelar
+                                <button onClick={() => handleChangeStatus('cancelada')} className="group p-5 bg-rose-50 hover:bg-rose-500 border border-rose-100 rounded-4xl transition-all flex flex-col items-center gap-2">
+                                    <div className="p-3 bg-white text-rose-500 rounded-2xl shadow-sm group-hover:bg-[#0d1b2a] group-hover:text-white transition-all"><XCircle size={24} /></div>
+                                    <span className="text-xs font-black text-rose-700 uppercase tracking-widest group-hover:text-white">Cancelar</span>
                                 </button>
                             </div>
                         </div>

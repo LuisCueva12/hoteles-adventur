@@ -211,7 +211,7 @@ export default function GaleriaAdminPage() {
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-admin-primary/40" />
                         <input type="text" placeholder="Buscar..." value={busqueda} onChange={e => setBusqueda(e.target.value)}
                             className="pl-9 pr-8 py-2 border border-admin-primary-light rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-admin-accent text-admin-primary placeholder:text-admin-primary/40 w-48" />
-                        {busqueda && <button onClick={() => setBusqueda('')} className="absolute right-3 top-1/2 -translate-y-1/2"><X className="w-3.5 h-3.5 text-admin-primary/40" /></button>}
+                        {busqueda && <button onClick={() => setBusqueda('')} title="Limpiar búsqueda" className="absolute right-3 top-1/2 -translate-y-1/2"><X className="w-3.5 h-3.5 text-admin-primary/40" /></button>}
                     </div>
                     <button onClick={() => setShowNuevoAlbum(true)} className="flex items-center gap-2 px-4 py-2 bg-admin-accent hover:bg-admin-accent-hover text-admin-primary-dark rounded-xl text-sm font-semibold shadow-sm transition-all">
                         <FolderPlus className="w-4 h-4" /> Nuevo Album
@@ -256,7 +256,7 @@ export default function GaleriaAdminPage() {
                             <div key={aloj.id} className="bg-white rounded-2xl border border-admin-primary-light shadow-sm overflow-hidden">
                                 <div className="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-admin-primary-light transition-colors" onClick={() => toggleExpandido(aloj.id)}>
                                     <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-xl overflow-hidden bg-admin-primary-light flex-shrink-0 border border-admin-primary-light">
+                                        <div className="w-12 h-12 rounded-xl overflow-hidden bg-admin-primary-light shrink-0 border border-admin-primary-light">
                                             {aloj.fotos.length > 0
                                                 ? <Image src={aloj.fotos.find(f => f.es_principal)?.url || aloj.fotos[0].url} alt={aloj.nombre} width={48} height={48} className="w-full h-full object-cover" />
                                                 : <div className="w-full h-full flex items-center justify-center"><Hotel className="w-5 h-5 text-admin-primary/30" /></div>}
@@ -292,9 +292,9 @@ export default function GaleriaAdminPage() {
                                                         <Image src={foto.url} alt="foto" fill sizes="160px" className="object-cover" />
                                                         {foto.es_principal && <div className="absolute top-1.5 left-1.5 bg-yellow-400 text-gray-900 text-[10px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5"><Star className="w-2.5 h-2.5" /> Principal</div>}
                                                         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                                            <button onClick={() => setLightbox(foto)} className="w-8 h-8 bg-white/20 hover:bg-white/40 rounded-full flex items-center justify-center"><Eye className="w-4 h-4 text-white" /></button>
-                                                            {!foto.es_principal && <button onClick={() => handleSetPrincipal(foto)} className="w-8 h-8 bg-yellow-400/80 hover:bg-yellow-400 rounded-full flex items-center justify-center"><Star className="w-4 h-4 text-gray-900" /></button>}
-                                                            <button onClick={() => handleEliminarFoto(foto)} className="w-8 h-8 bg-red-500/80 hover:bg-red-500 rounded-full flex items-center justify-center"><Trash2 className="w-4 h-4 text-white" /></button>
+                                                            <button onClick={() => setLightbox(foto)} title="Ver" className="w-8 h-8 bg-white/20 hover:bg-white/40 rounded-full flex items-center justify-center"><Eye className="w-4 h-4 text-white" /></button>
+                                                            {!foto.es_principal && <button onClick={() => handleSetPrincipal(foto)} title="Marcar como principal" className="w-8 h-8 bg-yellow-400/80 hover:bg-yellow-400 rounded-full flex items-center justify-center"><Star className="w-4 h-4 text-gray-900" /></button>}
+                                                            <button onClick={() => handleEliminarFoto(foto)} title="Eliminar" className="w-8 h-8 bg-red-500/80 hover:bg-red-500 rounded-full flex items-center justify-center"><Trash2 className="w-4 h-4 text-white" /></button>
                                                         </div>
                                                     </div>
                                                 ))}
@@ -323,14 +323,14 @@ export default function GaleriaAdminPage() {
                             <div key={album.nombre} className="bg-white rounded-2xl border border-admin-primary-light shadow-sm overflow-hidden">
                                 <div className="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-admin-primary-light transition-colors" onClick={() => toggleExpandido(album.nombre)}>
                                     <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-xl bg-admin-accent-light flex items-center justify-center flex-shrink-0">
+                                        <div className="w-12 h-12 rounded-xl bg-admin-accent-light flex items-center justify-center shrink-0">
                                             {abierto ? <FolderOpen className="w-6 h-6 text-admin-primary" /> : <Folder className="w-6 h-6 text-admin-primary" />}
                                         </div>
                                         <div><p className="font-semibold text-admin-primary">{album.nombre}</p><p className="text-xs text-admin-primary/60">Album general</p></div>
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${album.fotos.length === 0 ? 'bg-admin-primary-light text-admin-primary/60' : 'bg-admin-accent-light text-admin-primary'}`}>{album.fotos.length} foto{album.fotos.length !== 1 ? 's' : ''}</span>
-                                        <button onClick={e => { e.stopPropagation(); eliminarAlbum(album.nombre) }} className="w-7 h-7 bg-admin-error/10 hover:bg-admin-error/20 rounded-lg flex items-center justify-center transition-all"><Trash2 className="w-3.5 h-3.5 text-admin-error" /></button>
+                                        <button onClick={e => { e.stopPropagation(); eliminarAlbum(album.nombre) }} title="Eliminar album" className="w-7 h-7 bg-admin-error/10 hover:bg-admin-error/20 rounded-lg flex items-center justify-center transition-all"><Trash2 className="w-3.5 h-3.5 text-admin-error" /></button>
                                         {abierto ? <ChevronUp className="w-4 h-4 text-admin-primary/40" /> : <ChevronDown className="w-4 h-4 text-admin-primary/40" />}
                                     </div>
                                 </div>
@@ -355,8 +355,8 @@ export default function GaleriaAdminPage() {
                                                         <Image src={foto.url} alt={foto.titulo || 'foto'} fill sizes="160px" className="object-cover" />
                                                         {foto.titulo && <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] px-2 py-1 truncate">{foto.titulo}</div>}
                                                         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                                            <button onClick={() => setLightbox(foto)} className="w-8 h-8 bg-white/20 hover:bg-white/40 rounded-full flex items-center justify-center"><Eye className="w-4 h-4 text-white" /></button>
-                                                            <button onClick={() => handleEliminarFoto(foto)} className="w-8 h-8 bg-red-500/80 hover:bg-red-500 rounded-full flex items-center justify-center"><Trash2 className="w-4 h-4 text-white" /></button>
+                                                        <button onClick={() => setLightbox(foto)} title="Ver" className="w-8 h-8 bg-white/20 hover:bg-white/40 rounded-full flex items-center justify-center"><Eye className="w-4 h-4 text-white" /></button>
+                                                        <button onClick={() => handleEliminarFoto(foto)} title="Eliminar" className="w-8 h-8 bg-red-500/80 hover:bg-red-500 rounded-full flex items-center justify-center"><Trash2 className="w-4 h-4 text-white" /></button>
                                                         </div>
                                                     </div>
                                                 ))}
@@ -375,7 +375,7 @@ export default function GaleriaAdminPage() {
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center justify-between mb-5">
                             <h2 className="text-lg font-bold text-admin-primary flex items-center gap-2"><FolderPlus className="w-5 h-5 text-admin-primary" /> Nuevo Album</h2>
-                            <button onClick={() => setShowNuevoAlbum(false)} className="w-8 h-8 bg-admin-primary-light hover:bg-admin-primary-light/70 rounded-full flex items-center justify-center"><X className="w-4 h-4 text-admin-primary" /></button>
+                            <button onClick={() => setShowNuevoAlbum(false)} title="Cerrar" className="w-8 h-8 bg-admin-primary-light hover:bg-admin-primary-light/70 rounded-full flex items-center justify-center"><X className="w-4 h-4 text-admin-primary" /></button>
                         </div>
                         <div className="space-y-4">
                             <div>
@@ -395,7 +395,7 @@ export default function GaleriaAdminPage() {
 
             {lightbox && (
                 <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4" onClick={() => setLightbox(null)}>
-                    <button className="absolute top-4 right-4 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center" onClick={() => setLightbox(null)}><X className="w-5 h-5 text-white" /></button>
+                    <button className="absolute top-4 right-4 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center" onClick={() => setLightbox(null)} title="Cerrar"><X className="w-5 h-5 text-white" /></button>
                     <div className="relative max-w-4xl w-full max-h-[85vh] rounded-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
                         <Image src={lightbox.url} alt="preview" width={1200} height={800} className="w-full h-full object-contain" />
                     </div>

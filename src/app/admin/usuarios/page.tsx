@@ -2,12 +2,20 @@
 
 import { useUsuarios } from '@/hooks/useUsuarios'
 import type { UsuarioCreateInput, UsuarioUpdateInput } from '@/lib/validations/usuario.schema'
-import { UsuarioRepository, type Usuario } from '@/lib/repositories/usuario.repository'
 import { DataTableEnhanced } from '@/components/admin/DataTableEnhanced'
 import { UsuarioFormComponent } from '@/components/admin/UsuarioForm'
 import { Modal } from '@/components/admin/Modal'
 import { AlertService } from '@/lib/ui/alert.service'
-import { Edit, Trash2, Shield, ShieldCheck, RefreshCw, UserPlus, Mail } from 'lucide-react'
+import { 
+    Edit, 
+    Trash2, 
+    Shield, 
+    ShieldCheck, 
+    RefreshCw, 
+    UserPlus, 
+    Mail, 
+    AlertCircle
+} from 'lucide-react'
 
 export default function UsuariosAdminPage() {
   const {
@@ -88,75 +96,68 @@ export default function UsuariosAdminPage() {
   const columns = [
     {
       key: 'nombre' as const,
-      label: 'Nombre',
+      label: 'NOMBRE',
       render: (_value: string, item: any) => (
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-admin-primary to-admin-primary-dark flex items-center justify-center text-white font-bold text-sm shadow-md">
-            {item.nombre.charAt(0).toUpperCase()}
+        <div className="flex items-center gap-4 py-1">
+          <div className="w-10 h-10 rounded-full bg-[#0d1b2a] flex items-center justify-center text-white font-bold text-sm">
+            {(item.nombre?.charAt(0) || 'U').toUpperCase()}
           </div>
-          <span className="font-medium text-gray-900">{`${item.nombre} ${item.apellido}`}</span>
+          <span className="font-bold text-gray-800 text-sm">
+            {`${item.nombre} ${item.apellido}`.toLowerCase()}
+          </span>
         </div>
       ),
       sortable: true
     },
     {
       key: 'email' as const,
-      label: 'Email',
+      label: 'EMAIL',
       render: (value: string) => (
         <div className="flex items-center gap-2">
-          <Mail size={16} className="text-admin-primary/60" />
-          <span className="text-gray-700">{value}</span>
+          <Mail size={16} className="text-gray-400" />
+          <span className="text-gray-500 text-sm font-medium">{value}</span>
         </div>
       ),
       sortable: true
     },
     {
       key: 'telefono' as const,
-      label: 'Teléfono',
+      label: 'TELÉFONO',
       render: (value: string | undefined) => (
-        <span className="text-gray-600">{value || '-'}</span>
+        <span className="text-gray-400 text-sm font-medium">{value || '-'}</span>
       )
     },
     {
       key: 'rol' as const,
-      label: 'Rol',
-      render: (value: string) => {
-        const colors = {
-          admin: 'bg-admin-primary text-white',
-          propietario: 'bg-admin-accent text-admin-primary-dark',
-          turista: 'bg-gray-100 text-gray-700'
-        }
-        return (
-          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${colors[value as keyof typeof colors] || 'bg-gray-100 text-gray-700'}`}>
-            {formatRol(value)}
-          </span>
-        )
-      },
+      label: 'ROL',
+      render: (value: string) => (
+        <span className="px-5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-[#0d1b2a] text-white">
+          {formatRol(value)}
+        </span>
+      ),
       sortable: true
     },
     {
       key: 'verificado' as const,
-      label: 'Verificado',
+      label: 'VERIFICADO',
       render: (_value: boolean, item: any) => (
-        <button
-          onClick={() => handleToggleVerificado(item)}
-          className={`p-2 rounded-lg transition-all ${
-            item.verificado 
-              ? 'text-admin-success bg-green-50 hover:bg-green-100' 
-              : 'text-gray-400 bg-gray-50 hover:bg-gray-100'
-          }`}
-          title={item.verificado ? 'Desverificar' : 'Verificar'}
-        >
-          {item.verificado ? <ShieldCheck size={20} /> : <Shield size={20} />}
-        </button>
+        <div className="flex justify-center">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all ${
+                    item.verificado 
+                    ? 'bg-green-50 text-green-500 border-green-200' 
+                    : 'bg-gray-50 text-gray-300 border-gray-200'
+                }`}>
+                <ShieldCheck size={20} className={item.verificado ? 'fill-green-500/10' : ''} />
+            </div>
+        </div>
       ),
       sortable: true
     },
     {
       key: 'fecha_registro' as const,
-      label: 'Fecha Registro',
+      label: 'FECHA REGISTRO',
       render: (value: string) => (
-        <span className="text-gray-600 text-sm">
+        <span className="text-gray-400 text-sm font-medium">
           {new Date(value).toLocaleDateString('es-PE', {
             day: '2-digit',
             month: 'short',
@@ -168,22 +169,22 @@ export default function UsuariosAdminPage() {
     },
     {
       key: 'actions' as const,
-      label: 'Acciones',
+      label: 'ACCIONES',
       render: (_value: any, item: any) => (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <button
             onClick={() => openEditModal(item)}
-            className="p-2 text-admin-primary hover:bg-admin-primary-light rounded-lg transition-all"
+            className="p-2.5 text-gray-600 hover:bg-gray-100 rounded-xl transition-all border border-transparent hover:border-gray-200"
             title="Editar"
           >
-            <Edit size={16} />
+            <Edit size={18} />
           </button>
           <button
             onClick={() => handleDelete(item)}
-            className="p-2 text-admin-error hover:bg-red-50 rounded-lg transition-all"
+            className="p-2.5 text-red-400 hover:bg-red-50 rounded-xl transition-all border border-transparent hover:border-red-100"
             title="Eliminar"
           >
-            <Trash2 size={16} />
+            <Trash2 size={18} />
           </button>
         </div>
       )
@@ -191,101 +192,74 @@ export default function UsuariosAdminPage() {
   ]
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-admin-primary to-admin-primary-dark rounded-2xl p-6 shadow-xl">
-        <div className="flex items-center justify-between">
+    <div className="space-y-8 pb-10">
+      {/* Dark Header Card */}
+      <div className="bg-[#0d1b2a] rounded-[2.5rem] p-10 shadow-2xl relative overflow-hidden group">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl group-hover:bg-blue-500/20 transition-all duration-1000"></div>
+        
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">
+            <h1 className="text-4xl font-black text-white tracking-tight mb-2 uppercase">
               Gestión de Usuarios
             </h1>
-            <p className="text-white/80">
-              Administra todos los usuarios del sistema
+            <p className="text-gray-400 text-lg font-medium">
+              Administra todos los usuarios del sistema de forma segura.
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <button
               onClick={refreshUsuarios}
               disabled={isRefreshing}
-              className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white border border-white/30 rounded-lg transition-all disabled:opacity-50 backdrop-blur-sm"
+              className="flex items-center gap-2 px-6 py-3.5 bg-white/5 hover:bg-white/10 text-white border border-white/20 rounded-2xl transition-all backdrop-blur-md disabled:opacity-50 font-bold"
             >
-              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
               Actualizar
             </button>
             <button
               onClick={openCreateModal}
-              className="flex items-center gap-2 px-4 py-2 bg-admin-accent hover:bg-admin-accent-hover text-admin-primary-dark rounded-lg shadow-lg transition-all font-semibold"
+              className="flex items-center gap-2 px-8 py-4 bg-[#fccd2a] hover:bg-[#ffdf4a] text-[#0d1b2a] rounded-2xl shadow-xl shadow-yellow-400/10 transition-all transform hover:scale-105 active:scale-95 font-black uppercase tracking-tight"
             >
-              <UserPlus size={20} />
+              <UserPlus size={22} className="stroke-[3]" />
               Nuevo Usuario
             </button>
           </div>
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl p-5 shadow-md border border-gray-100 hover:shadow-lg transition-all">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-medium text-gray-600">Total Usuarios</p>
-            <div className="w-10 h-10 bg-admin-primary-light rounded-lg flex items-center justify-center">
-              <UserPlus className="w-5 h-5 text-admin-primary" />
+      {/* Modern Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[
+            { label: 'Total Usuarios', value: usuarios.length, icon: UserPlus, iconBg: 'bg-blue-50', iconColor: 'text-blue-600' },
+            { label: 'Administradores', value: usuarios.filter(u => u.rol === 'admin').length, icon: Shield, iconBg: 'bg-indigo-50', iconColor: 'text-indigo-900' },
+            { label: 'Verificados', value: usuarios.filter(u => u.verificado).length, icon: ShieldCheck, iconBg: 'bg-emerald-50', iconColor: 'text-emerald-500' },
+            { label: 'Turistas', value: usuarios.filter(u => u.rol === 'turista').length, icon: UserPlus, iconBg: 'bg-slate-50', iconColor: 'text-slate-400' }
+        ].map((stat, i) => (
+            <div key={i} className="bg-white rounded-3xl p-8 shadow-xl shadow-blue-900/5 border border-gray-50 flex items-center justify-between hover:shadow-blue-900/10 transition-all group">
+                <div>
+                    <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">{stat.label}</p>
+                    <p className="text-5xl font-black text-gray-900 tabular-nums">{stat.value}</p>
+                </div>
+                <div className={`w-16 h-16 ${stat.iconBg} rounded-[1.25rem] flex items-center justify-center transition-transform group-hover:scale-110 duration-500`}>
+                    <stat.icon className={`w-8 h-8 ${stat.iconColor} stroke-[2.5]`} />
+                </div>
             </div>
-          </div>
-          <p className="text-3xl font-bold text-admin-primary">{usuarios.length}</p>
-        </div>
-
-        <div className="bg-white rounded-xl p-5 shadow-md border border-gray-100 hover:shadow-lg transition-all">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-medium text-gray-600">Administradores</p>
-            <div className="w-10 h-10 bg-admin-primary-light rounded-lg flex items-center justify-center">
-              <Shield className="w-5 h-5 text-admin-primary" />
-            </div>
-          </div>
-          <p className="text-3xl font-bold text-admin-primary">
-            {usuarios.filter(u => u.rol === 'admin').length}
-          </p>
-        </div>
-
-        <div className="bg-white rounded-xl p-5 shadow-md border border-gray-100 hover:shadow-lg transition-all">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-medium text-gray-600">Verificados</p>
-            <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
-              <ShieldCheck className="w-5 h-5 text-admin-success" />
-            </div>
-          </div>
-          <p className="text-3xl font-bold text-admin-success">
-            {usuarios.filter(u => u.verificado).length}
-          </p>
-        </div>
-
-        <div className="bg-white rounded-xl p-5 shadow-md border border-gray-100 hover:shadow-lg transition-all">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-medium text-gray-600">Turistas</p>
-            <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-              <UserPlus className="w-5 h-5 text-gray-600" />
-            </div>
-          </div>
-          <p className="text-3xl font-bold text-gray-700">
-            {usuarios.filter(u => u.rol === 'turista').length}
-          </p>
-        </div>
+        ))}
       </div>
 
       {errorMessage && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
-          <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
-            <span className="text-red-600">⚠</span>
+        <div className="bg-red-50 border-2 border-red-100 rounded-[2rem] p-6 flex items-center gap-4 animate-in fade-in slide-in-from-top-4">
+          <div className="w-12 h-12 bg-red-500 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-red-500/20">
+            <AlertCircle className="text-white w-6 h-6" />
           </div>
           <div>
-            <p className="font-semibold text-red-800">Error al cargar usuarios</p>
-            <p className="text-red-600 text-sm">{errorMessage}</p>
+            <p className="font-black text-red-900 uppercase text-sm tracking-tighter">Error crítico de sistema</p>
+            <p className="text-red-600 font-medium">{errorMessage}</p>
           </div>
         </div>
       )}
 
-      {/* Table */}
-      <div className="bg-white rounded-xl shadow-md border border-gray-100">
+      {/* Main Table Container */}
+      <div className="bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,123,255,0.05)] border border-gray-100 overflow-hidden">
         <DataTableEnhanced
           data={usuarios}
           columns={columns}
@@ -295,8 +269,8 @@ export default function UsuariosAdminPage() {
         />
       </div>
 
-      {/* Modals */}
-      <Modal isOpen={isModalOpen} onClose={closeModals} title="Nuevo Usuario">
+      {/* Create Modal */}
+      <Modal isOpen={isModalOpen} onClose={closeModals} title="Desplegar Nuevo Usuario">
         <UsuarioFormComponent
           onSubmit={handleCreate}
           onCancel={closeModals}
@@ -304,25 +278,28 @@ export default function UsuariosAdminPage() {
         />
       </Modal>
 
-      <Modal isOpen={isEditModalOpen} onClose={closeModals} title="Editar Usuario">
+      {/* Edit Modal */}
+      <Modal isOpen={isEditModalOpen} onClose={closeModals} title="Optimizar Registro de Usuario">
         {selectedUsuario && (
-          <UsuarioFormComponent
-            initialValues={{
-              nombre: selectedUsuario.nombre,
-              apellido: selectedUsuario.apellido,
-              email: selectedUsuario.email || '',
-              telefono: selectedUsuario.telefono || '',
-              documento_identidad: selectedUsuario.documento_identidad || '',
-              tipo_documento: selectedUsuario.tipo_documento || 'DNI',
-              pais: selectedUsuario.pais || '',
-              rol: selectedUsuario.rol,
-              verificado: selectedUsuario.verificado
-            }}
-            onSubmit={handleUpdate}
-            onCancel={closeModals}
-            loading={saving}
-            isEdit={true}
-          />
+          <div className="p-2">
+            <UsuarioFormComponent
+              initialValues={{
+                nombre: selectedUsuario.nombre,
+                apellido: selectedUsuario.apellido,
+                email: selectedUsuario.email || '',
+                telefono: selectedUsuario.telefono || '',
+                documento_identidad: selectedUsuario.documento_identidad || '',
+                tipo_documento: selectedUsuario.tipo_documento || 'DNI',
+                pais: selectedUsuario.pais || '',
+                rol: selectedUsuario.rol,
+                verificado: selectedUsuario.verificado
+              }}
+              onSubmit={handleUpdate}
+              onCancel={closeModals}
+              loading={saving}
+              isEdit={true}
+            />
+          </div>
         )}
       </Modal>
     </div>
