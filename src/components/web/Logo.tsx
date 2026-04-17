@@ -12,7 +12,7 @@ export function Logo({
   return (
     <div className={`flex items-center justify-center ${className}`}>
       <img
-        src="./logo.webp"
+        src="/logo.webp"
         alt="Adventur Hotels Logo"
         className="h-full w-auto object-contain"
       />
