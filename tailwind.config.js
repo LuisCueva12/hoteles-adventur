@@ -18,10 +18,10 @@ module.exports = {
         },
         admin: {
           primary: {
-            DEFAULT: '#001F3F',
-            hover: '#003366',
-            light: '#E6EEF5',
-            dark: '#001529',
+            DEFAULT: '#082747',
+            hover: '#0D355D',
+            light: '#EEF4FB',
+            dark: '#051B32',
           },
           accent: {
             DEFAULT: '#FACC15',
@@ -33,6 +33,19 @@ module.exports = {
           error: '#EF4444',
           info: '#3B82F6',
         },
+        surface: {
+          DEFAULT: '#FFFFFF',
+          soft: '#F8FBFF',
+          muted: '#D8E3EE',
+          ink: '#0F172A',
+        },
+      },
+      borderRadius: {
+        panel: '1.75rem',
+      },
+      boxShadow: {
+        panel: '0 18px 50px -32px rgba(15, 23, 42, 0.45)',
+        sidebar: '0 30px 70px -32px rgba(2, 19, 36, 0.65)',
       },
     },
   },

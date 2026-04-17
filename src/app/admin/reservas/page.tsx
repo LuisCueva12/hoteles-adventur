@@ -1,460 +1,380 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Modal } from '@/components/admin/Modal'
+import { useEffect, useMemo, useState } from 'react'
+import { CalendarCheck2, CalendarClock, CircleDollarSign, Plus, RefreshCw, Trash2 } from 'lucide-react'
+import { useToast } from '@/hooks/useNotificacion'
+import { useReservas } from '@/hooks/useReservas'
 import { dashboardService } from '@/services/dashboard.service'
-import { notificationsService } from '@/services/notificaciones.servicio'
-import { AlertService } from '@/lib/ui/alert.service'
-import { 
-    RefreshCw, 
-    Loader2, 
-    Calendar, 
-    User, 
-    Home, 
-    CreditCard, 
-    Eye, 
-    Trash2,
-    CheckCircle,
-    Clock,
-    XCircle,
-    TrendingUp
-} from 'lucide-react'
-import { DataTableEnhanced } from '@/components/admin/DataTableEnhanced'
+import {
+  AdminBadge,
+  AdminDataTable,
+  AdminDialog,
+  AdminPageShell,
+  AdminPanel,
+  AdminReservaForm,
+  AdminStatCard,
+  type ReservaOption,
+  type ReservaPayload,
+} from '@/components/admin'
+import { formatCurrency, formatDate } from '@/components/admin/formatters'
 
-interface Reserva {
-    id: string
-    codigo_reserva: string
-    fecha_inicio: string
-    fecha_fin: string
-    personas: number
-    total: number
-    adelanto: number
-    estado: string
-    fecha_creacion: string
-    usuarios: {
-        nombre: string
-        apellido: string
-        email: string
-    } | null
-    alojamientos: {
-        nombre: string
-        tipo: string
-    } | null
-    pagos: Array<{
-        monto: number
-        estado: string
-        metodo: string
-    }> | null
+function getEstadoTone(estado: string) {
+  const normalized = estado.toLowerCase()
+
+  if (normalized.includes('confirm') || normalized.includes('check_in') || normalized.includes('complet')) {
+    return 'success' as const
+  }
+
+  if (normalized.includes('pend')) {
+    return 'warning' as const
+  }
+
+  if (normalized.includes('cancel')) {
+    return 'danger' as const
+  }
+
+  return 'info' as const
 }
 
-const COLUMNS = [
-    {
-        key: 'codigo_reserva' as const,
-        label: 'CÓDIGO',
-        sortable: true,
-        render: (value: string) => (
-            <span className="text-[10px] font-black tracking-widest bg-blue-50 px-3 py-1.5 rounded-xl text-blue-700 border border-blue-100 uppercase">
-                {value}
-            </span>
-        )
-    },
-    {
-        key: 'usuarios' as const,
-        label: 'HUÉSPED',
-        sortable: true,
-        render: (_value: any, row: Reserva) => (
-            <div className="flex flex-col">
-                <span className="text-sm font-bold text-gray-800 uppercase tracking-tight">
-                    {row.usuarios ? `${row.usuarios.nombre} ${row.usuarios.apellido}` : 'Huésped General'}
-                </span>
-                <span className="text-[11px] text-gray-400 font-medium">{row.usuarios?.email || 'Sin contacto'}</span>
-            </div>
-        )
-    },
-    {
-        key: 'alojamientos' as const,
-        label: 'ALOJAMIENTO',
-        sortable: true,
-        render: (_value: any, row: Reserva) => (
-            <div className="flex flex-col">
-                <span className="text-sm text-gray-800 font-bold uppercase tracking-tight">{row.alojamientos?.nombre || 'General'}</span>
-                <span className="text-[11px] text-gray-400 uppercase tracking-[0.15em] font-medium">{row.alojamientos?.tipo || 'Unidad'}</span>
-            </div>
-        )
-    },
-    {
-        key: 'fecha_inicio' as const,
-        label: 'ESTADÍA',
-        sortable: true,
-        render: (_value: any, row: Reserva) => (
-            <div className="flex items-center gap-2">
-                <div className="flex flex-col bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100 min-w-17.5 items-center">
-                    <span className="text-[9px] font-black text-blue-600 uppercase">In</span>
-                    <span className="text-xs font-bold text-gray-900">{new Date(row.fecha_inicio).toLocaleDateString('es-PE', { day: '2-digit', month: 'short' })}</span>
-                </div>
-                <div className="w-2 h-0.5 bg-gray-200"></div>
-                <div className="flex flex-col bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100 min-w-17.5 items-center">
-                    <span className="text-[9px] font-black text-purple-600 uppercase">Out</span>
-                    <span className="text-xs font-bold text-gray-900">{new Date(row.fecha_fin).toLocaleDateString('es-PE', { day: '2-digit', month: 'short' })}</span>
-                </div>
-            </div>
-        )
-    },
-    {
-        key: 'total' as const,
-        label: 'TOTAL',
-        sortable: true,
-        render: (value: number, row: Reserva) => (
-            <div className="flex flex-col text-right">
-                <span className="text-base font-black text-gray-900 leading-none mb-1">S/. {value.toLocaleString()}</span>
-                {row.adelanto > 0 && (
-                    <span className="text-[10px] text-emerald-600 font-black uppercase tracking-tighter">Adelanto: S/. {row.adelanto.toLocaleString()}</span>
-                )}
-            </div>
-        )
-    },
-    {
-        key: 'estado' as const,
-        label: 'ESTADO',
-        sortable: true,
-        render: (value: string, row: Reserva) => {
-            const colors = {
-                confirmada: 'bg-green-50 text-green-600 border-green-200',
-                pendiente: 'bg-amber-50 text-amber-600 border-amber-200',
-                cancelada: 'bg-red-50 text-red-600 border-red-200'
-            }
-            return (
-                <div className="flex justify-center">
-                    <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all ${colors[value as keyof typeof colors] || 'bg-gray-50 text-gray-600'}`}>
-                        {value === 'confirmada' ? '✓ ' : value === 'pendiente' ? '⏱ ' : '✕ '}
-                        {value}
-                    </span>
-                </div>
-            )
-        }
-    },
-    {
-        key: 'actions' as const,
-        label: 'ACCIONES',
-        render: (_value: any, row: Reserva) => (
-            <div className="flex items-center justify-center gap-2">
-                <button
-                    onClick={(e) => { e.stopPropagation(); (window as any).onViewReserva(row) }}
-                    className="p-2.5 text-blue-600 hover:bg-blue-50 rounded-xl transition-all border border-transparent hover:border-blue-100"
-                    title="Ver detalles"
-                >
-                    <Eye size={18} />
-                </button>
-                <button
-                    onClick={(e) => { e.stopPropagation(); (window as any).onDeleteReserva(row) }}
-                    className="p-2.5 text-red-500 hover:bg-red-50 rounded-xl transition-all border border-transparent hover:border-red-100"
-                    title="Eliminar"
-                >
-                    <Trash2 size={18} />
-                </button>
-            </div>
-        )
-    }
-]
+export default function AdminReservasPage() {
+  const [query, setQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState('todas')
+  const [usuarios, setUsuarios] = useState<ReservaOption[]>([])
+  const [alojamientos, setAlojamientos] = useState<ReservaOption[]>([])
+  const {
+    reservas,
+    loading,
+    isRefreshing,
+    isModalOpen,
+    isEditModalOpen,
+    selectedReserva,
+    saving,
+    loadReservas,
+    refreshReservas,
+    createReserva,
+    updateReserva,
+    deleteReserva,
+    changeEstado,
+    openCreateModal,
+    openEditModal,
+    closeModals,
+  } = useReservas()
+  const toast = useToast()
 
-export default function ReservasAdminPage() {
-    const [reservas, setReservas] = useState<Reserva[]>([])
-    const [loading, setLoading] = useState(true)
-    const [selectedReserva, setSelectedReserva] = useState<Reserva | null>(null)
-    const [isModalOpen, setIsModalOpen] = useState(false)
-    const [filterEstado, setFilterEstado] = useState<string>('todas')
-    const [isRefreshing, setIsRefreshing] = useState(false)
+  useEffect(() => {
+    loadReservas()
 
-    useEffect(() => {
-        loadReservas()
-        
-        // Global focus for action buttons
-        (window as any).onViewReserva = handleView;
-        (window as any).onDeleteReserva = handleDelete;
-        
-        return () => {
-            delete (window as any).onViewReserva;
-            delete (window as any).onDeleteReserva;
-        }
-    }, [])
+    const loadOptions = async () => {
+      const [usuariosData, alojamientosData] = await Promise.all([
+        dashboardService.getUsuarios(),
+        dashboardService.getAlojamientos(),
+      ])
 
-    const loadReservas = async () => {
-        try {
-            setLoading(true)
-            const data = await dashboardService.getReservas()
-            const cleanData = (data || []).map((reserva: Reserva) => ({
-                ...reserva,
-                usuarios: reserva.usuarios || null,
-                alojamientos: reserva.alojamientos || null,
-                pagos: reserva.pagos || []
-            }))
-            setReservas(cleanData)
-        } catch (error) {
-            console.error('Error loading reservas:', error)
-            await AlertService.error('Error', 'No se pudieron cargar las reservas.')
-        } finally {
-            setLoading(false)
-        }
+      setUsuarios(
+        (usuariosData || []).map((usuario: any) => ({
+          id: usuario.id,
+          label: `${usuario.nombre} ${usuario.apellido} · ${usuario.email}`,
+        })),
+      )
+      setAlojamientos(
+        (alojamientosData || []).map((alojamiento: any) => ({
+          id: alojamiento.id,
+          label: `${alojamiento.nombre} · ${alojamiento.tipo}`,
+        })),
+      )
     }
 
-    const handleRefresh = async () => {
-        setIsRefreshing(true)
-        await loadReservas()
-        setIsRefreshing(false)
+    loadOptions()
+  }, [])
+
+  const filteredReservas = useMemo(() => {
+    const term = query.trim().toLowerCase()
+
+    return reservas.filter((reserva) => {
+      const matchesQuery =
+        !term ||
+        [
+          reserva.codigo_reserva,
+          reserva.usuarios?.nombre,
+          reserva.usuarios?.apellido,
+          reserva.usuarios?.email,
+          reserva.alojamientos?.nombre,
+          reserva.estado,
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase()
+          .includes(term)
+
+      const matchesStatus = statusFilter === 'todas' || reserva.estado === statusFilter
+
+      return matchesQuery && matchesStatus
+    })
+  }, [query, reservas, statusFilter])
+
+  const confirmadas = reservas.filter((reserva) =>
+    ['confirmada', 'check_in', 'completada'].includes(reserva.estado),
+  ).length
+  const pendientes = reservas.filter((reserva) => reserva.estado === 'pendiente').length
+  const ingresos = reservas.reduce((total, reserva) => total + Number(reserva.total || 0), 0)
+
+  const handleCreate = async (payload: ReservaPayload) => {
+    const result = await createReserva(payload)
+
+    if (result.success) {
+      toast.success('Reserva creada correctamente.')
+      return
     }
 
-    const handleView = (reserva: Reserva) => {
-        setSelectedReserva(reserva)
-        setIsModalOpen(true)
+    toast.error('No se pudo crear la reserva.')
+  }
+
+  const handleUpdate = async (payload: ReservaPayload) => {
+    if (!selectedReserva) {
+      return
     }
 
-    const handleDelete = async (reserva: Reserva) => {
-        const confirmed = await AlertService.confirmDanger({
-            title: '¿Eliminar reserva?',
-            text: `Esta acción borrará el código ${reserva.codigo_reserva} permanentemente.`,
-            confirmButtonText: 'Sí, eliminar',
-            cancelButtonText: 'Cancelar'
-        })
+    const result = await updateReserva(selectedReserva.id, payload)
 
-        if (confirmed) {
-            try {
-                await dashboardService.deleteReserva(reserva.id)
-                await loadReservas()
-                await AlertService.success('¡Eliminado!', 'Reserva eliminada con éxito')
-            } catch (error) {
-                await AlertService.error('Error', 'No se pudo eliminar')
-            }
-        }
+    if (result.success) {
+      toast.success('Reserva actualizada correctamente.')
+      return
     }
 
-    const handleChangeStatus = async (newStatus: string) => {
-        if (!selectedReserva) return
-        try {
-            await dashboardService.updateReserva(selectedReserva.id, { estado: newStatus })
-            await loadReservas()
-            
-            // Notify if needed
-            await notificationsService.notifyAdmins(
-                'info',
-                'Status Actualizado',
-                `Reserva ${selectedReserva.codigo_reserva} pasó a ${newStatus}`,
-                '/admin/reservas'
-            )
-            
-            await AlertService.success('¡Hecho!', `Estado cambiado a ${newStatus}`)
-            setIsModalOpen(false)
-        } catch (error) {
-            await AlertService.error('Error', 'No se pudo cambiar el estado')
-        }
+    toast.error('No se pudo actualizar la reserva.')
+  }
+
+  const handleDelete = async (id: string, codigo: string) => {
+    const confirmed = window.confirm(`¿Deseas eliminar la reserva ${codigo}?`)
+
+    if (!confirmed) {
+      return
     }
 
-    const filteredReservas = filterEstado === 'todas' 
-        ? reservas 
-        : reservas.filter(r => r.estado === filterEstado)
+    const result = await deleteReserva(id)
 
-    if (loading) {
-        return (
-            <div className="min-h-[60vh] flex flex-col items-center justify-center space-y-6">
-                <div className="w-20 h-20 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin"></div>
-                <p className="text-gray-400 font-black uppercase tracking-[0.4em] animate-pulse">Sincronizando Reservas...</p>
-            </div>
-        )
+    if (result.success) {
+      toast.success('Reserva eliminada correctamente.')
+      return
     }
 
-    return (
-        <div className="space-y-10 pb-16">
-            {/* Premium Header - Matching Users Design */}
-            <div className="bg-[#0d1b2a] rounded-[2.5rem] p-10 shadow-2xl relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl transition-all duration-1000 group-hover:bg-blue-500/20"></div>
-                
-                <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
-                    <div>
-                        <h1 className="text-4xl font-black text-white tracking-tight mb-2 uppercase">
-                            Gestión de <span className="text-blue-400">Reservas</span>
-                        </h1>
-                        <p className="text-gray-400 text-lg font-medium">
-                            Administra ingresos, estadías y estados en tiempo real.
-                        </p>
-                    </div>
-                    <button
-                        onClick={handleRefresh}
-                        disabled={isRefreshing}
-                        className="flex items-center gap-3 px-8 py-4 bg-white/5 hover:bg-white/10 text-white border border-white/20 rounded-2xl transition-all backdrop-blur-md disabled:opacity-50 font-black uppercase tracking-widest text-sm"
-                    >
-                        <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
-                        Sincronizar
-                    </button>
-                </div>
-            </div>
+    toast.error('No se pudo eliminar la reserva.')
+  }
 
-            {/* Colorful Stats Cards - Matching Shared Image */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {[
-                    { label: 'Total Reservas', value: reservas.length, icon: Calendar, color: 'from-blue-600 to-indigo-600', sub: 'Todas las estadías' },
-                    { label: 'Confirmadas', value: reservas.filter(r => r.estado === 'confirmada').length, icon: CheckCircle, color: 'from-emerald-500 to-teal-400', sub: 'Listas para ingreso' },
-                    { label: 'Pendientes', value: reservas.filter(r => r.estado === 'pendiente').length, icon: Clock, color: 'from-amber-400 to-orange-400', sub: 'Esperando validación' },
-                    { label: 'Canceladas', value: reservas.filter(r => r.estado === 'cancelada').length, icon: XCircle, color: 'from-rose-500 to-pink-500', sub: 'Fuera de sistema' }
-                ].map((stat, i) => (
-                    <div key={i} className={`bg-linear-to-br ${stat.color} rounded-4xl p-8 text-white shadow-xl shadow-blue-900/10 transition-all transform hover:scale-[1.03] cursor-default group relative overflow-hidden`}>
-                        <div className="relative z-10">
-                            <div className="flex items-center justify-between mb-6">
-                                <span className="text-xs font-black uppercase tracking-[0.2em] opacity-80">{stat.label}</span>
-                                <div className="p-3 bg-white/20 rounded-[1.25rem]">
-                                    <stat.icon size={24} />
-                                </div>
-                            </div>
-                            <h3 className="text-5xl font-black mb-1">{stat.value}</h3>
-                            <p className="text-xs mt-3 font-medium opacity-80 uppercase tracking-widest">{stat.sub}</p>
-                        </div>
-                        <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform duration-500">
-                            <stat.icon size={120} />
-                        </div>
-                    </div>
-                ))}
-            </div>
+  const handleStatusChange = async (reserva: (typeof reservas)[number], estado: string) => {
+    const result = await changeEstado(reserva, estado)
 
-            {/* New Table Container with Filter Tabs */}
-            <div className="bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,123,255,0.05)] border border-gray-100 overflow-hidden">
-                <div className="p-8 border-b border-gray-50 flex items-center justify-between bg-gray-50/20">
-                    <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mr-4">Filtro Estado:</span>
-                        <div className="flex bg-white/50 p-1.5 rounded-2xl border border-gray-100">
-                            {['todas', 'pendiente', 'confirmada', 'cancelada'].map((est) => (
-                                <button
-                                    key={est}
-                                    onClick={() => setFilterEstado(est)}
-                                    className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                                        filterEstado === est 
-                                        ? 'bg-[#0d1b2a] text-white shadow-lg' 
-                                        : 'text-gray-400 hover:text-gray-600'
-                                    }`}
-                                >
-                                    {est}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                    <div className="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2">
-                        <TrendingUp size={14} />
-                        Total: {filteredReservas.length} registros
-                    </div>
-                </div>
-                
-                <div className="p-4">
-                    <DataTableEnhanced
-                        data={filteredReservas}
-                        columns={COLUMNS}
-                        searchable={true}
-                        onRefresh={handleRefresh}
-                    />
-                </div>
-            </div>
+    if (result.success) {
+      toast.success(`Reserva actualizada a ${estado}.`)
+      return
+    }
 
-            {/* Premium Details Modal */}
-            <Modal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                title={`Detalles Reserva ${selectedReserva?.codigo_reserva}`}
-                size="lg"
-            >
-                {selectedReserva && (
-                    <div className="space-y-8 py-2">
-                        {/* Guest Hero Section */}
-                        <div className="flex items-start justify-between bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100">
-                            <div className="flex items-center gap-6">
-                                <div className="w-20 h-20 bg-[#0d1b2a] rounded-4xl flex items-center justify-center text-white text-3xl font-black">
-                                    {selectedReserva.usuarios?.nombre?.charAt(0) || 'U'}
-                                </div>
-                                <div>
-                                    <h4 className="text-2xl font-black text-gray-900 uppercase">
-                                        {selectedReserva.usuarios ? `${selectedReserva.usuarios.nombre} ${selectedReserva.usuarios.apellido}` : 'Invitado'}
-                                    </h4>
-                                    <p className="text-blue-600 font-bold">{selectedReserva.usuarios?.email}</p>
-                                    <div className="flex items-center gap-2 mt-2">
-                                        <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-white border ${
-                                            selectedReserva.estado === 'confirmada' ? 'text-green-600 border-green-200' : 
-                                            selectedReserva.estado === 'pendiente' ? 'text-amber-600 border-amber-200' : 'text-red-600 border-red-200'
-                                        }`}>
-                                            Estado Actual: {selectedReserva.estado}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="text-right">
-                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Reserva</p>
-                                <p className="text-4xl font-black text-[#0d1b2a]">S/. {selectedReserva.total.toLocaleString()}</p>
-                            </div>
-                        </div>
+    toast.error('No se pudo actualizar el estado de la reserva.')
+  }
 
-                        {/* Information Grid */}
-                        <div className="grid grid-cols-2 gap-8">
-                            <div className="space-y-4">
-                                <h5 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] px-2 flex items-center gap-2">
-                                    <Home size={14} className="text-blue-500" /> Detalle Alojamiento
-                                </h5>
-                                <div className="bg-white border border-gray-100 p-6 rounded-4xl shadow-sm">
-                                    <p className="text-lg font-black text-gray-800 uppercase leading-none">{selectedReserva.alojamientos?.nombre}</p>
-                                    <p className="text-sm text-gray-400 mt-2 font-medium uppercase tracking-widest">{selectedReserva.alojamientos?.tipo}</p>
-                                </div>
-                            </div>
-
-                            <div className="space-y-4">
-                                <h5 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] px-2 flex items-center gap-2">
-                                    <Calendar size={14} className="text-purple-500" /> Período Estadía
-                                </h5>
-                                <div className="bg-white border border-gray-100 p-6 rounded-4xl shadow-sm flex items-center justify-between">
-                                    <div>
-                                        <p className="text-[10px] font-black text-blue-600 uppercase mb-1">Check-In</p>
-                                        <p className="text-xl font-black text-gray-800">{new Date(selectedReserva.fecha_inicio).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
-                                    </div>
-                                    <div className="w-10 h-0.5 bg-gray-100"></div>
-                                    <div className="text-right">
-                                        <p className="text-[10px] font-black text-purple-600 uppercase mb-1">Check-Out</p>
-                                        <p className="text-xl font-black text-gray-800">{new Date(selectedReserva.fecha_fin).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Payment Summary */}
-                        <div className="bg-white border border-gray-100 rounded-[2.5rem] p-8">
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="p-2.5 bg-amber-50 rounded-xl text-amber-500"><CreditCard size={20} /></div>
-                                <h5 className="text-lg font-black text-gray-800 uppercase tracking-tight">Registro de Pagos</h5>
-                            </div>
-                            <div className="space-y-4">
-                                <div className="flex justify-between items-center p-4 bg-gray-50 rounded-2xl">
-                                    <span className="text-sm font-bold text-gray-600 uppercase tracking-widest">Adelanto abonado:</span>
-                                    <span className="text-xl font-black text-emerald-600 italic">S/. {selectedReserva.adelanto.toLocaleString()}</span>
-                                </div>
-                                <div className="flex justify-between items-center p-4 bg-[#0d1b2a] text-white rounded-2xl shadow-xl">
-                                    <span className="text-sm font-bold opacity-70 uppercase tracking-widest">Saldo Pendiente:</span>
-                                    <span className="text-2xl font-black text-amber-400 italic">S/. {(selectedReserva.total - selectedReserva.adelanto).toLocaleString()}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Action Command Section */}
-                        <div className="pt-4 border-t border-gray-50">
-                            <p className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 text-center">Cambiar Estado Operativo</p>
-                            <div className="grid grid-cols-3 gap-4">
-                                <button onClick={() => handleChangeStatus('confirmada')} className="group p-5 bg-emerald-50 hover:bg-emerald-600 border border-emerald-100 rounded-4xl transition-all flex flex-col items-center gap-2">
-                                    <div className="p-3 bg-white text-emerald-600 rounded-2xl shadow-sm group-hover:bg-[#0d1b2a] group-hover:text-white transition-all"><CheckCircle size={24} /></div>
-                                    <span className="text-xs font-black text-emerald-700 uppercase tracking-widest group-hover:text-white">Confirmar</span>
-                                </button>
-                                <button onClick={() => handleChangeStatus('pendiente')} className="group p-5 bg-amber-50 hover:bg-amber-500 border border-amber-100 rounded-4xl transition-all flex flex-col items-center gap-2">
-                                    <div className="p-3 bg-white text-amber-500 rounded-2xl shadow-sm group-hover:bg-[#0d1b2a] group-hover:text-white transition-all"><Clock size={24} /></div>
-                                    <span className="text-xs font-black text-amber-700 uppercase tracking-widest group-hover:text-white">Pendiente</span>
-                                </button>
-                                <button onClick={() => handleChangeStatus('cancelada')} className="group p-5 bg-rose-50 hover:bg-rose-500 border border-rose-100 rounded-4xl transition-all flex flex-col items-center gap-2">
-                                    <div className="p-3 bg-white text-rose-500 rounded-2xl shadow-sm group-hover:bg-[#0d1b2a] group-hover:text-white transition-all"><XCircle size={24} /></div>
-                                    <span className="text-xs font-black text-rose-700 uppercase tracking-widest group-hover:text-white">Cancelar</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </Modal>
+  const columns = [
+    {
+      key: 'codigo',
+      header: 'Reserva',
+      cell: (reserva: (typeof reservas)[number]) => (
+        <div className="space-y-1">
+          <p className="font-semibold text-slate-900">{reserva.codigo_reserva}</p>
+          <p className="text-sm text-slate-500">{formatDate(reserva.fecha_creacion)}</p>
         </div>
-    )
+      ),
+    },
+    {
+      key: 'huesped',
+      header: 'Huésped',
+      cell: (reserva: (typeof reservas)[number]) => (
+        <div className="space-y-1">
+          <p className="font-medium text-slate-700">
+            {[reserva.usuarios?.nombre, reserva.usuarios?.apellido].filter(Boolean).join(' ') || 'Sin usuario'}
+          </p>
+          <p className="text-sm text-slate-500">{reserva.usuarios?.email || 'Sin correo'}</p>
+        </div>
+      ),
+    },
+    {
+      key: 'alojamiento',
+      header: 'Alojamiento',
+      cell: (reserva: (typeof reservas)[number]) => (
+        <div className="space-y-1">
+          <p className="font-medium text-slate-700">{reserva.alojamientos?.nombre || 'Sin alojamiento'}</p>
+          <p className="text-sm text-slate-500">{reserva.alojamientos?.tipo || 'Sin tipo'}</p>
+        </div>
+      ),
+    },
+    {
+      key: 'fechas',
+      header: 'Estadía',
+      cell: (reserva: (typeof reservas)[number]) => (
+        <div className="space-y-1 text-sm text-slate-600">
+          <p>{formatDate(reserva.fecha_inicio)}</p>
+          <p>{formatDate(reserva.fecha_fin)}</p>
+        </div>
+      ),
+    },
+    {
+      key: 'estado',
+      header: 'Estado',
+      cell: (reserva: (typeof reservas)[number]) => (
+        <div className="space-y-2">
+          <AdminBadge tone={getEstadoTone(reserva.estado)}>{reserva.estado}</AdminBadge>
+          <p className="text-xs text-slate-500">{formatCurrency(reserva.total)}</p>
+        </div>
+      ),
+    },
+    {
+      key: 'acciones',
+      header: 'Acciones',
+      cell: (reserva: (typeof reservas)[number]) => (
+        <div className="flex flex-wrap gap-2">
+          <button type="button" className="admin-button-secondary px-3 py-2" onClick={() => openEditModal(reserva)}>
+            Editar
+          </button>
+          {reserva.estado !== 'confirmada' ? (
+            <button
+              type="button"
+              className="admin-button-secondary px-3 py-2"
+              onClick={() => handleStatusChange(reserva, 'confirmada')}
+            >
+              Confirmar
+            </button>
+          ) : null}
+          {reserva.estado !== 'cancelada' ? (
+            <button
+              type="button"
+              className="admin-button-secondary px-3 py-2"
+              onClick={() => handleStatusChange(reserva, 'cancelada')}
+            >
+              Cancelar
+            </button>
+          ) : null}
+          <button
+            type="button"
+            className="admin-button-ghost px-3 py-2 text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+            onClick={() => handleDelete(reserva.id, reserva.codigo_reserva)}
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
+      ),
+    },
+  ]
+
+  return (
+    <AdminPageShell
+      title="Reservas"
+      description="Control integral del flujo de reservas, estados y facturación asociada."
+      actions={
+        <>
+          <button type="button" className="admin-button-secondary" onClick={refreshReservas}>
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? 'Actualizando...' : 'Actualizar'}
+          </button>
+          <button type="button" className="admin-button-primary" onClick={openCreateModal}>
+            <Plus className="h-4 w-4" />
+            Nueva reserva
+          </button>
+        </>
+      }
+    >
+      <section className="admin-grid">
+        <AdminStatCard title="Reservas totales" value={reservas.length} helper="Historial actual" icon={CalendarClock} tone="blue" />
+        <AdminStatCard title="Confirmadas" value={confirmadas} helper="Activas o completadas" icon={CalendarCheck2} tone="green" />
+        <AdminStatCard title="Pendientes" value={pendientes} helper="Por revisar" icon={CalendarClock} tone="purple" />
+        <AdminStatCard title="Ingresos" value={formatCurrency(ingresos)} helper="Total acumulado" icon={CircleDollarSign} tone="amber" />
+      </section>
+
+      <AdminPanel className="overflow-hidden">
+        <div className="flex flex-col gap-4 border-b border-slate-200 px-6 py-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h2 className="text-2xl font-semibold text-slate-950">Agenda de reservas</h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Consulta huéspedes, fechas, estado y facturación de cada reserva.
+              </p>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <input
+                className="admin-input w-full min-w-[240px]"
+                placeholder="Buscar por código, huésped o alojamiento"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+              />
+              <select
+                className="admin-input w-full sm:w-52"
+                value={statusFilter}
+                onChange={(event) => setStatusFilter(event.target.value)}
+              >
+                <option value="todas">Todas</option>
+                <option value="pendiente">Pendiente</option>
+                <option value="confirmada">Confirmada</option>
+                <option value="check_in">Check-in</option>
+                <option value="completada">Completada</option>
+                <option value="cancelada">Cancelada</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <AdminDataTable
+          columns={columns}
+          data={filteredReservas}
+          getRowId={(reserva) => reserva.id}
+          emptyTitle={loading ? 'Cargando reservas' : 'No hay reservas para mostrar'}
+          emptyDescription={
+            loading ? 'Estamos consultando el calendario de reservas.' : 'Prueba otro filtro o crea una nueva reserva.'
+          }
+        />
+      </AdminPanel>
+
+      <AdminDialog
+        open={isModalOpen}
+        title="Crear reserva"
+        description="Registra una nueva reserva asociándola a un huésped y a una unidad."
+        onClose={closeModals}
+      >
+        <AdminReservaForm
+          mode="create"
+          usuarios={usuarios}
+          alojamientos={alojamientos}
+          saving={saving}
+          onCancel={closeModals}
+          onSubmit={handleCreate}
+        />
+      </AdminDialog>
+
+      <AdminDialog
+        open={isEditModalOpen}
+        title="Editar reserva"
+        description="Actualiza fechas, estado o datos operativos de la reserva."
+        onClose={closeModals}
+      >
+        <AdminReservaForm
+          mode="edit"
+          initialValue={
+            selectedReserva
+              ? {
+                  codigo_reserva: selectedReserva.codigo_reserva,
+                  fecha_inicio: selectedReserva.fecha_inicio?.slice(0, 10),
+                  fecha_fin: selectedReserva.fecha_fin?.slice(0, 10),
+                  personas: selectedReserva.personas,
+                  total: Number(selectedReserva.total || 0),
+                  estado: selectedReserva.estado,
+                  usuario_id: selectedReserva.usuario_id,
+                  alojamiento_id: selectedReserva.alojamiento_id,
+                }
+              : undefined
+          }
+          usuarios={usuarios}
+          alojamientos={alojamientos}
+          saving={saving}
+          onCancel={closeModals}
+          onSubmit={handleUpdate}
+        />
+      </AdminDialog>
+    </AdminPageShell>
+  )
 }

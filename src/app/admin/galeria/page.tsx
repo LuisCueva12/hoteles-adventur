@@ -1,406 +1,247 @@
-﻿'use client'
+'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import Image from 'next/image'
-import {
-    Images, Upload, Trash2, Star, Search, X, Loader2,
-    ChevronDown, ChevronUp, Plus, Eye, Hotel,
-    FolderPlus, Folder, FolderOpen
-} from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { Camera, ImagePlus, RefreshCw, Sparkles, Star } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
-import Swal from 'sweetalert2'
+import {
+  AdminBadge,
+  AdminDialog,
+  AdminEmptyState,
+  AdminPageShell,
+  AdminPanel,
+  AdminStatCard,
+} from '@/components/admin'
 
-interface Foto {
-    id: string; url: string; es_principal: boolean
-    alojamiento_id: string | null; album: string | null; titulo: string | null
+type GalleryPhoto = {
+  id: string
+  url: string
+  es_principal: boolean
+  alojamientos: {
+    nombre: string
+    categoria: string
+    tipo: string
+  } | null
 }
-interface Alojamiento {
-    id: string; nombre: string; tipo: string; categoria: string; fotos: Foto[]
-}
-interface Album { nombre: string; fotos: Foto[] }
-type Tab = 'alojamientos' | 'albumes'
-const BUCKET = 'accommodation-photos'
 
-export default function GaleriaAdminPage() {
-    const supabase = createClient()
-    const [tab, setTab] = useState<Tab>('alojamientos')
-    const [alojamientos, setAlojamientos] = useState<Alojamiento[]>([])
-    const [albumes, setAlbumes] = useState<Album[]>([])
-    const [loading, setLoading] = useState(true)
-    const [busqueda, setBusqueda] = useState('')
-    const [expandidos, setExpandidos] = useState<Set<string>>(new Set())
-    const [uploading, setUploading] = useState<string | null>(null)
-    const [lightbox, setLightbox] = useState<Foto | null>(null)
-    const [showNuevoAlbum, setShowNuevoAlbum] = useState(false)
-    const [nuevoAlbumNombre, setNuevoAlbumNombre] = useState('')
-    const fileRefs = useRef<Record<string, HTMLInputElement | null>>({})
+export default function AdminGaleriaPage() {
+  const [photos, setPhotos] = useState<GalleryPhoto[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [query, setQuery] = useState('')
+  const [category, setCategory] = useState('Todas')
+  const [selectedPhoto, setSelectedPhoto] = useState<GalleryPhoto | null>(null)
 
-    useEffect(() => { cargar() }, [])
+  const loadPhotos = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const supabase = createClient()
+      const { data, error } = await supabase
+        .from('fotos_alojamiento')
+        .select(
+          `
+            id,
+            url,
+            es_principal,
+            alojamientos (
+              nombre,
+              categoria,
+              tipo
+            )
+          `,
+        )
+        .order('es_principal', { ascending: false })
 
-    async function cargar() {
-        setLoading(true)
-        try {
-            const [resAloj, resFotos] = await Promise.all([
-                supabase.from('alojamientos')
-                    .select('id, nombre, tipo, categoria, fotos_alojamiento ( id, url, es_principal, alojamiento_id, album, titulo )')
-                    .order('nombre'),
-                supabase.from('fotos_alojamiento')
-                    .select('id, url, es_principal, alojamiento_id, album, titulo')
-                    .is('alojamiento_id', null).order('album').order('titulo')
-            ])
-            if (resAloj.error) throw resAloj.error
-            const mapped: Alojamiento[] = (resAloj.data || []).map((a: any) => ({
-                id: a.id, nombre: a.nombre, tipo: a.tipo, categoria: a.categoria,
-                fotos: (a.fotos_alojamiento || []).sort((x: Foto, y: Foto) =>
-                    x.es_principal === y.es_principal ? 0 : x.es_principal ? -1 : 1),
-            }))
-            setAlojamientos(mapped)
-            const fotosGenerales: Foto[] = resFotos.data || []
-            const albumMap: Record<string, Foto[]> = {}
-            fotosGenerales.forEach(f => {
-                const key = f.album || 'Sin album'
-                if (!albumMap[key]) albumMap[key] = []
-                albumMap[key].push(f)
-            })
-            setAlbumes(Object.entries(albumMap).map(([nombre, fotos]) => ({ nombre, fotos })))
-        } catch (err) { console.error(err) }
-        finally { setLoading(false) }
+      if (error) {
+        throw error
+      }
+
+      const normalized: GalleryPhoto[] = (data || []).map((item: any) => ({
+        id: item.id,
+        url: item.url,
+        es_principal: item.es_principal,
+        alojamientos: Array.isArray(item.alojamientos) ? item.alojamientos[0] || null : item.alojamientos || null,
+      }))
+
+      setPhotos(normalized)
+    } catch (loadError) {
+      console.error(loadError)
+      setError('No se pudo cargar la galería del panel.')
+      setPhotos([])
+    } finally {
+      setLoading(false)
     }
+  }
 
-    async function ensureBucket() {
-        const { data: buckets } = await supabase.storage.listBuckets()
-        if (!buckets?.some((b: any) => b.id === BUCKET)) {
-            await supabase.storage.createBucket(BUCKET, { public: true, fileSizeLimit: 10485760 })
-        }
-    }
+  useEffect(() => {
+    loadPhotos()
+  }, [])
 
-    function toggleExpandido(id: string) {
-        setExpandidos(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s })
-    }
+  const categories = useMemo(
+    () => ['Todas', ...Array.from(new Set(photos.map((photo) => photo.alojamientos?.tipo).filter(Boolean))).sort()],
+    [photos],
+  )
 
-    async function uploadFiles(files: File[], prefix: string): Promise<string[]> {
-        await ensureBucket()
-        const urls: string[] = []
-        for (const file of files) {
-            const ext = file.name.split('.').pop()
-            const path = `${prefix}/${Date.now()}-${Math.random().toString(36).slice(7)}.${ext}`
-            const { error } = await supabase.storage.from(BUCKET).upload(path, file, { cacheControl: '3600', upsert: false })
-            if (error) {
-                if (error.message.includes('Bucket not found'))
-                    throw new Error('Bucket no encontrado. Ejecuta la migracion 010_accommodation_photos_storage.sql en Supabase.')
-                throw new Error(`Error subiendo ${file.name}: ${error.message}`)
-            }
-            const { data: { publicUrl } } = supabase.storage.from(BUCKET).getPublicUrl(path)
-            urls.push(publicUrl)
-        }
-        return urls
-    }
+  const filteredPhotos = useMemo(() => {
+    const term = query.trim().toLowerCase()
 
-    async function handleUploadAlojamiento(alojamientoId: string, files: FileList | null) {
-        if (!files || files.length === 0) return
-        const valid = Array.from(files).filter(f => f.type.startsWith('image/'))
-        if (!valid.length) return
-        setUploading(alojamientoId)
-        try {
-            const aloj = alojamientos.find(a => a.id === alojamientoId)
-            const yaHayFotos = (aloj?.fotos.length ?? 0) > 0
-            const urls = await uploadFiles(valid, alojamientoId)
-            const rows = urls.map((url, i) => ({ alojamiento_id: alojamientoId, url, es_principal: !yaHayFotos && i === 0 }))
-            const { error } = await supabase.from('fotos_alojamiento').insert(rows)
-            if (error) throw error
-            await cargar()
-            setExpandidos(prev => new Set([...prev, alojamientoId]))
-        } catch (err: any) {
-            Swal.fire({ icon: 'error', title: 'Error', text: err.message, confirmButtonColor: '#3B82F6' })
-        } finally {
-            setUploading(null)
-            const ref = fileRefs.current[alojamientoId]; if (ref) ref.value = ''
-        }
-    }
+    return photos.filter((photo) => {
+      const matchesCategory = category === 'Todas' || photo.alojamientos?.tipo === category
+      const matchesQuery =
+        !term ||
+        [photo.alojamientos?.nombre, photo.alojamientos?.categoria, photo.alojamientos?.tipo]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase()
+          .includes(term)
 
-    async function handleUploadAlbum(albumNombre: string, files: FileList | null) {
-        if (!files || files.length === 0) return
-        const valid = Array.from(files).filter(f => f.type.startsWith('image/'))
-        if (!valid.length) return
-        setUploading('album_' + albumNombre)
-        try {
-            const urls = await uploadFiles(valid, `general/${albumNombre}`)
-            const rows = urls.map((url, i) => ({ alojamiento_id: null, album: albumNombre, url, es_principal: false, titulo: valid[i].name.replace(/\.[^.]+$/, '') }))
-            const { error } = await supabase.from('fotos_alojamiento').insert(rows)
-            if (error) throw error
-            await cargar()
-            setExpandidos(prev => new Set([...prev, albumNombre]))
-        } catch (err: any) {
-            Swal.fire({ icon: 'error', title: 'Error', text: err.message, confirmButtonColor: '#3B82F6' })
-        } finally {
-            setUploading(null)
-            const ref = fileRefs.current['album_' + albumNombre]; if (ref) ref.value = ''
-        }
-    }
+      return matchesCategory && matchesQuery
+    })
+  }, [category, photos, query])
 
-    async function crearAlbum() {
-        const nombre = nuevoAlbumNombre.trim()
-        if (!nombre) return
-        if (albumes.some(a => a.nombre.toLowerCase() === nombre.toLowerCase())) {
-            Swal.fire({ icon: 'warning', title: 'Ya existe', text: 'Ya hay un album con ese nombre', confirmButtonColor: '#3B82F6' }); return
-        }
-        setAlbumes(prev => [...prev, { nombre, fotos: [] }])
-        setExpandidos(prev => new Set([...prev, nombre]))
-        setNuevoAlbumNombre(''); setShowNuevoAlbum(false); setTab('albumes')
-    }
+  const principales = photos.filter((photo) => photo.es_principal).length
+  const alojamientosConFotos = new Set(photos.map((photo) => photo.alojamientos?.nombre).filter(Boolean)).size
 
-    async function handleEliminarFoto(foto: Foto) {
-        const result = await Swal.fire({ title: 'Eliminar foto?', text: 'Esta accion no se puede deshacer.', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#6b7280', confirmButtonText: 'Si, eliminar', cancelButtonText: 'Cancelar' })
-        if (!result.isConfirmed) return
-        try {
-            const urlObj = new URL(foto.url)
-            const storagePath = urlObj.pathname.split(`/${BUCKET}/`)[1]
-            if (storagePath) await supabase.storage.from(BUCKET).remove([storagePath])
-            const { error } = await supabase.from('fotos_alojamiento').delete().eq('id', foto.id)
-            if (error) throw error
-            if (foto.es_principal && foto.alojamiento_id) {
-                const aloj = alojamientos.find(a => a.id === foto.alojamiento_id)
-                const siguiente = aloj?.fotos.find(f => f.id !== foto.id)
-                if (siguiente) await supabase.from('fotos_alojamiento').update({ es_principal: true }).eq('id', siguiente.id)
-            }
-            await cargar()
-        } catch (err: any) { Swal.fire({ icon: 'error', title: 'Error', text: err.message, confirmButtonColor: '#3B82F6' }) }
-    }
+  return (
+    <AdminPageShell
+      title="Galería"
+      description="Visión general de las fotografías cargadas por alojamiento dentro del sistema."
+      actions={
+        <button type="button" className="admin-button-secondary" onClick={loadPhotos}>
+          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          {loading ? 'Actualizando...' : 'Actualizar'}
+        </button>
+      }
+    >
+      {error ? (
+        <AdminPanel className="border-rose-200 bg-rose-50 px-5 py-4 text-sm font-medium text-rose-600">
+          {error}
+        </AdminPanel>
+      ) : null}
 
-    async function handleSetPrincipal(foto: Foto) {
-        try {
-            await supabase.from('fotos_alojamiento').update({ es_principal: false }).eq('alojamiento_id', foto.alojamiento_id)
-            const { error } = await supabase.from('fotos_alojamiento').update({ es_principal: true }).eq('id', foto.id)
-            if (error) throw error
-            await cargar()
-        } catch (err: any) { Swal.fire({ icon: 'error', title: 'Error', text: err.message, confirmButtonColor: '#3B82F6' }) }
-    }
+      <section className="admin-grid">
+        <AdminStatCard title="Fotos" value={photos.length} helper="Activos visuales" icon={Camera} tone="blue" />
+        <AdminStatCard
+          title="Principales"
+          value={principales}
+          helper="Portadas destacadas"
+          icon={Star}
+          tone="amber"
+        />
+        <AdminStatCard
+          title="Alojamientos"
+          value={alojamientosConFotos}
+          helper="Con contenido visual"
+          icon={ImagePlus}
+          tone="green"
+        />
+        <AdminStatCard
+          title="Tipos"
+          value={Math.max(categories.length - 1, 0)}
+          helper="Categorías activas"
+          icon={Sparkles}
+          tone="purple"
+        />
+      </section>
 
-    async function eliminarAlbum(albumNombre: string) {
-        const result = await Swal.fire({ title: 'Eliminar album?', text: 'Se eliminaran todas las fotos.', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#6b7280', confirmButtonText: 'Si, eliminar', cancelButtonText: 'Cancelar' })
-        if (!result.isConfirmed) return
-        try {
-            const album = albumes.find(a => a.nombre === albumNombre)
-            if (album) for (const foto of album.fotos) {
-                const urlObj = new URL(foto.url)
-                const sp = urlObj.pathname.split(`/${BUCKET}/`)[1]
-                if (sp) await supabase.storage.from(BUCKET).remove([sp])
-            }
-            await supabase.from('fotos_alojamiento').delete().eq('album', albumNombre).is('alojamiento_id', null)
-            await cargar()
-        } catch (err: any) { Swal.fire({ icon: 'error', title: 'Error', text: err.message, confirmButtonColor: '#3B82F6' }) }
-    }
+      <AdminPanel className="p-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h2 className="text-2xl font-semibold text-slate-950">Biblioteca visual</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Filtra por tipo de alojamiento o por nombre para revisar la galería cargada.
+            </p>
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <input
+              className="admin-input min-w-[240px]"
+              placeholder="Buscar por nombre o categoría"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+            />
+            <select
+              className="admin-input w-full sm:w-52"
+              value={category}
+              onChange={(event) => setCategory(event.target.value)}
+            >
+              {categories.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </AdminPanel>
 
-    const filtradosAloj = alojamientos.filter(a => a.nombre.toLowerCase().includes(busqueda.toLowerCase()) || a.tipo.toLowerCase().includes(busqueda.toLowerCase()))
-    const filtradosAlbumes = albumes.filter(a => a.nombre.toLowerCase().includes(busqueda.toLowerCase()))
-    const totalFotosAloj = alojamientos.reduce((s, a) => s + a.fotos.length, 0)
-    const totalFotosAlbum = albumes.reduce((s, a) => s + a.fotos.length, 0)
-
-    return (
-        <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-admin-primary flex items-center gap-2">
-                        <Images className="w-7 h-7 text-admin-primary" />
-                        Gestion de Galeria
-                    </h1>
-                    <p className="text-sm text-admin-primary/60 mt-1">{alojamientos.length} alojamientos · {albumes.length} albumes · {totalFotosAloj + totalFotosAlbum} fotos</p>
+      {filteredPhotos.length === 0 ? (
+        <AdminEmptyState
+          icon={Camera}
+          title={loading ? 'Cargando galería' : 'No hay fotos para mostrar'}
+          description={
+            loading
+              ? 'Estamos recuperando el material visual del sistema.'
+              : 'No hay imágenes que coincidan con el filtro actual.'
+          }
+        />
+      ) : (
+        <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {filteredPhotos.map((photo) => (
+            <button
+              key={photo.id}
+              type="button"
+              className="admin-panel overflow-hidden text-left transition hover:-translate-y-1"
+              onClick={() => setSelectedPhoto(photo)}
+            >
+              <div className="aspect-[4/3] overflow-hidden bg-slate-100">
+                <img src={photo.url} alt={photo.alojamientos?.nombre || 'Foto'} className="h-full w-full object-cover" />
+              </div>
+              <div className="space-y-3 px-5 py-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-lg font-semibold text-slate-950">
+                      {photo.alojamientos?.nombre || 'Alojamiento sin nombre'}
+                    </p>
+                    <p className="text-sm text-slate-500">{photo.alojamientos?.categoria || 'Sin categoría'}</p>
+                  </div>
+                  <AdminBadge tone={photo.es_principal ? 'accent' : 'neutral'}>
+                    {photo.es_principal ? 'Principal' : 'Secundaria'}
+                  </AdminBadge>
                 </div>
                 <div className="flex items-center gap-2">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-admin-primary/40" />
-                        <input type="text" placeholder="Buscar..." value={busqueda} onChange={e => setBusqueda(e.target.value)}
-                            className="pl-9 pr-8 py-2 border border-admin-primary-light rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-admin-accent text-admin-primary placeholder:text-admin-primary/40 w-48" />
-                        {busqueda && <button onClick={() => setBusqueda('')} title="Limpiar búsqueda" className="absolute right-3 top-1/2 -translate-y-1/2"><X className="w-3.5 h-3.5 text-admin-primary/40" /></button>}
-                    </div>
-                    <button onClick={() => setShowNuevoAlbum(true)} className="flex items-center gap-2 px-4 py-2 bg-admin-accent hover:bg-admin-accent-hover text-admin-primary-dark rounded-xl text-sm font-semibold shadow-sm transition-all">
-                        <FolderPlus className="w-4 h-4" /> Nuevo Album
-                    </button>
+                  <AdminBadge tone="info">{photo.alojamientos?.tipo || 'Sin tipo'}</AdminBadge>
                 </div>
+              </div>
+            </button>
+          ))}
+        </section>
+      )}
+
+      <AdminDialog
+        open={Boolean(selectedPhoto)}
+        title={selectedPhoto?.alojamientos?.nombre || 'Vista previa'}
+        description={selectedPhoto?.alojamientos?.categoria || 'Detalle de la imagen seleccionada.'}
+        onClose={() => setSelectedPhoto(null)}
+      >
+        {selectedPhoto ? (
+          <div className="space-y-5">
+            <div className="overflow-hidden rounded-[28px] bg-slate-100">
+              <img
+                src={selectedPhoto.url}
+                alt={selectedPhoto.alojamientos?.nombre || 'Foto seleccionada'}
+                className="max-h-[65vh] w-full object-cover"
+              />
             </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {[
-                    { label: 'Alojamientos', value: alojamientos.length, color: 'bg-admin-primary-light text-admin-primary' },
-                    { label: 'Albumes', value: albumes.length, color: 'bg-admin-accent-light text-admin-primary' },
-                    { label: 'Fotos aloj.', value: totalFotosAloj, color: 'bg-admin-accent-light text-admin-accent-hover' },
-                    { label: 'Fotos album', value: totalFotosAlbum, color: 'bg-admin-primary-light text-admin-primary-hover' },
-                ].map(s => (
-                    <div key={s.label} className={`rounded-xl p-4 ${s.color}`}>
-                        <p className="text-2xl font-bold">{s.value}</p>
-                        <p className="text-xs font-semibold uppercase tracking-wide opacity-70 mt-0.5">{s.label}</p>
-                    </div>
-                ))}
+            <div className="flex flex-wrap gap-3">
+              <AdminBadge tone={selectedPhoto.es_principal ? 'accent' : 'neutral'}>
+                {selectedPhoto.es_principal ? 'Imagen principal' : 'Imagen secundaria'}
+              </AdminBadge>
+              <AdminBadge tone="info">{selectedPhoto.alojamientos?.tipo || 'Sin tipo'}</AdminBadge>
+              <AdminBadge tone="neutral">{selectedPhoto.alojamientos?.categoria || 'Sin categoría'}</AdminBadge>
             </div>
-
-            <div className="flex gap-1 bg-admin-primary-light p-1 rounded-xl w-fit">
-                <button onClick={() => setTab('alojamientos')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${tab === 'alojamientos' ? 'bg-white text-admin-primary shadow-sm' : 'text-admin-primary/60 hover:text-admin-primary'}`}>
-                    <Hotel className="w-4 h-4" /> Por Alojamiento
-                </button>
-                <button onClick={() => setTab('albumes')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${tab === 'albumes' ? 'bg-white text-admin-primary shadow-sm' : 'text-admin-primary/60 hover:text-admin-primary'}`}>
-                    <Folder className="w-4 h-4" /> Albumes Generales
-                    {albumes.length > 0 && <span className="bg-admin-primary text-admin-accent text-xs px-1.5 py-0.5 rounded-full font-bold">{albumes.length}</span>}
-                </button>
-            </div>
-
-            {loading ? (
-                <div className="flex items-center justify-center py-24"><Loader2 className="w-8 h-8 animate-spin text-admin-accent" /></div>
-            ) : tab === 'alojamientos' ? (
-                <div className="space-y-3">
-                    {filtradosAloj.length === 0 ? (
-                        <div className="text-center py-16 text-admin-primary/40"><Hotel className="w-12 h-12 mx-auto mb-3 opacity-30" /><p>No se encontraron alojamientos</p></div>
-                    ) : filtradosAloj.map(aloj => {
-                        const abierto = expandidos.has(aloj.id)
-                        const subiendo = uploading === aloj.id
-                        return (
-                            <div key={aloj.id} className="bg-white rounded-2xl border border-admin-primary-light shadow-sm overflow-hidden">
-                                <div className="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-admin-primary-light transition-colors" onClick={() => toggleExpandido(aloj.id)}>
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-xl overflow-hidden bg-admin-primary-light shrink-0 border border-admin-primary-light">
-                                            {aloj.fotos.length > 0
-                                                ? <Image src={aloj.fotos.find(f => f.es_principal)?.url || aloj.fotos[0].url} alt={aloj.nombre} width={48} height={48} className="w-full h-full object-cover" />
-                                                : <div className="w-full h-full flex items-center justify-center"><Hotel className="w-5 h-5 text-admin-primary/30" /></div>}
-                                        </div>
-                                        <div>
-                                            <p className="font-semibold text-admin-primary">{aloj.nombre}</p>
-                                            <p className="text-xs text-admin-primary/60">{aloj.tipo} · {aloj.categoria}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${aloj.fotos.length === 0 ? 'bg-admin-error/10 text-admin-error' : 'bg-admin-primary-light text-admin-primary'}`}>{aloj.fotos.length} foto{aloj.fotos.length !== 1 ? 's' : ''}</span>
-                                        {abierto ? <ChevronUp className="w-4 h-4 text-admin-primary/40" /> : <ChevronDown className="w-4 h-4 text-admin-primary/40" />}
-                                    </div>
-                                </div>
-                                {abierto && (
-                                    <div className="border-t border-admin-primary-light px-5 py-5">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <p className="text-sm font-semibold text-admin-primary">Fotos del alojamiento</p>
-                                            <label className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold cursor-pointer transition-all ${subiendo ? 'bg-admin-primary-light text-admin-primary/40 cursor-not-allowed' : 'bg-admin-primary hover:bg-admin-primary-hover text-white shadow-sm'}`}>
-                                                {subiendo ? <><Loader2 className="w-4 h-4 animate-spin" /> Subiendo...</> : <><Plus className="w-4 h-4" /> Agregar fotos</>}
-                                                <input type="file" accept="image/*" multiple className="hidden" disabled={subiendo} ref={el => { fileRefs.current[aloj.id] = el }} onChange={e => handleUploadAlojamiento(aloj.id, e.target.files)} />
-                                            </label>
-                                        </div>
-                                        {aloj.fotos.length === 0 ? (
-                                            <label className="flex flex-col items-center justify-center h-36 border-2 border-dashed border-admin-primary-light rounded-2xl text-admin-primary/40 cursor-pointer hover:border-admin-accent hover:text-admin-accent transition-all">
-                                                <Upload className="w-8 h-8 mb-2" /><p className="text-sm font-medium">Haz clic para subir fotos</p><p className="text-xs mt-1">PNG, JPG, WEBP</p>
-                                                <input type="file" accept="image/*" multiple className="hidden" onChange={e => handleUploadAlojamiento(aloj.id, e.target.files)} />
-                                            </label>
-                                        ) : (
-                                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                                                {aloj.fotos.map(foto => (
-                                                    <div key={foto.id} className="group relative aspect-square rounded-xl overflow-hidden bg-admin-primary-light border-2 border-transparent hover:border-admin-accent transition-all">
-                                                        <Image src={foto.url} alt="foto" fill sizes="160px" className="object-cover" />
-                                                        {foto.es_principal && <div className="absolute top-1.5 left-1.5 bg-yellow-400 text-gray-900 text-[10px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5"><Star className="w-2.5 h-2.5" /> Principal</div>}
-                                                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                                            <button onClick={() => setLightbox(foto)} title="Ver" className="w-8 h-8 bg-white/20 hover:bg-white/40 rounded-full flex items-center justify-center"><Eye className="w-4 h-4 text-white" /></button>
-                                                            {!foto.es_principal && <button onClick={() => handleSetPrincipal(foto)} title="Marcar como principal" className="w-8 h-8 bg-yellow-400/80 hover:bg-yellow-400 rounded-full flex items-center justify-center"><Star className="w-4 h-4 text-gray-900" /></button>}
-                                                            <button onClick={() => handleEliminarFoto(foto)} title="Eliminar" className="w-8 h-8 bg-red-500/80 hover:bg-red-500 rounded-full flex items-center justify-center"><Trash2 className="w-4 h-4 text-white" /></button>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        )
-                    })}
-                </div>
-            ) : (
-                <div className="space-y-3">
-                    {filtradosAlbumes.length === 0 ? (
-                        <div className="text-center py-16 text-admin-primary/40">
-                            <Folder className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                            <p className="mb-4">No hay albumes generales aun</p>
-                            <button onClick={() => setShowNuevoAlbum(true)} className="flex items-center gap-2 px-5 py-2.5 bg-admin-accent hover:bg-admin-accent-hover text-admin-primary-dark rounded-xl text-sm font-semibold mx-auto transition-all">
-                                <FolderPlus className="w-4 h-4" /> Crear primer album
-                            </button>
-                        </div>
-                    ) : filtradosAlbumes.map(album => {
-                        const abierto = expandidos.has(album.nombre)
-                        const subiendo = uploading === 'album_' + album.nombre
-                        return (
-                            <div key={album.nombre} className="bg-white rounded-2xl border border-admin-primary-light shadow-sm overflow-hidden">
-                                <div className="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-admin-primary-light transition-colors" onClick={() => toggleExpandido(album.nombre)}>
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-xl bg-admin-accent-light flex items-center justify-center shrink-0">
-                                            {abierto ? <FolderOpen className="w-6 h-6 text-admin-primary" /> : <Folder className="w-6 h-6 text-admin-primary" />}
-                                        </div>
-                                        <div><p className="font-semibold text-admin-primary">{album.nombre}</p><p className="text-xs text-admin-primary/60">Album general</p></div>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${album.fotos.length === 0 ? 'bg-admin-primary-light text-admin-primary/60' : 'bg-admin-accent-light text-admin-primary'}`}>{album.fotos.length} foto{album.fotos.length !== 1 ? 's' : ''}</span>
-                                        <button onClick={e => { e.stopPropagation(); eliminarAlbum(album.nombre) }} title="Eliminar album" className="w-7 h-7 bg-admin-error/10 hover:bg-admin-error/20 rounded-lg flex items-center justify-center transition-all"><Trash2 className="w-3.5 h-3.5 text-admin-error" /></button>
-                                        {abierto ? <ChevronUp className="w-4 h-4 text-admin-primary/40" /> : <ChevronDown className="w-4 h-4 text-admin-primary/40" />}
-                                    </div>
-                                </div>
-                                {abierto && (
-                                    <div className="border-t border-admin-primary-light px-5 py-5">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <p className="text-sm font-semibold text-admin-primary">Fotos del album</p>
-                                            <label className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold cursor-pointer transition-all ${subiendo ? 'bg-admin-primary-light text-admin-primary/40 cursor-not-allowed' : 'bg-admin-primary hover:bg-admin-primary-hover text-white shadow-sm'}`}>
-                                                {subiendo ? <><Loader2 className="w-4 h-4 animate-spin" /> Subiendo...</> : <><Plus className="w-4 h-4" /> Agregar fotos</>}
-                                                <input type="file" accept="image/*" multiple className="hidden" disabled={subiendo} ref={el => { fileRefs.current['album_' + album.nombre] = el }} onChange={e => handleUploadAlbum(album.nombre, e.target.files)} />
-                                            </label>
-                                        </div>
-                                        {album.fotos.length === 0 ? (
-                                            <label className="flex flex-col items-center justify-center h-36 border-2 border-dashed border-admin-accent-light rounded-2xl text-admin-primary/40 cursor-pointer hover:border-admin-accent hover:text-admin-accent transition-all">
-                                                <Upload className="w-8 h-8 mb-2" /><p className="text-sm font-medium">Subir fotos al album</p><p className="text-xs mt-1">PNG, JPG, WEBP</p>
-                                                <input type="file" accept="image/*" multiple className="hidden" onChange={e => handleUploadAlbum(album.nombre, e.target.files)} />
-                                            </label>
-                                        ) : (
-                                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                                                {album.fotos.map(foto => (
-                                                    <div key={foto.id} className="group relative aspect-square rounded-xl overflow-hidden bg-admin-primary-light border-2 border-transparent hover:border-admin-accent transition-all">
-                                                        <Image src={foto.url} alt={foto.titulo || 'foto'} fill sizes="160px" className="object-cover" />
-                                                        {foto.titulo && <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] px-2 py-1 truncate">{foto.titulo}</div>}
-                                                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                                        <button onClick={() => setLightbox(foto)} title="Ver" className="w-8 h-8 bg-white/20 hover:bg-white/40 rounded-full flex items-center justify-center"><Eye className="w-4 h-4 text-white" /></button>
-                                                        <button onClick={() => handleEliminarFoto(foto)} title="Eliminar" className="w-8 h-8 bg-red-500/80 hover:bg-red-500 rounded-full flex items-center justify-center"><Trash2 className="w-4 h-4 text-white" /></button>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        )
-                    })}
-                </div>
-            )}
-
-            {showNuevoAlbum && (
-                <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setShowNuevoAlbum(false)}>
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
-                        <div className="flex items-center justify-between mb-5">
-                            <h2 className="text-lg font-bold text-admin-primary flex items-center gap-2"><FolderPlus className="w-5 h-5 text-admin-primary" /> Nuevo Album</h2>
-                            <button onClick={() => setShowNuevoAlbum(false)} title="Cerrar" className="w-8 h-8 bg-admin-primary-light hover:bg-admin-primary-light/70 rounded-full flex items-center justify-center"><X className="w-4 h-4 text-admin-primary" /></button>
-                        </div>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-semibold text-admin-primary mb-1.5">Nombre del album</label>
-                                <input type="text" value={nuevoAlbumNombre} onChange={e => setNuevoAlbumNombre(e.target.value)} onKeyDown={e => e.key === 'Enter' && crearAlbum()}
-                                    placeholder="Ej: Piscina, Restaurante, Eventos..." autoFocus
-                                    className="w-full px-4 py-2.5 border-2 border-admin-primary-light rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-admin-accent focus:border-admin-accent text-admin-primary" />
-                            </div>
-                            <div className="flex gap-3 pt-2">
-                                <button onClick={() => setShowNuevoAlbum(false)} className="flex-1 py-2.5 border-2 border-admin-primary-light text-admin-primary font-semibold rounded-xl hover:bg-admin-primary-light transition-all text-sm">Cancelar</button>
-                                <button onClick={crearAlbum} disabled={!nuevoAlbumNombre.trim()} className="flex-1 py-2.5 bg-admin-accent hover:bg-admin-accent-hover disabled:opacity-40 disabled:cursor-not-allowed text-admin-primary-dark font-semibold rounded-xl transition-all text-sm">Crear Album</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {lightbox && (
-                <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4" onClick={() => setLightbox(null)}>
-                    <button className="absolute top-4 right-4 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center" onClick={() => setLightbox(null)} title="Cerrar"><X className="w-5 h-5 text-white" /></button>
-                    <div className="relative max-w-4xl w-full max-h-[85vh] rounded-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
-                        <Image src={lightbox.url} alt="preview" width={1200} height={800} className="w-full h-full object-contain" />
-                    </div>
-                </div>
-            )}
-        </div>
-    )
+          </div>
+        ) : null}
+      </AdminDialog>
+    </AdminPageShell>
+  )
 }

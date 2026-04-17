@@ -30,12 +30,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="es" suppressHydrationWarning data-scroll-behavior="smooth">
       <head>
         <link rel="icon" href="/favicon.ico" />
-        {/* Preconnect a dominios externos para reducir latencia */}
         <link rel="preconnect" href="https://images.unsplash.com" />
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
-      <body className={`${geist.variable} font-sans antialiased bg-gray-50`}>
+      <body className={`${geist.variable} font-sans antialiased text-slate-950`}>
         <SiteConfigProvider initialConfig={siteConfig}>
           <ErrorBoundary>
             <QueryProvider>
