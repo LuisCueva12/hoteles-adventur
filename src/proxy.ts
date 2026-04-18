@@ -1,26 +1,24 @@
-// ============================================================
-// src/proxy.ts  (antiguo middleware.ts — renombrado en Next.js 16)
-// Protege las rutas /admin — redirige a /login si no hay sesión
-// Compatible con Turbopack
-// ============================================================
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
-import { NextResponse, type NextRequest } from 'next/server';
-import { actualizarSesionSupabase } from '@/lib/supabase/middleware';
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 export async function proxy(request: NextRequest) {
-  const { response, user } = await actualizarSesionSupabase(request);
+  const { data: { session } } = await supabase.auth.getSession();
 
-  const estaEnRutaAdmin = request.nextUrl.pathname.startsWith('/admin');
-
-  if (estaEnRutaAdmin && !user) {
-    return NextResponse.redirect(new URL('/login', request.url));
+  if (request.nextUrl.pathname.startsWith('/admin')) {
+    if (!session) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
   }
 
-  return response;
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: [
-    '/((?!_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-  ],
+  matcher: ['/admin/:path*'],
 };

@@ -1,69 +1,26 @@
-// ============================================================
-// MÓDULO: reservas / capa de APLICACIÓN
-// Caso de uso principal: Procesar reserva → WhatsApp
-// ============================================================
-//
-// Dependencias cruzadas: Este módulo llama a la capa de
-// APLICACIÓN de hoteles (nunca directamente a su DB).
-// ============================================================
+import { Reserva, CrearReservaDTO } from '../dominio/Reserva';
+import { RepositorioReservas } from '../dominio/RepositorioReservas';
+import { RepositorioHoteles } from '@/modulos/hoteles/dominio/RepositorioHoteles';
 
-import type { EntidadReserva, RepositorioReservas } from '../dominio/RepositorioReservas';
-import type { RepositorioHoteles } from '@/modulos/hoteles/dominio/RepositorioHoteles';
-import { generarUrlWhatsapp } from '@/lib/whatsapp/generadorUrl';
-
-interface EntradaProcesarReserva {
-  habitacionId: string;
-  hotelId: string;
-  nombreHabitacion: string;
-  nombreCliente: string;
-  telefonoCliente: string;
-  fechaIngreso: Date;
-  fechaSalida: Date;
-}
-
-export class CasoUsoProcesarReservaWhatsapp {
+export class CasosUsoReservas {
   constructor(
     private repositorioReservas: RepositorioReservas,
     private repositorioHoteles: RepositorioHoteles
-  ) {}
+  ) { }
 
-  async ejecutar(entrada: EntradaProcesarReserva): Promise<string> {
-    // 1. Obtener el hotel para conseguir el teléfono de WhatsApp
-    const hotel = await this.repositorioHoteles.obtenerPorId(entrada.hotelId);
-    if (!hotel) throw new Error('Hotel no encontrado.');
+  async procesarReservaYGenerarLink(
+    datos: CrearReservaDTO,
+    hotelId: string
+  ): Promise<{ link: string; reserva: Reserva }> {
 
-    // 2. Guardar la intención de reserva en la base de datos
-    const reservaGuardada = await this.repositorioReservas.guardar({
-      habitacionId: entrada.habitacionId,
-      hotelId: entrada.hotelId,
-      nombreCliente: entrada.nombreCliente,
-      telefonoCliente: entrada.telefonoCliente,
-      fechaIngreso: entrada.fechaIngreso,
-      fechaSalida: entrada.fechaSalida,
-      estadoReserva: 'pendiente_whatsapp',
-    });
+    const reserva = await this.repositorioReservas.crear(datos);
 
-    // 3. Generar URL de WhatsApp con mensaje pre-formateado
-    const urlWhatsapp = generarUrlWhatsapp({
-      telefonoHotel: hotel.telefonoWhatsapp,
-      nombreCliente: entrada.nombreCliente,
-      nombreHabitacion: entrada.nombreHabitacion,
-      fechaIngreso: entrada.fechaIngreso,
-      fechaSalida: entrada.fechaSalida,
-      idSeguimiento: reservaGuardada.id!,
-    });
+    const hotel = await this.repositorioHoteles.obtenerPorId(hotelId);
+    if (!hotel) throw new Error('Hotel no disponible.');
 
-    return urlWhatsapp;
-  }
-}
+    const mensaje = `Hola! Quiero reservar en ${hotel.nombre}. Cliente: ${reserva.datos.nombreCliente}`;
+    const link = `https://wa.me/${hotel.telefonoWhatsapp}?text=${encodeURIComponent(mensaje)}`;
 
-export class CasoUsoActualizarEstadoReserva {
-  constructor(private repositorio: RepositorioReservas) {}
-
-  async ejecutar(
-    id: string,
-    estado: 'confirmada' | 'cancelada'
-  ): Promise<EntidadReserva> {
-    return this.repositorio.actualizarEstado(id, estado);
+    return { link, reserva };
   }
 }

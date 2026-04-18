@@ -1,16 +1,10 @@
-// ============================================================
-// MÓDULO: hoteles / capa de INFRAESTRUCTURA
-// Implementación de RepositorioHoteles usando Supabase/Postgres
-// ============================================================
-
 import { crearClienteSupabaseServidor } from '@/lib/supabase/servidor';
 import { Hotel } from '../dominio/Hotel';
 import { RepositorioHoteles } from '../dominio/RepositorioHoteles';
 
-// Mapper: Postgres (snake_case) → Dominio (camelCase)
 function mapearADominio(row: Record<string, unknown>): Hotel {
   const imagenes = (row.imagenes_urls as string[]) || [];
-  
+
   return {
     id: row.id as string,
     nombre: row.nombre as string,
@@ -32,6 +26,7 @@ export class RepositorioHotelesSupabase implements RepositorioHoteles {
       .select('*')
       .eq('activo', true)
       .order('nombre');
+
     if (error) throw new Error(error.message);
     return (data ?? []).map(mapearADominio);
   }
@@ -54,6 +49,7 @@ export class RepositorioHotelesSupabase implements RepositorioHoteles {
       .select('*')
       .ilike('ciudad', `%${ciudad}%`)
       .eq('activo', true);
+
     if (error) throw new Error(error.message);
     return (data ?? []).map(mapearADominio);
   }
@@ -74,6 +70,7 @@ export class RepositorioHotelesSupabase implements RepositorioHoteles {
       })
       .select()
       .single();
+
     if (error) throw new Error(error.message);
     return mapearADominio(data);
   }
@@ -94,6 +91,7 @@ export class RepositorioHotelesSupabase implements RepositorioHoteles {
       .eq('id', id)
       .select()
       .single();
+
     if (error) throw new Error(error.message);
     return mapearADominio(data);
   }

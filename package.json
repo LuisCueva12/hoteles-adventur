@@ -6,13 +6,7 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
-    "db:push": "supabase db push",
-    "db:pull": "supabase db pull",
-    "db:reset": "supabase db reset",
-    "db:migration:new": "supabase migration new",
-    "db:types": "supabase gen types typescript --linked > src/types/supabase.ts",
-    "db:status": "supabase migration list"
+    "lint": "next lint"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

@@ -1,12 +1,9 @@
-import { RepositorioHotelesSupabase } from '@/modulos/hoteles/infraestructura/RepositorioHotelesSupabase';
-import { CasoUsoObtenerHotelesDestacados } from '@/modulos/hoteles/aplicacion/CasoUsoObtenerHotelesDestacados';
+import { FabricaModulos } from '@/lib/factories/FabricaModulos';
 import { TarjetaHotel } from '../reutilizables/TarjetaHotel';
 
 export async function HotelesDestacados() {
-  // Inyección de dependencias (Manualmente por ahora, para mostrar el flujo)
-  const repositorio = new RepositorioHotelesSupabase();
-  const casoUso = new CasoUsoObtenerHotelesDestacados(repositorio);
-
+  // Ahora usamos la fábrica: Desacoplamiento total de la infraestructura
+  const casoUso = FabricaModulos.obtenerCasoUsoHotelesDestacados();
   const hoteles = await casoUso.ejecutar();
 
   return (
@@ -23,20 +20,20 @@ export async function HotelesDestacados() {
 
       <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-3">
         {hoteles.map((hotel) => (
-          <TarjetaHotel
-            key={hotel.id}
+          <TarjetaHotel 
+            key={hotel.id} 
             hotel={{
-              id: hotel.id!,
+              id: hotel.id,
               nombre: hotel.nombre,
               ciudad: hotel.ciudad,
-              fotoUrl: hotel.fotoUrl || '/placeholder-hotel.webp',
-              telefonoWhatsapp: hotel.telefonoWhatsapp,
-            }}
+              fotoUrl: hotel.fotoUrl,
+              telefonoWhatsapp: hotel.telefonoWhatsapp
+            }} 
           />
         ))}
 
         {hoteles.length === 0 && (
-          <div className="col-span-full py-20 text-center text-text-muted">
+          <div className="col-span-full py-20 text-center text-gray-400">
             Estamos preparando los mejores destinos para ti.
           </div>
         )}

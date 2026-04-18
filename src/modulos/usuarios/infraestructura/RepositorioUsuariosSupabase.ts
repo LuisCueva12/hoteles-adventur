@@ -1,54 +1,63 @@
-// ============================================================
-// MÓDULO: usuarios / capa de INFRAESTRUCTURA
-// ============================================================
-
 import { crearClienteSupabaseServidor } from '@/lib/supabase/servidor';
-import type {
-  EntidadUsuario,
-  RepositorioUsuarios,
-  RolUsuario,
-} from '../dominio/RepositorioUsuarios';
+import { Usuario, RolUsuario } from '../dominio/Usuario';
+import { RepositorioUsuarios } from '../dominio/RepositorioUsuarios';
 
-function mapearADominio(row: Record<string, unknown>): EntidadUsuario {
+function mapearADominio(row: any): Usuario {
   return {
-    id: row.id as string,
-    nombre: row.nombre as string,
-    email: row.email as string,
+    id: row.id,
+    nombreCompleto: row.nombre_completo,
+    correo: row.correo,
+    telefono: row.telefono || '',
     rol: row.rol as RolUsuario,
-    fechaCreacion: row.fecha_creacion ? new Date(row.fecha_creacion as string) : undefined,
   };
 }
 
 export class RepositorioUsuariosSupabase implements RepositorioUsuarios {
-  async obtenerPorId(id: string): Promise<EntidadUsuario | null> {
+  async obtenerPorId(id: string): Promise<Usuario | null> {
     const db = await crearClienteSupabaseServidor();
     const { data, error } = await db
       .from('usuarios')
       .select('*')
       .eq('id', id)
       .single();
+    
     if (error) return null;
     return mapearADominio(data);
   }
 
-  async obtenerTodos(): Promise<EntidadUsuario[]> {
+  async crearPerfil(usuario: Usuario & { contrasena: string }): Promise<Usuario> {
     const db = await crearClienteSupabaseServidor();
     const { data, error } = await db
       .from('usuarios')
-      .select('*')
-      .order('fecha_creacion', { ascending: false });
+      .insert({
+        id: usuario.id,
+        nombre_completo: usuario.nombreCompleto,
+        correo: usuario.correo,
+        contrasena: usuario.contrasena,
+        telefono: usuario.telefono,
+        rol: usuario.rol,
+      })
+      .select()
+      .single();
+
     if (error) throw new Error(error.message);
-    return (data ?? []).map(mapearADominio);
+    return mapearADominio(data);
   }
 
-  async actualizarRol(id: string, rol: RolUsuario): Promise<EntidadUsuario> {
+  async actualizarPerfil(id: string, datos: Partial<Usuario>): Promise<Usuario> {
     const db = await crearClienteSupabaseServidor();
     const { data, error } = await db
       .from('usuarios')
-      .update({ rol })
+      .update({
+        ...(datos.nombreCompleto && { nombre_completo: datos.nombreCompleto }),
+        ...(datos.correo && { correo: datos.correo }),
+        ...(datos.telefono !== undefined && { telefono: datos.telefono }),
+        ...(datos.rol && { rol: datos.rol }),
+      })
       .eq('id', id)
       .select()
       .single();
+
     if (error) throw new Error(error.message);
     return mapearADominio(data);
   }

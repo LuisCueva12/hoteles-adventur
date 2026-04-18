@@ -4,7 +4,7 @@ export interface Hotel {
   descripcion: string;
   direccion: string;
   ciudad: string;
-  fotoUrl: string; // Usaremos la primera de imagenes_urls
+  fotoUrl: string;
   telefonoWhatsapp: string;
   estrellas: number;
   activo: boolean;

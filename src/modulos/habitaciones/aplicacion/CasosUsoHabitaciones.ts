@@ -1,42 +1,22 @@
-// ============================================================
-// MÓDULO: habitaciones / capa de APLICACIÓN
-// ============================================================
+import { Habitacion } from '../dominio/Habitacion';
+import { RepositorioHabitaciones } from '../dominio/RepositorioHabitaciones';
 
-import type { EntidadHabitacion, RepositorioHabitaciones } from '../dominio/RepositorioHabitaciones';
-
-export class CasoUsoObtenerHabitacionesPorHotel {
+export class CasosUsoHabitaciones {
   constructor(private repositorio: RepositorioHabitaciones) {}
 
-  async ejecutar(hotelId: string): Promise<EntidadHabitacion[]> {
-    return this.repositorio.obtenerPorHotel(hotelId);
+  async listarHabitacionesPorHotel(hotelId: string): Promise<Habitacion[]> {
+    return this.repositorio.obtenerTodas(hotelId);
   }
-}
 
-export class CasoUsoObtenerHabitacionPorId {
-  constructor(private repositorio: RepositorioHabitaciones) {}
-
-  async ejecutar(id: string): Promise<EntidadHabitacion | null> {
+  async obtenerDetalleHabitacion(id: string): Promise<Habitacion | null> {
     return this.repositorio.obtenerPorId(id);
   }
-}
 
-export class CasoUsoCrearHabitacion {
-  constructor(private repositorio: RepositorioHabitaciones) {}
-
-  async ejecutar(
-    datos: Omit<EntidadHabitacion, 'id' | 'fechaCreacion'>
-  ): Promise<EntidadHabitacion> {
-    if (datos.precioNoche <= 0) throw new Error('El precio debe ser mayor a 0.');
-    if (datos.capacidadPersonas <= 0)
-      throw new Error('La capacidad debe ser mayor a 0.');
+  async gestionarHabitacion(datos: Omit<Habitacion, 'id'>): Promise<Habitacion> {
     return this.repositorio.crear(datos);
   }
-}
 
-export class CasoUsoEliminarHabitacion {
-  constructor(private repositorio: RepositorioHabitaciones) {}
-
-  async ejecutar(id: string): Promise<void> {
-    return this.repositorio.eliminar(id);
+  async cambiarDisponibilidad(id: string, estaDisponible: boolean): Promise<Habitacion> {
+    return this.repositorio.actualizar(id, { estaDisponible });
   }
 }
