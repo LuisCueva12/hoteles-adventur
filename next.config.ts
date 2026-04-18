@@ -31,7 +31,6 @@ const nextConfig: NextConfig = {
   skipTrailingSlashRedirect: true,
   async headers() {
     return [
-      // Páginas HTML: no cachear para evitar servir JS viejos
       {
         source: '/((?!_next/static|_next/image|fonts|favicon\\.ico).*)',
         headers: [
@@ -40,7 +39,6 @@ const nextConfig: NextConfig = {
           { key: 'Expires', value: '0' },
         ],
       },
-      // Headers de seguridad
       {
         source: '/(.*)',
         headers: [
@@ -54,7 +52,7 @@ const nextConfig: NextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://va.vercel-scripts.com https://cdn.jsdelivr.net blob: data:",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://va.vercel-scripts.com https://cdn.jsdelivr.net blob: data:",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com data:",
               "img-src 'self' data: blob: https://images.unsplash.com https://*.supabase.co https://www.google-analytics.com",
@@ -67,7 +65,6 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-      // Assets estáticos: cachear para siempre (tienen hash en el nombre)
       {
         source: '/_next/static/(.*)',
         headers: [

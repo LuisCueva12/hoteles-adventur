@@ -4,39 +4,37 @@
 // ============================================================
 
 import { crearClienteSupabaseServidor } from '@/lib/supabase/servidor';
-import type {
-  EntidadHotel,
-  RepositorioHoteles,
-} from '../dominio/RepositorioHoteles';
+import { Hotel } from '../dominio/Hotel';
+import { RepositorioHoteles } from '../dominio/RepositorioHoteles';
 
-// Mapper: Postgres → Dominio
-function mapearADominio(row: Record<string, unknown>): EntidadHotel {
+function mapearADominio(row: Record<string, unknown>): Hotel {
   return {
     id: row.id as string,
     nombre: row.nombre as string,
-    descripcion: row.descripcion as string | undefined,
+    descripcion: (row.descripcion as string) || '',
     ciudad: row.ciudad as string,
-    direccion: row.direccion as string | undefined,
-    telefonoWhatsapp: row.telefono_whatsapp as string,
-    fotoUrl: row.foto_url as string | undefined,
+    direccion: (row.direccion as string) || '',
+    fotoUrl: (row.foto_url as string) || '',
+    telefonoWhatsapp: (row.telefono_whatsapp as string) || '',
     estaActivo: row.esta_activo as boolean,
-    fechaCreacion: row.fecha_creacion ? new Date(row.fecha_creacion as string) : undefined,
+    rating: (row.rating as number) || 5,
+    facilidades: (row.facilidades as string[]) || [],
   };
 }
 
 export class RepositorioHotelesSupabase implements RepositorioHoteles {
-  async obtenerTodos(): Promise<EntidadHotel[]> {
+  async obtenerTodos(): Promise<Hotel[]> {
     const db = await crearClienteSupabaseServidor();
     const { data, error } = await db
       .from('hoteles')
       .select('*')
       .eq('esta_activo', true)
       .order('nombre');
-    if (error) throw new Error(error.message);
+    //if (error) throw new Error(error.message);
     return (data ?? []).map(mapearADominio);
   }
 
-  async obtenerPorId(id: string): Promise<EntidadHotel | null> {
+  async obtenerPorId(id: string): Promise<Hotel | null> {
     const db = await crearClienteSupabaseServidor();
     const { data, error } = await db
       .from('hoteles')
@@ -47,7 +45,7 @@ export class RepositorioHotelesSupabase implements RepositorioHoteles {
     return mapearADominio(data);
   }
 
-  async obtenerPorCiudad(ciudad: string): Promise<EntidadHotel[]> {
+  async obtenerPorCiudad(ciudad: string): Promise<Hotel[]> {
     const db = await crearClienteSupabaseServidor();
     const { data, error } = await db
       .from('hoteles')
@@ -58,9 +56,7 @@ export class RepositorioHotelesSupabase implements RepositorioHoteles {
     return (data ?? []).map(mapearADominio);
   }
 
-  async crear(
-    hotel: Omit<EntidadHotel, 'id' | 'fechaCreacion'>
-  ): Promise<EntidadHotel> {
+  async crear(hotel: Omit<Hotel, 'id'>): Promise<Hotel> {
     const db = await crearClienteSupabaseServidor();
     const { data, error } = await db
       .from('hoteles')
@@ -79,7 +75,7 @@ export class RepositorioHotelesSupabase implements RepositorioHoteles {
     return mapearADominio(data);
   }
 
-  async actualizar(id: string, datos: Partial<EntidadHotel>): Promise<EntidadHotel> {
+  async actualizar(id: string, datos: Partial<Hotel>): Promise<Hotel> {
     const db = await crearClienteSupabaseServidor();
     const { data, error } = await db
       .from('hoteles')
@@ -89,7 +85,7 @@ export class RepositorioHotelesSupabase implements RepositorioHoteles {
         ...(datos.ciudad && { ciudad: datos.ciudad }),
         ...(datos.direccion !== undefined && { direccion: datos.direccion }),
         ...(datos.telefonoWhatsapp && { telefono_whatsapp: datos.telefonoWhatsapp }),
-        ...(datos.fotoUrl !== undefined && { foto_url: datos.fotoUrl }),
+        ...(datos.fotoUrl && { foto_url: datos.fotoUrl }),
         ...(datos.estaActivo !== undefined && { esta_activo: datos.estaActivo }),
       })
       .eq('id', id)

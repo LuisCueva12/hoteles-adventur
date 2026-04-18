@@ -1,13 +1,18 @@
+import { Navbar } from '@/components/layout/Navbar';
+import { Footer } from '@/components/layout/Footer';
+
 export default function PublicLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen">
-      {/* Navbar se importará aquí */}
-      <main>{children}</main>
-      {/* Footer se importará aquí */}
+    <div className="flex min-h-screen w-full flex-col">
+      <Navbar />
+      <div className="flex-1 w-full flex flex-col">
+        {children}
+      </div>
+      <Footer />
     </div>
   );
 }

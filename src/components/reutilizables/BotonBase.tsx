@@ -14,9 +14,9 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const estilos: Record<Variante, string> = {
   primario:
-    'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500',
+    'bg-primary text-secondary hover:bg-primary-hover focus:ring-primary',
   secundario:
-    'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 focus:ring-gray-400',
+    'bg-secondary text-white hover:bg-secondary-hover focus:ring-secondary',
   peligro:
     'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
   whatsapp:

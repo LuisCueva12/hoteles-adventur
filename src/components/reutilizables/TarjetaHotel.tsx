@@ -30,18 +30,18 @@ export function TarjetaHotel({ hotel }: Props) {
       </div>
 
       <div className="p-5">
-        <p className="mb-1 text-xs font-medium uppercase tracking-wide text-green-600">
+        <p className="mb-1 text-xs font-medium uppercase tracking-wide text-primary">
           {hotel.ciudad}
         </p>
-        <h3 className="mb-2 text-lg font-bold text-gray-900">{hotel.nombre}</h3>
+        <h3 className="mb-2 text-lg font-bold text-secondary">{hotel.nombre}</h3>
         {hotel.descripcion && (
-          <p className="mb-4 line-clamp-2 text-sm text-gray-500">
+          <p className="mb-4 line-clamp-2 text-sm text-text-muted">
             {hotel.descripcion}
           </p>
         )}
         <Link
           href={`/hoteles/${hotel.id}`}
-          className="inline-block rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 transition-colors"
+          className="inline-block rounded-lg bg-primary px-4 py-2 text-sm font-bold text-secondary hover:bg-primary-hover transition-colors"
         >
           Ver habitaciones
         </Link>

@@ -1,19 +1,27 @@
 ---
-description: Estándares globales de código limpio, arquitectura clara y legibilidad
+description: Estándares globales de arquitectura Hexagonal, código limpio y modularidad innegociable.
 alwaysApply: true
 ---
 
-# Código limpio y arquitectura del proyecto
+# LEY PRIMERA: ARQUITECTURA HEXAGONAL (PUERTOS Y ADAPTADORES)
 
-- Prioriza código limpio, simple y mantenible en cada cambio.
-- No agregues comentarios en el código, salvo que el usuario lo pida explícitamente.
-- Usa nombres de variables, funciones, clases y archivos que expresen intención de negocio.
-- Cada función debe tener una responsabilidad clara y un tamaño acotado.
-- Evita lógica compleja en controladores o vistas; mueve reglas de negocio a servicios o capas de dominio.
-- Mantén separación clara de capas: presentación, aplicación, dominio e infraestructura.
-- Prefiere composición y reutilización antes que duplicar código.
-- Elimina código muerto, ramas innecesarias y validaciones redundantes; no dejes **archivos del repositorio** (componentes, utilidades, tipos, rutas API, assets en `src/` o `server/`) que no estén referenciados o que sean restos de refactors, salvo que formen parte de un feature en curso acordado.
-- Aplica retorno temprano para reducir anidaciones profundas.
-- Haz que las interfaces y contratos sean explícitos y consistentes entre módulos.
-- Mantén consistencia de estilo y convenciones del proyecto en todos los archivos.
-- Antes de finalizar, valida que el flujo quede funcional, legible y coherente con la arquitectura existente.
+Este proyecto se rige estrictamente por la Arquitectura Hexagonal. Ningún cambio debe violar la dirección de las dependencias.
+
+- **Dependencias Invariables:** Las dependencias siempre apuntan hacia adentro. 
+    - `Infraestructura` conoce a `Aplicación` y `Dominio`.
+    - `Aplicación` conoce a `Dominio`.
+    - `Dominio` **NO conoce a nadie**. Es código puro sin librerías externas ni dependencias de BD (Supabase).
+- **El Dominio es el Contrato:** Todas las interfaces de repositorios deben vivir en `dominio`. La infraestructura solo implementa estas interfaces.
+- **Aislamiento Total:** Si eliminamos la carpeta `infraestructura`, la lógica de negocio en `dominio` y `aplicacion` debe seguir compilando y siendo testeable.
+
+# Código Limpio y Modularidad
+
+- **Modularidad Estricta:** Un módulo no puede acceder a las tripas de otro. La comunicación entre módulos se hace exclusivamente a través de los contratos de `dominio`.
+- **Nombres de Negocio:** Se usa lenguaje ubicuo. Los términos técnicos ceden ante los términos de negocio (ej: Usar `Alojamiento` en lugar de `HotelRow`).
+- **Cero Comentarios:** El código debe ser auto-explicativo mediante nombres claros.
+- **Responsabilidad Única:** Cada clase, función o componente hace una sola cosa y la hace bien.
+- **Retorno Temprano:** Minimiza el uso de `else` y anidamientos.
+- **Validación Final:** Antes de entregar, verifica que el flujo sea: **UI (React) -> Aplicación (Caso de Uso) -> Dominio (Entidad) <- Infraestructura (Adaptador/Supabase).**
+
+# Estándares de Diseño
+- Usa siempre el sistema de diseño global: Tipografía `Montserrat`, colores `--primary` (#ffd600) y `--secondary` (#001f3f). No uses colores "ad-hoc".

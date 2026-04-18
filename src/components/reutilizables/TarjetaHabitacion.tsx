@@ -46,27 +46,27 @@ export function TarjetaHabitacion({ habitacion }: Props) {
       </div>
 
       <div className="p-5">
-        <h3 className="mb-1 text-base font-bold text-gray-900">
+        <h3 className="mb-1 text-base font-bold text-secondary">
           {habitacion.nombre}
         </h3>
-        <p className="mb-1 text-xs text-gray-500">
+        <p className="mb-1 text-xs text-text-muted">
           👥 {habitacion.capacidadPersonas} persona
           {habitacion.capacidadPersonas > 1 ? 's' : ''}
         </p>
         {habitacion.descripcion && (
-          <p className="mb-3 line-clamp-2 text-sm text-gray-500">
+          <p className="mb-3 line-clamp-2 text-sm text-text-muted">
             {habitacion.descripcion}
           </p>
         )}
         <div className="flex items-center justify-between">
-          <span className="text-lg font-bold text-green-700">
+          <span className="text-lg font-bold text-secondary">
             {formatearPrecio(habitacion.precioNoche)}
-            <span className="text-xs font-normal text-gray-400"> /noche</span>
+            <span className="text-xs font-normal text-text-muted"> /noche</span>
           </span>
           {habitacion.estaDisponible && (
             <Link
               href={`/checkout/${habitacion.id}`}
-              className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 transition-colors"
+              className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-secondary hover:bg-primary-hover transition-colors shadow-sm"
             >
               Reservar
             </Link>
