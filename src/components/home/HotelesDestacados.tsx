@@ -6,7 +6,7 @@ export async function HotelesDestacados() {
   // Inyección de dependencias (Manualmente por ahora, para mostrar el flujo)
   const repositorio = new RepositorioHotelesSupabase();
   const casoUso = new CasoUsoObtenerHotelesDestacados(repositorio);
-  
+
   const hoteles = await casoUso.ejecutar();
 
   return (
@@ -23,16 +23,15 @@ export async function HotelesDestacados() {
 
       <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-3">
         {hoteles.map((hotel) => (
-          <TarjetaHotel 
-            key={hotel.id} 
+          <TarjetaHotel
+            key={hotel.id}
             hotel={{
               id: hotel.id!,
               nombre: hotel.nombre,
               ciudad: hotel.ciudad,
               fotoUrl: hotel.fotoUrl || '/placeholder-hotel.webp',
               telefonoWhatsapp: hotel.telefonoWhatsapp,
-              estaActivo: hotel.estaActivo
-            }} 
+            }}
           />
         ))}
 
