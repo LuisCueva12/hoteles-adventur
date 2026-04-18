@@ -1,7 +1,0 @@
-export * from './errores'
-export * from './internacionalizacion'
-export * from './cliente-consultas'
-export * from './limite-velocidad'
-export * from './seguridad'
-export * from './seo'
-export * from './validations'

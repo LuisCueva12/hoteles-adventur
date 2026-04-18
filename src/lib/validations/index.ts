@@ -1,5 +1,0 @@
-export * from './common.schema'
-export * from './usuario.schema'
-export * from './alojamiento.schema'
-export * from './reserva.schema'
-export * from './auth.schema'
