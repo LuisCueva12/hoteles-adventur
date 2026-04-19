@@ -4,19 +4,31 @@ import { RepositorioHabitaciones } from '../dominio/RepositorioHabitaciones';
 export class CasosUsoHabitaciones {
   constructor(private repositorio: RepositorioHabitaciones) {}
 
-  async listarHabitacionesPorHotel(hotelId: string): Promise<Habitacion[]> {
+  async listarTodas(): Promise<Habitacion[]> {
+    return this.repositorio.obtenerTodas();
+  }
+
+  async contar(): Promise<number> {
+    return this.repositorio.contar();
+  }
+
+  async listarPorHotel(hotelId: string): Promise<Habitacion[]> {
     return this.repositorio.obtenerTodas(hotelId);
   }
 
-  async obtenerDetalleHabitacion(id: string): Promise<Habitacion | null> {
+  async obtenerPorId(id: string): Promise<Habitacion | null> {
     return this.repositorio.obtenerPorId(id);
   }
 
-  async gestionarHabitacion(datos: Omit<Habitacion, 'id'>): Promise<Habitacion> {
+  async crear(datos: Omit<Habitacion, 'id'>): Promise<Habitacion> {
     return this.repositorio.crear(datos);
   }
 
-  async cambiarDisponibilidad(id: string, estaDisponible: boolean): Promise<Habitacion> {
-    return this.repositorio.actualizar(id, { estaDisponible });
+  async editar(id: string, datos: Partial<Habitacion>): Promise<Habitacion> {
+    return this.repositorio.actualizar(id, datos);
+  }
+
+  async eliminar(id: string): Promise<void> {
+    return this.repositorio.eliminar(id);
   }
 }

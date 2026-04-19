@@ -1,39 +1,38 @@
-import { crearClienteSupabaseServidor } from '@/lib/supabase/servidor';
+import { SupabaseClient } from '@supabase/supabase-js';
 import { Hotel } from '../dominio/Hotel';
 import { RepositorioHoteles } from '../dominio/RepositorioHoteles';
 
-function mapearADominio(row: Record<string, unknown>): Hotel {
+function mapearADominio(row: any): Hotel {
   const imagenes = (row.imagenes_urls as string[]) || [];
-
   return {
-    id: row.id as string,
-    nombre: row.nombre as string,
-    descripcion: (row.descripcion as string) || '',
-    ciudad: row.ciudad as string,
-    direccion: (row.direccion as string) || '',
-    fotoUrl: imagenes.length > 0 ? imagenes[0] : '/placeholder-hotel.webp',
-    telefonoWhatsapp: (row.telefono_whatsapp as string) || '',
-    estrellas: (row.estrellas as number) || 3,
-    activo: row.activo as boolean,
+    id: row.id,
+    nombre: row.nombre,
+    descripcion: row.descripcion || '',
+    ciudad: row.ciudad,
+    direccion: row.direccion || '',
+    imagenesUrls: imagenes,
+    imagenPrincipal: row.imagen_principal || imagenes[0] || '',
+    telefonoWhatsapp: row.telefono_whatsapp,
+    estrellas: row.estrellas || 3,
+    activo: row.activo,
   };
 }
 
 export class RepositorioHotelesSupabase implements RepositorioHoteles {
+  constructor(private db: SupabaseClient) {}
+
   async obtenerTodos(): Promise<Hotel[]> {
-    const db = await crearClienteSupabaseServidor();
-    const { data, error } = await db
+    const { data, error } = await this.db
       .from('hoteles')
       .select('*')
       .eq('activo', true)
       .order('nombre');
-
     if (error) throw new Error(error.message);
     return (data ?? []).map(mapearADominio);
   }
 
   async obtenerPorId(id: string): Promise<Hotel | null> {
-    const db = await crearClienteSupabaseServidor();
-    const { data, error } = await db
+    const { data, error } = await this.db
       .from('hoteles')
       .select('*')
       .eq('id', id)
@@ -43,20 +42,17 @@ export class RepositorioHotelesSupabase implements RepositorioHoteles {
   }
 
   async obtenerPorCiudad(ciudad: string): Promise<Hotel[]> {
-    const db = await crearClienteSupabaseServidor();
-    const { data, error } = await db
+    const { data, error } = await this.db
       .from('hoteles')
       .select('*')
       .ilike('ciudad', `%${ciudad}%`)
       .eq('activo', true);
-
     if (error) throw new Error(error.message);
     return (data ?? []).map(mapearADominio);
   }
 
   async crear(hotel: Omit<Hotel, 'id'>): Promise<Hotel> {
-    const db = await crearClienteSupabaseServidor();
-    const { data, error } = await db
+    const { data, error } = await this.db
       .from('hoteles')
       .insert({
         nombre: hotel.nombre,
@@ -64,20 +60,19 @@ export class RepositorioHotelesSupabase implements RepositorioHoteles {
         ciudad: hotel.ciudad,
         direccion: hotel.direccion,
         telefono_whatsapp: hotel.telefonoWhatsapp,
-        imagenes_urls: [hotel.fotoUrl],
+        imagenes_urls: hotel.imagenesUrls,
+        imagen_principal: hotel.imagenPrincipal || hotel.imagenesUrls[0] || '',
         estrellas: hotel.estrellas,
         activo: hotel.activo,
       })
       .select()
       .single();
-
     if (error) throw new Error(error.message);
     return mapearADominio(data);
   }
 
   async actualizar(id: string, datos: Partial<Hotel>): Promise<Hotel> {
-    const db = await crearClienteSupabaseServidor();
-    const { data, error } = await db
+    const { data, error } = await this.db
       .from('hoteles')
       .update({
         ...(datos.nombre && { nombre: datos.nombre }),
@@ -87,18 +82,27 @@ export class RepositorioHotelesSupabase implements RepositorioHoteles {
         ...(datos.telefonoWhatsapp && { telefono_whatsapp: datos.telefonoWhatsapp }),
         ...(datos.estrellas && { estrellas: datos.estrellas }),
         ...(datos.activo !== undefined && { activo: datos.activo }),
+        ...(datos.imagenesUrls && { imagenes_urls: datos.imagenesUrls }),
+        ...(datos.imagenPrincipal !== undefined && { imagen_principal: datos.imagenPrincipal }),
       })
       .eq('id', id)
       .select()
       .single();
-
     if (error) throw new Error(error.message);
     return mapearADominio(data);
   }
 
   async eliminar(id: string): Promise<void> {
-    const db = await crearClienteSupabaseServidor();
-    const { error } = await db.from('hoteles').delete().eq('id', id);
+    const { error } = await this.db.from('hoteles').delete().eq('id', id);
     if (error) throw new Error(error.message);
+  }
+
+  async contar(): Promise<number> {
+    const { count, error } = await this.db
+      .from('hoteles')
+      .select('*', { count: 'exact', head: true })
+      .eq('activo', true);
+    if (error) throw new Error(error.message);
+    return count ?? 0;
   }
 }

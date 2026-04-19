@@ -1,23 +1,20 @@
-// ============================================================
-// components/reutilizables/TarjetaHotel.tsx
-// Tarjeta para mostrar un hotel en el listado público
-// ============================================================
-
 import Image from 'next/image';
 import Link from 'next/link';
-import type { EntidadHotel } from '@/modulos/hoteles/dominio/RepositorioHoteles';
+import { Hotel } from '@/modulos/hoteles/dominio/Hotel';
 
 interface Props {
-  hotel: EntidadHotel;
+  hotel: Hotel;
 }
 
 export function TarjetaHotel({ hotel }: Props) {
+  const fotoPortada = hotel.imagenesUrls?.[0];
+
   return (
     <article className="group overflow-hidden rounded-2xl bg-white shadow-md transition-shadow hover:shadow-xl">
       <div className="relative h-48 w-full overflow-hidden bg-gray-100">
-        {hotel.fotoUrl ? (
+        {fotoPortada ? (
           <Image
-            src={hotel.fotoUrl}
+            src={fotoPortada}
             alt={hotel.nombre}
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-105"

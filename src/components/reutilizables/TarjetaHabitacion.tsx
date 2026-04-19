@@ -1,14 +1,9 @@
-// ============================================================
-// components/reutilizables/TarjetaHabitacion.tsx
-// Tarjeta para mostrar una habitación en el catálogo del hotel
-// ============================================================
-
 import Image from 'next/image';
 import Link from 'next/link';
-import type { EntidadHabitacion } from '@/modulos/habitaciones/dominio/RepositorioHabitaciones';
+import { Habitacion } from '@/modulos/habitaciones/dominio/Habitacion';
 
 interface Props {
-  habitacion: EntidadHabitacion;
+  habitacion: Habitacion;
 }
 
 const formatearPrecio = (precio: number): string =>
@@ -19,7 +14,7 @@ const formatearPrecio = (precio: number): string =>
   }).format(precio);
 
 export function TarjetaHabitacion({ habitacion }: Props) {
-  const fotoPortada = habitacion.fotos?.[0];
+  const fotoPortada = habitacion.imagenesUrls?.[0];
 
   return (
     <article className="group overflow-hidden rounded-2xl bg-white shadow-md transition-shadow hover:shadow-xl">

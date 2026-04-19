@@ -7,4 +7,5 @@ export interface RepositorioHoteles {
   crear(hotel: Omit<Hotel, 'id'>): Promise<Hotel>;
   actualizar(id: string, datos: Partial<Hotel>): Promise<Hotel>;
   eliminar(id: string): Promise<void>;
+  contar(): Promise<number>;
 }

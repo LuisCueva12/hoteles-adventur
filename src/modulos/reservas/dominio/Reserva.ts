@@ -8,6 +8,7 @@ export interface ReservaProps {
   telefonoContacto: string;
   fechaIngreso: Date;
   fechaSalida: Date;
+  fechaCreacion: Date;
   estado: EstadoReserva;
 }
 
@@ -19,6 +20,7 @@ export class Reserva {
     this.validarDatosContacto();
   }
 
+  get id() { return this.props.id; }
   get datos() { return this.props; }
 
   private validarFechas() {

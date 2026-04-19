@@ -1,31 +1,27 @@
-import type { Metadata } from 'next';
-import { Montserrat } from 'next/font/google';
-import './globals.css';
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
+import { Toaster } from "sonner"; // Importamos Sonner
 
-// Configuración robusta de Montserrat
-const montserrat = Montserrat({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-montserrat',
-  weight: ['300', '400', '500', '600', '700', '800', '900'],
-});
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'Hoteles Adventur - Reservas por WhatsApp',
-  description:
-    'Encuentra y reserva el hotel perfecto. Cierra tu reserva directo por WhatsApp con el hotel de tu elección.',
-  keywords: ['hoteles', 'reservas', 'whatsapp', 'colombia'],
-  robots: { index: true, follow: true },
+  title: "Adventur | Hoteles y Reservas",
+  description: "Plataforma premium de gestión hotelera",
 };
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
-    <html lang="es" className={montserrat.variable}>
-      <body className="antialiased">{children}</body>
+    <html lang="es">
+      <body className={inter.className}>
+        {children}
+        {/* Sistema de notificación global moderno */}
+        <Toaster position="top-right" richColors closeButton />
+      </body>
     </html>
   );
 }

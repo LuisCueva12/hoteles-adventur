@@ -1,7 +1,4 @@
-// ============================================================
-// components/reutilizables/BotonBase.tsx
-// Botón base reutilizable con variantes
-// ============================================================
+'use client';
 
 import type { ButtonHTMLAttributes } from 'react';
 
@@ -13,14 +10,10 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const estilos: Record<Variante, string> = {
-  primario:
-    'bg-primary text-secondary hover:bg-primary-hover focus:ring-primary',
-  secundario:
-    'bg-secondary text-white hover:bg-secondary-hover focus:ring-secondary',
-  peligro:
-    'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
-  whatsapp:
-    'bg-[#25d366] text-white hover:bg-[#1ebe57] focus:ring-[#25d366]',
+  primario: 'bg-primary text-secondary hover:bg-primary-hover focus:ring-primary',
+  secundario: 'bg-secondary text-white hover:bg-secondary-hover focus:ring-secondary',
+  peligro: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
+  whatsapp: 'bg-[#25d366] text-white hover:bg-[#1ebe57] focus:ring-[#25d366]',
 };
 
 export function BotonBase({

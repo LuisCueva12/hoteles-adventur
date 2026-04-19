@@ -1,10 +1,9 @@
 // ============================================================
-// lib/whatsapp/generadorUrl.ts
 // Genera URLs de WhatsApp con mensaje pre-formateado
 // ============================================================
 
 interface ParamsGenerarUrl {
-  telefonoHotel: string; // Ej: "573001234567" (código país + número, sin +)
+  telefonoHotel: string;
   nombreCliente: string;
   nombreHabitacion: string;
   fechaIngreso: Date;

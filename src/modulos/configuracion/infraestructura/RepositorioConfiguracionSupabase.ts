@@ -1,4 +1,4 @@
-import { crearClienteSupabaseServidor } from '@/lib/supabase/servidor';
+import { SupabaseClient } from '@supabase/supabase-js';
 import { ConfiguracionSitio } from '../dominio/ConfiguracionSitio';
 import { RepositorioConfiguracion } from '../dominio/RepositorioConfiguracion';
 
@@ -22,22 +22,16 @@ function mapearADominio(row: any): ConfiguracionSitio {
 }
 
 export class RepositorioConfiguracionSupabase implements RepositorioConfiguracion {
+  constructor(private db: SupabaseClient) {}
+
   async obtenerConfiguracion(): Promise<ConfiguracionSitio | null> {
-    const db = await crearClienteSupabaseServidor();
-    const { data, error } = await db
-      .from('configuracion')
-      .select('*')
-      .single();
-    
+    const { data, error } = await this.db.from('configuracion').select('*').single();
     if (error) return null;
     return mapearADominio(data);
   }
 
   async actualizarConfiguracion(datos: Partial<ConfiguracionSitio>): Promise<ConfiguracionSitio> {
-    const db = await crearClienteSupabaseServidor();
-    const { data, error } = await db
-      .from('configuracion')
-      .update({
+    const { data, error } = await this.db.from('configuracion').update({
         ...(datos.nombreSitio && { nombre_sitio: datos.nombreSitio }),
         ...(datos.eslogan !== undefined && { eslogan: datos.eslogan }),
         ...(datos.logoUrl !== undefined && { logo_url: datos.logoUrl }),
@@ -49,11 +43,7 @@ export class RepositorioConfiguracionSupabase implements RepositorioConfiguracio
         ...(datos.redesSociales?.whatsapp && { whatsapp: datos.redesSociales.whatsapp }),
         ...(datos.terminosCondiciones !== undefined && { terminos_condiciones: datos.terminosCondiciones }),
         ...(datos.politicaPrivacidad !== undefined && { politica_privacidad: datos.politicaPrivacidad }),
-      })
-      .eq('id', datos.id!)
-      .select()
-      .single();
-
+      }).eq('id', datos.id!).select().single();
     if (error) throw new Error(error.message);
     return mapearADominio(data);
   }

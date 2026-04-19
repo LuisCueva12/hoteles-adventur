@@ -1,51 +1,57 @@
+import { SupabaseClient } from '@supabase/supabase-js';
+
+// Repositorios e Infraestructura
 import { RepositorioHotelesSupabase } from '@/modulos/hoteles/infraestructura/RepositorioHotelesSupabase';
-import { CasoUsoObtenerHotelesDestacados } from '@/modulos/hoteles/aplicacion/CasoUsoObtenerHotelesDestacados';
-import { CasosUsoHoteles } from '@/modulos/hoteles/aplicacion/CasosUsoHoteles';
-
 import { RepositorioHabitacionesSupabase } from '@/modulos/habitaciones/infraestructura/RepositorioHabitacionesSupabase';
-import { CasosUsoHabitaciones } from '@/modulos/habitaciones/aplicacion/CasosUsoHabitaciones';
-
 import { RepositorioReservasSupabase } from '@/modulos/reservas/infraestructura/RepositorioReservasSupabase';
-import { CasosUsoReservas } from '@/modulos/reservas/aplicacion/CasosUsoReservas';
-
 import { RepositorioUsuariosSupabase } from '@/modulos/usuarios/infraestructura/RepositorioUsuariosSupabase';
-import { CasosUsoUsuarios } from '@/modulos/usuarios/aplicacion/CasosUsoUsuarios';
-
 import { RepositorioConfiguracionSupabase } from '@/modulos/configuracion/infraestructura/RepositorioConfiguracionSupabase';
-import { CasosUsoConfiguracion } from '@/modulos/configuracion/aplicacion/CasosUsoConfiguracion';
-
 import { RepositorioResenasSupabase } from '@/modulos/resenas/infraestructura/RepositorioResenasSupabase';
+import { RepositorioAuthSupabase } from '@/modulos/auth/infraestructura/RepositorioAuthSupabase';
+
+// Casos de Uso
+import { CasosUsoHoteles } from '@/modulos/hoteles/aplicacion/CasosUsoHoteles';
+import { CasoUsoObtenerHotelesDestacados } from '@/modulos/hoteles/aplicacion/CasoUsoObtenerHotelesDestacados';
+import { CasosUsoHabitaciones } from '@/modulos/habitaciones/aplicacion/CasosUsoHabitaciones';
+import { CasosUsoReservas } from '@/modulos/reservas/aplicacion/CasosUsoReservas';
+import { CasosUsoUsuarios } from '@/modulos/usuarios/aplicacion/CasosUsoUsuarios';
+import { CasosUsoConfiguracion } from '@/modulos/configuracion/aplicacion/CasosUsoConfiguracion';
 import { CasosUsoResenas } from '@/modulos/resenas/aplicacion/CasosUsoResenas';
+import { CasosUsoAuth } from '@/modulos/auth/aplicacion/CasosUsoAuth';
 
 export class FabricaModulos {
-  static obtenerCasosUsoHoteles() {
-    return new CasosUsoHoteles(new RepositorioHotelesSupabase());
+  static obtenerCasosUsoHoteles(db: SupabaseClient) {
+    return new CasosUsoHoteles(new RepositorioHotelesSupabase(db));
   }
 
-  static obtenerCasoUsoHotelesDestacados() {
-    return new CasoUsoObtenerHotelesDestacados(new RepositorioHotelesSupabase());
+  static obtenerCasoUsoHotelesDestacados(db: SupabaseClient) {
+    return new CasoUsoObtenerHotelesDestacados(new RepositorioHotelesSupabase(db));
   }
 
-  static obtenerCasosUsoHabitaciones() {
-    return new CasosUsoHabitaciones(new RepositorioHabitacionesSupabase());
+  static obtenerCasosUsoHabitaciones(db: SupabaseClient) {
+    return new CasosUsoHabitaciones(new RepositorioHabitacionesSupabase(db));
   }
 
-  static obtenerCasosUsoReservas() {
+  static obtenerCasosUsoReservas(db: SupabaseClient) {
     return new CasosUsoReservas(
-      new RepositorioReservasSupabase(),
-      new RepositorioHotelesSupabase()
+      new RepositorioReservasSupabase(db),
+      new RepositorioHotelesSupabase(db)
     );
   }
 
-  static obtenerCasosUsoUsuarios() {
-    return new CasosUsoUsuarios(new RepositorioUsuariosSupabase());
+  static obtenerCasosUsoUsuarios(db: SupabaseClient) {
+    return new CasosUsoUsuarios(new RepositorioUsuariosSupabase(db));
   }
 
-  static obtenerCasosUsoConfiguracion() {
-    return new CasosUsoConfiguracion(new RepositorioConfiguracionSupabase());
+  static obtenerCasosUsoConfiguracion(db: SupabaseClient) {
+    return new CasosUsoConfiguracion(new RepositorioConfiguracionSupabase(db));
   }
 
-  static obtenerCasosUsoResenas() {
-    return new CasosUsoResenas(new RepositorioResenasSupabase());
+  static obtenerCasosUsoResenas(db: SupabaseClient) {
+    return new CasosUsoResenas(new RepositorioResenasSupabase(db));
+  }
+
+  static obtenerCasosUsoAuth(db: SupabaseClient) {
+    return new CasosUsoAuth(new RepositorioAuthSupabase(db));
   }
 }

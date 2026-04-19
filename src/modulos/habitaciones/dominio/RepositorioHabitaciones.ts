@@ -6,4 +6,5 @@ export interface RepositorioHabitaciones {
   crear(habitacion: Omit<Habitacion, 'id'>): Promise<Habitacion>;
   actualizar(id: string, datos: Partial<Habitacion>): Promise<Habitacion>;
   eliminar(id: string): Promise<void>;
+  contar(): Promise<number>;
 }

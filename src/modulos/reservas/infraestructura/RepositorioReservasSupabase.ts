@@ -1,4 +1,4 @@
-import { crearClienteSupabaseServidor } from '@/lib/supabase/servidor';
+import { SupabaseClient } from '@supabase/supabase-js';
 import { Reserva, EstadoReserva, CrearReservaDTO } from '../dominio/Reserva';
 import { RepositorioReservas } from '../dominio/RepositorioReservas';
 
@@ -11,15 +11,16 @@ function mapearADominio(row: any): Reserva {
     telefonoContacto: row.telefono_contacto,
     fechaIngreso: new Date(row.fecha_ingreso),
     fechaSalida: new Date(row.fecha_salida),
+    fechaCreacion: new Date(row.fecha_creacion),
     estado: row.estado as EstadoReserva,
   });
 }
 
 export class RepositorioReservasSupabase implements RepositorioReservas {
-  async crear(datos: CrearReservaDTO): Promise<Reserva> {
-    const db = await crearClienteSupabaseServidor();
+  constructor(private db: SupabaseClient) {}
 
-    const { data, error } = await db
+  async crear(datos: CrearReservaDTO): Promise<Reserva> {
+    const { data, error } = await this.db
       .from('reservas')
       .insert({
         usuario_id: datos.usuarioId,
@@ -33,30 +34,38 @@ export class RepositorioReservasSupabase implements RepositorioReservas {
       .select()
       .single();
 
-    if (error) throw new Error('Error al procesar la reserva en la base de datos.');
-    
+    if (error) throw new Error(error.message);
     return mapearADominio(data);
   }
 
   async obtenerTodas(): Promise<Reserva[]> {
-    const db = await crearClienteSupabaseServidor();
-    const { data, error } = await db
-      .from('reservas')
-      .select('*')
-      .order('fecha_creacion', { ascending: false });
-    
-    if (error) throw new Error('Error al recuperar las reservas.');
+    const { data, error } = await this.db.from('reservas').select('*').order('fecha_creacion', { ascending: false });
+    if (error) throw new Error(error.message);
     return (data ?? []).map(mapearADominio);
   }
 
   async obtenerPorUsuario(usuarioId: string): Promise<Reserva[]> {
-    const db = await crearClienteSupabaseServidor();
-    const { data, error } = await db
-      .from('reservas')
-      .select('*')
-      .eq('usuario_id', usuarioId);
-    
-    if (error) throw new Error('Error al recuperar las reservas del usuario.');
+    const { data, error } = await this.db.from('reservas').select('*').eq('usuario_id', usuarioId);
+    if (error) throw new Error(error.message);
     return (data ?? []).map(mapearADominio);
+  }
+
+  async actualizarEstado(id: string, estado: EstadoReserva): Promise<Reserva> {
+    const { data, error } = await this.db
+      .from('reservas')
+      .update({ estado })
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
+    return mapearADominio(data);
+  }
+
+  async contar(): Promise<number> {
+    const { count, error } = await this.db
+      .from('reservas')
+      .select('*', { count: 'exact', head: true });
+    if (error) throw new Error(error.message);
+    return count ?? 0;
   }
 }

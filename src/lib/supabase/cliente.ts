@@ -1,8 +1,3 @@
-// ============================================================
-// lib/supabase/cliente.ts
-// Cliente de Supabase para componentes de CLIENTE (Browser)
-// ============================================================
-
 import { createBrowserClient } from '@supabase/ssr';
 
 export function crearClienteSupabaseNavegador() {

@@ -20,4 +20,12 @@ export class CasosUsoUsuarios {
     const usuario = await this.repositorio.obtenerPorId(id);
     return usuario?.rol === 'admin';
   }
+
+  async listarTodos(): Promise<Usuario[]> {
+    return this.repositorio.obtenerTodos();
+  }
+
+  async contar(): Promise<number> {
+    return this.repositorio.contar();
+  }
 }

@@ -1,9 +1,10 @@
 import { FabricaModulos } from '@/lib/factories/FabricaModulos';
+import { crearClienteSupabaseServidor } from '@/lib/supabase/servidor'; // Importamos el cliente de servidor
 import { TarjetaHotel } from '../reutilizables/TarjetaHotel';
 
 export async function HotelesDestacados() {
-  // Ahora usamos la fábrica: Desacoplamiento total de la infraestructura
-  const casoUso = FabricaModulos.obtenerCasoUsoHotelesDestacados();
+  const db = await crearClienteSupabaseServidor();
+  const casoUso = FabricaModulos.obtenerCasoUsoHotelesDestacados(db);
   const hoteles = await casoUso.ejecutar();
 
   return (
@@ -22,13 +23,7 @@ export async function HotelesDestacados() {
         {hoteles.map((hotel) => (
           <TarjetaHotel 
             key={hotel.id} 
-            hotel={{
-              id: hotel.id,
-              nombre: hotel.nombre,
-              ciudad: hotel.ciudad,
-              fotoUrl: hotel.fotoUrl,
-              telefonoWhatsapp: hotel.telefonoWhatsapp
-            }} 
+            hotel={hotel} 
           />
         ))}
 
