@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { Habitacion } from '@/modulos/habitaciones/dominio/Habitacion';
+import { isValidImageSrc } from '@/lib/utils';
 
 interface Props {
   habitacion: Habitacion;
@@ -15,13 +16,14 @@ const formatearPrecio = (precio: number): string =>
 
 export function TarjetaHabitacion({ habitacion }: Props) {
   const fotoPortada = habitacion.imagenesUrls?.[0];
+  const fotoValida = isValidImageSrc(fotoPortada);
 
   return (
     <article className="group overflow-hidden rounded-2xl bg-white shadow-md transition-shadow hover:shadow-xl">
       <div className="relative h-44 w-full overflow-hidden bg-gray-100">
-        {fotoPortada ? (
+        {fotoValida ? (
           <Image
-            src={fotoPortada}
+            src={fotoPortada!}
             alt={habitacion.nombre}
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-105"

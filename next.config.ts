@@ -6,14 +6,12 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: '**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'img3.jpg',
+        pathname: '/**',
       },
       {
         protocol: 'http',
         hostname: '**',
+        pathname: '/**',
       }
     ],
     unoptimized: true,

@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { Hotel } from '@/modulos/hoteles/dominio/Hotel';
+import { isValidImageSrc } from '@/lib/utils';
 
 interface Props {
   hotel: Hotel;
@@ -8,13 +9,14 @@ interface Props {
 
 export function TarjetaHotel({ hotel }: Props) {
   const fotoPortada = hotel.imagenesUrls?.[0];
+  const fotoValida = isValidImageSrc(fotoPortada);
 
   return (
     <article className="group overflow-hidden rounded-2xl bg-white shadow-md transition-shadow hover:shadow-xl">
       <div className="relative h-48 w-full overflow-hidden bg-gray-100">
-        {fotoPortada ? (
+        {fotoValida ? (
           <Image
-            src={fotoPortada}
+            src={fotoPortada!}
             alt={hotel.nombre}
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-105"
